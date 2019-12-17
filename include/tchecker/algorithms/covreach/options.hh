@@ -46,6 +46,8 @@ namespace tchecker {
         UNKNOWN,
         ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L,
         ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L,
+        ASYNC_ZG_POR_ELAPSED_EXTRALU_PLUS_L,
+        ASYNC_ZG_POR_NON_ELAPSED_EXTRALU_PLUS_L,
         ZG_ELAPSED_NOEXTRA,
         ZG_ELAPSED_EXTRAM_G,
         ZG_ELAPSED_EXTRAM_L,
@@ -291,6 +293,18 @@ namespace tchecker {
        admissible
        */
       void set_algorithm_model_async_zg(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log);
+
+      /*!
+       \brief Set algorithm model for asynchronous zone graphs with POR
+       \param semantics : a semantics
+       \param extrapolation : an extrapolation
+       \param log : logging facility
+       \post algorithm model has been set to asynchronous zone graph with POR,  with semantics and
+       extrapolation
+       An error has been reported to log if semantics or extrapolation is not
+       admissible
+       */
+      void set_algorithm_model_async_zg_por(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log);
       
       /*!
        \brief Set algorithm model for zone graphs

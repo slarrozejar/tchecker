@@ -8,6 +8,12 @@
 #ifndef TCHECKER_ALGORITHMS_COVREACH_RUN_HH
 #define TCHECKER_ALGORITHMS_COVREACH_RUN_HH
 
+#if BOOST_VERSION <= 106600
+# include <boost/functional/hash.hpp>
+#else
+# include <boost/container_hash/hash.hpp>
+#endif
+
 #include "tchecker/algorithms/covreach/accepting.hh"
 #include "tchecker/algorithms/covreach/algorithm.hh"
 #include "tchecker/algorithms/covreach/cover.hh"
@@ -19,6 +25,9 @@
 #include "tchecker/graph/allocators.hh"
 #include "tchecker/graph/output.hh"
 #include "tchecker/parsing/declaration.hh"
+#include "tchecker/por/output.hh"
+#include "tchecker/por/state.hh"
+#include "tchecker/por/ts.hh"
 #include "tchecker/ts/allocators.hh"
 #include "tchecker/utils/gc.hh"
 #include "tchecker/utils/log.hh"
@@ -192,6 +201,102 @@ namespace tchecker {
         } // end of namespace ta
         
       } // end of namespace async_zg
+      
+      
+      
+      
+      namespace por {
+        
+        namespace async_zg {
+          
+          namespace ta {
+            
+            /*!
+             \class algorithm_model_t
+             \brief Model for covering reachability over asynchronous zone graphs of timed automata with global/local POR
+             */
+            template <class ZONE_SEMANTICS>
+            class algorithm_model_t {
+            public:
+              using zone_semantics_t = ZONE_SEMANTICS;
+              using model_t = tchecker::async_zg::ta::model_t;
+              
+              using state_t = tchecker::por::make_state_t<typename zone_semantics_t::ts_t::state_t>;
+              using ts_t = tchecker::por::gl_ts_t<typename zone_semantics_t::ts_t, state_t>;
+              using transition_t = typename ts_t::transition_t;
+              
+              using key_t = std::size_t;
+              
+              using node_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_t;
+              using node_ptr_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_ptr_t;
+              
+              using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<node_t>;
+              using transition_allocator_t
+              = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
+              using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
+              
+              using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+              
+              static inline key_t node_to_key(node_ptr_t const & node)
+              {
+                std::size_t h = tchecker::por::hash_value(static_cast<tchecker::por::state_t const &>(*node));
+                boost::hash_combine(h, tchecker::ta::details::hash_value(*node));
+                return h;
+              }
+              
+              class state_predicate_t {
+              public:
+                using node_ptr_t = typename tchecker::covreach::details::por::async_zg::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
+                
+                bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
+                {
+                  return ((static_cast<tchecker::ta::state_t const &>(*n1)
+                           == static_cast<tchecker::ta::state_t const &>(*n2))
+                          &&
+                          (static_cast<tchecker::por::state_t const &>(*n1)
+                           == static_cast<tchecker::por::state_t const &>(*n2))
+                          );
+                }
+              };
+              
+              class node_lt_t {
+              public:
+                bool operator() (node_ptr_t const & n1, node_ptr_t const & n2) const
+                {
+                  return tchecker::por::lexical_cmp(*n1, *n2) < 0;
+                }
+              };
+              
+              static std::tuple<> state_predicate_args(model_t const & model)
+              {
+                return std::tuple<>();
+              }
+              
+              static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
+              {
+                return std::tuple<model_t const &>(model);
+              }
+              
+              using node_outputter_t
+              = tchecker::por::state_outputter_t<typename zone_semantics_t::ts_t::state_t,
+              tchecker::async_zg::ta::state_outputter_t>;
+              
+              static std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &, tchecker::clock_index_t const &>
+              node_outputter_args(model_t const & model)
+              {
+                return
+                std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &, tchecker::clock_index_t const &>
+                (model.flattened_integer_variables().index(),
+                 model.flattened_offset_clock_variables().index(),
+                 model.flattened_clock_variables().index());
+              }
+            };
+            
+          } // end of namespace ta
+          
+        } // end of namespace async_zg
+        
+      } // end of namespace por
       
       
       
@@ -394,6 +499,20 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+            //
+          case tchecker::covreach::options_t::ASYNC_ZG_POR_ELAPSED_EXTRALU_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::async_zg::ta::algorithm_model_t<tchecker::async_zg::ta::elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_POR_NON_ELAPSED_EXTRALU_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::async_zg::ta::algorithm_model_t<tchecker::async_zg::ta::non_elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+            //
           case tchecker::covreach::options_t::ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_zg
             <tchecker::covreach::details::zg::ta::algorithm_model_t<tchecker::zg::ta::elapsed_no_extrapolation_t>,

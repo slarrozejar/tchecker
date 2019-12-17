@@ -35,6 +35,7 @@ add_subdirectory(flat_system)
 add_subdirectory(fsm)
 add_subdirectory(graph)
 add_subdirectory(parsing)
+add_subdirectory(por)
 add_subdirectory(statement)
 add_subdirectory(system)
 add_subdirectory(ta)
@@ -61,6 +62,7 @@ ${FLAT_SYSTEM_SRC}
 ${GRAPH_SRC}
 ${OTHER_SRC}
 ${PARSING_SRC}
+${POR_SRC}
 ${STATEMENT_SRC}
 ${SYNTAX_SRC}
 ${SYSTEM_SRC}

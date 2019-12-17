@@ -193,6 +193,8 @@ namespace tchecker {
       
       if (graph == "async_zg")
         set_algorithm_model_async_zg(semantics, extrapolation, log);
+      else if (graph == "async_zg_por")
+        set_algorithm_model_async_zg_por(semantics, extrapolation, log);
       else if (graph == "zg")
         set_algorithm_model_zg(semantics, extrapolation, log);
       else
@@ -212,6 +214,26 @@ namespace tchecker {
       else if (semantics == "non-elapsed") {
         if (extrapolation == "extraLU+l")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L;
+        else
+          log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
+      }
+      else
+        log.error("Unknown semantics: " + semantics + " for command line parameter -m");
+    }
+    
+    
+    void options_t::set_algorithm_model_async_zg_por
+    (std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log)
+    {
+      if (semantics == "elapsed") {
+        if (extrapolation == "extraLU+l")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_POR_ELAPSED_EXTRALU_PLUS_L;
+        else
+          log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
+      }
+      else if (semantics == "non-elapsed") {
+        if (extrapolation == "extraLU+l")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_POR_NON_ELAPSED_EXTRALU_PLUS_L;
         else
           log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
       }

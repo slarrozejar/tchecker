@@ -135,7 +135,23 @@ namespace tchecker {
         ++ _edge;
       return *this;
     }
+    
+    /*!
+     \brief Empty vedge iterator
+     \return An empty vedge iterator, operators * and ++ shall not be called on the returned vedge iterator
+     */
+    static tchecker::vedge_iterator_t<EDGE, EDGE_ITERATOR> empty_vedge_iterator()
+    {
+      return vedge_iterator_t();
+    }
   private:
+    /*!
+     \brief Constructor
+     */
+    vedge_iterator_t()
+    : _edge(nullptr)
+    {}
+    
     EDGE const * _edge;   /*!< Single edge in vedge (if not nullptr) */
     EDGE_ITERATOR _it;    /*!< Iterator (if _edge is nullptr) */
   };
