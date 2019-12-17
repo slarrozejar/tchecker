@@ -162,7 +162,8 @@ namespace tchecker {
         tchecker::intrusive_shared_ptr_t<STATE> construct_from_state(STATE const & state, ARGS && ... args)
         {
           return tchecker::ta::details::state_pool_allocator_t<STATE, VLOC, INTVARS_VAL>::construct_from_state
-          (state, args..., _offset_zone_pool.construct(state.offset_zone()), _sync_zone_pool.construct(state.sync_zone()));
+          (state, args..., _offset_zone_pool.construct(state.offset_zone()),
+           _sync_zone_pool.construct(state.sync_zone()));
         }
         
         /*!
