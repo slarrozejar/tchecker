@@ -13,21 +13,21 @@ namespace tchecker {
     
     /* state_t */
     
-    state_t::state_t(tchecker::process_id_t active_pid)
-    : _active_pid(active_pid)
+    state_t::state_t(tchecker::process_id_t rank)
+    : _rank(rank)
     {}
     
     
-    void state_t::active_pid(tchecker::process_id_t pid)
+    void state_t::rank(tchecker::process_id_t pid)
     {
-      _active_pid = pid;
+      _rank = pid;
     }
     
     
     
     bool operator== (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2)
     {
-      return s1.active_pid() == s2.active_pid();
+      return s1.rank() == s2.rank();
     }
     
     
@@ -39,15 +39,15 @@ namespace tchecker {
     
     std::size_t hash_value(tchecker::por::state_t const & s)
     {
-      return s.active_pid();
+      return s.rank();
     }
     
     
     int lexical_cmp(tchecker::por::state_t const & s1, tchecker::por::state_t const & s2)
     {
-      if (s1.active_pid() < s2.active_pid())
+      if (s1.rank() < s2.rank())
         return -1;
-      else if (s1.active_pid() == s2.active_pid())
+      else if (s1.rank() == s2.rank())
         return 0;
       return 1;
     }

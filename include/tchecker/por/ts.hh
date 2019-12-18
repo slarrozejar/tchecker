@@ -29,17 +29,6 @@ namespace tchecker {
     namespace details {
       
       /*!
-       \brief Type of global/local transition
-       */
-      enum gl_transition_t {
-        GL_TRANSITION_GLOBAL,  /*!< Global transition */
-        GL_TRANSITION_LOCAL,   /*!< Local transition */
-        GL_TRANSITION_NEXT,    /*!< Make next process active */
-        GL_TRANSITION_DONE,    /*!< For internal use */
-      };
-      
-      
-      /*!
        \class gl_outgoing_iterator_t
        \brief Outgoing iterator for global-local transition system with POR
        \tparam OUTGOING_ITERATOR : type of outgoing iterator for underlying transition system
@@ -50,31 +39,24 @@ namespace tchecker {
         /*!
          \brief Constructor
          \param outgoing_it : outgoing iterator in underlying transition system
-         \param active_pid : active process identifier
-         \param process_count : number of processes
-         \pre active_pid <= process_count
-         \throw std::invalid_argument : if active_pid > process_count
-         \note this iterator filters outgoing_it:
-         - if active_pid < process_count, then only outgoing transitions from process active_pid are
-         enabled, and a new transition is added
-         - if active_pid == process_count, then only outgoing transitions involving all processes are
-         allowed (i.e. global transitions)
+         \param rank : rank of active processes
+         \param processes_count : number of processes
+         \pre rank <= processes_count
+         \throw std::invalid_argument : if rank > processes_count
+         \note this iterator filters outgoing_it by only allowing global transitions and local transitions of
+         processes with a PID greater than or equal to rank. If rank == processes_count, then only global
+         transitions are allowed
          */
         gl_outgoing_iterator_t(OUTGOING_ITERATOR const & outgoing_it,
-                               tchecker::process_id_t active_pid,
+                               tchecker::process_id_t rank,
                                tchecker::process_id_t processes_count)
         : _outgoing_it(outgoing_it),
-        _active_pid(active_pid),
-        _processes_count(processes_count)
+        _rank(rank),
+        _processes_count(processes_count),
+        _edge_rank(0)
         {
-          if (_active_pid > _processes_count)
-            throw std::invalid_argument("Invalid active process");
-          
-          if (_active_pid == _processes_count)
-            _transition_mode = tchecker::por::details::GL_TRANSITION_GLOBAL;
-          else
-            _transition_mode = tchecker::por::details::GL_TRANSITION_LOCAL;
-          
+          if (_rank > _processes_count)
+            throw std::invalid_argument("Invalid rank");
           skip();
         }
         
@@ -115,9 +97,9 @@ namespace tchecker {
         operator== (tchecker::por::details::gl_outgoing_iterator_t<OUTGOING_ITERATOR> const & it) const
         {
           return ((_outgoing_it == it._outgoing_it) &&
-                  (_active_pid == it._active_pid) &&
+                  (_rank == it._rank) &&
                   (_processes_count == it._process_count) &&
-                  (_transition_mode == it._transition_mode));
+                  (_edge_rank == it._edge_rank));
         }
         
         /*!
@@ -137,7 +119,7 @@ namespace tchecker {
          */
         inline bool at_end() const
         {
-          return(_transition_mode == tchecker::por::details::GL_TRANSITION_DONE);
+          return _outgoing_it.at_end();
         }
         
         /*!
@@ -149,21 +131,16 @@ namespace tchecker {
         inline tchecker::por::details::gl_outgoing_iterator_t<OUTGOING_ITERATOR> & operator++ ()
         {
           assert(! at_end());
-          if (_transition_mode == tchecker::por::details::GL_TRANSITION_NEXT)
-            _transition_mode = tchecker::por::details::GL_TRANSITION_DONE;
-          else {
-            ++_outgoing_it;
-            skip();
-          }
+          ++ _outgoing_it;
+          skip();
           return *this;
         }
         
         /*!
-         \brief Value type
+         \brief Value type (edge rank, edge)
          */
         using value_type_t
-        = std::tuple<enum tchecker::por::details::gl_transition_t,
-        typename std::iterator_traits<OUTGOING_ITERATOR>::value_type>;
+        = std::tuple<tchecker::process_id_t, typename std::iterator_traits<OUTGOING_ITERATOR>::value_type>;
         
         /*!
          \brief Dereference operator
@@ -173,30 +150,25 @@ namespace tchecker {
         inline value_type_t operator* ()
         {
           assert(! at_end());
-          if (_transition_mode == tchecker::por::details::GL_TRANSITION_NEXT) {
-            using vedge_iterator_t = typename std::iterator_traits<OUTGOING_ITERATOR>::value_type::iterator_t;
-            return std::make_tuple(_transition_mode,
-                                   tchecker::make_range(vedge_iterator_t::empty_vedge_iterator(),
-                                                        vedge_iterator_t::empty_vedge_iterator()));
-          }
-          return std::make_tuple(_transition_mode, *_outgoing_it);
+          return std::make_tuple(_edge_rank, *_outgoing_it);
         }
       private:
         /*!
-         \brief Skip transitions that are not of current mode
-         \post _outgoing_it points to the next global/local transition depending on _transition_mode, if any, and past-the-end
-         otherwise
+         \brief Skip transitions that involve processes with a PID less than _rank
+         \post _outgoing_it points to the next transition that is either global, or that is local and that involves a process with
+         a PID greater than or equal to _rank, if any, and past-the-end otherwise.. If _rank == _processes_count, only global
+         transitions are allowed.
          \throw std::runtime_error : if the model is not local/gobal
          */
         void skip()
         {
           while (! _outgoing_it.at_end()) {
-            // Compute vedge size and first_pid
-            tchecker::process_id_t first_pid = _processes_count; // not a valid pid
+            // Compute vedge size and edge rank
+            _edge_rank = _processes_count;  // not a PID
             std::size_t vedge_size = 0;
             for (auto it = (*_outgoing_it).begin(); it != (*_outgoing_it).end(); ++it) {
-              if (first_pid == _processes_count)
-                first_pid = (*it)->pid();
+              if (_edge_rank == _processes_count)
+                _edge_rank = (*it)->pid();
               ++vedge_size;
             }
 
@@ -205,28 +177,21 @@ namespace tchecker {
               throw std::runtime_error("System is not local/global");
             
             // Check if expected vedge found
-            if ((vedge_size == 1) &&
-                (_transition_mode == tchecker::por::details::GL_TRANSITION_LOCAL) &&
-                (first_pid == _active_pid))
+            if ((vedge_size == 1) && (_edge_rank >= _rank))
               break;
-            else if ((vedge_size == _processes_count) &&
-                     (_transition_mode == tchecker::por::details::GL_TRANSITION_GLOBAL))
+            else if (vedge_size == _processes_count) {
+              _edge_rank = _processes_count;
               break;
+            }
               
             ++ _outgoing_it;
           }
-          if (_outgoing_it.at_end()) {
-            if (_transition_mode == tchecker::por::details::GL_TRANSITION_LOCAL)
-              _transition_mode = tchecker::por::details::GL_TRANSITION_NEXT;
-            else
-              _transition_mode = tchecker::por::details::GL_TRANSITION_DONE;
-          }
         }
                 
-        OUTGOING_ITERATOR _outgoing_it;                                 /*!< Underlying iterator */
-        tchecker::process_id_t _active_pid;                             /*!< Active process */
-        tchecker::process_id_t _processes_count;                        /*!< Number of processes */
-        enum tchecker::por::details::gl_transition_t _transition_mode;  /*!< Mode of global/local transition */
+        OUTGOING_ITERATOR _outgoing_it;           /*!< Underlying iterator */
+        tchecker::process_id_t _rank;             /*!< Rank of active processes  */
+        tchecker::process_id_t _processes_count;  /*!< Number of processes */
+        tchecker::process_id_t _edge_rank;        /*!< Rank of current edge */
       };
       
     } // end of namespace details
@@ -379,8 +344,8 @@ namespace tchecker {
       {
         tchecker::range_t<typename TS::outgoing_edges_iterator_t> ts_outgoing_edges = _ts.outgoing_edges(s);
         return tchecker::make_range
-        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), s.active_pid(), _processes_count),
-         outgoing_edges_iterator_t(ts_outgoing_edges.end(), s.active_pid(), _processes_count));
+        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), s.rank(), _processes_count),
+         outgoing_edges_iterator_t(ts_outgoing_edges.end(), s.rank(), _processes_count));
       }
       
       /*!
@@ -395,19 +360,14 @@ namespace tchecker {
                                                  typename TS::transition_t & t,
                                                  outgoing_edges_iterator_value_t const & v)
       {
-        enum tchecker::por::details::gl_transition_t transition_mode = std::get<0>(v);
+        tchecker::process_id_t edge_rank = std::get<0>(v);
         typename TS::outgoing_edges_iterator_value_t const & vedge = std::get<1>(v);
-
-        assert(transition_mode != tchecker::por::details::GL_TRANSITION_DONE);
         
-        if (transition_mode == tchecker::por::details::GL_TRANSITION_NEXT) {
-          s.active_pid(s.active_pid() + 1);
-          return tchecker::STATE_OK;
-        }
+        assert(s.rank() <= edge_rank);
         
         enum tchecker::state_status_t state_status = _ts.next(s, t, vedge);
-        if (transition_mode == tchecker::por::details::GL_TRANSITION_GLOBAL)
-          s.active_pid(0);
+        s.rank(edge_rank == _processes_count ? 0 : edge_rank);
+        
         return state_status;
       }
     private:

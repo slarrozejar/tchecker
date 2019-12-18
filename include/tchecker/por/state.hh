@@ -33,28 +33,28 @@ namespace tchecker {
     public:
       /*!
        \brief Constructor
-       \param active_pid : active process pid
-       \post process with PID active_pid is active
+       \param rank : rank of active processes
+       \post processes with PID greater than or equal to rank are active
        */
-      state_t(tchecker::process_id_t active_pid = 0);
+      state_t(tchecker::process_id_t rank = 0);
       
       /*!
        \brief Accessor
-       \return PID of active process
+       \return Rank of active processes
        */
-      constexpr inline tchecker::process_id_t active_pid() const
+      constexpr inline tchecker::process_id_t rank() const
       {
-        return _active_pid;
+        return _rank;
       }
       
       /*!
        \brief Set active process ID
        \param pid : process ID
-       \post active PID has been set to pid
+       \post Rank of active processes has been set to pid
        */
-      void active_pid(tchecker::process_id_t pid);
+      void rank(tchecker::process_id_t pid);
     private:
-      tchecker::process_id_t _active_pid;
+      tchecker::process_id_t _rank;  /*!< Rank of active processes */
     };
     
     
@@ -62,7 +62,7 @@ namespace tchecker {
      \brief Equality predicate
      \param s1 : state
      \param s2 : state
-     \return true if s1 and s2 have same active process, false otherwise
+     \return true if s1 and s2 have same rank, false otherwise
      */
     bool operator== (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
 
