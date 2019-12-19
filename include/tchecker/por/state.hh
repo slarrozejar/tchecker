@@ -77,6 +77,15 @@ namespace tchecker {
     
     
     /*!
+     \brief Less-than-or-equal-to predicate
+     \param s1 : state
+     \param s2 : state
+     \return true if s1 has a rank smaller than or equal to the rank of s2
+     */
+    bool operator<= (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
+    
+    
+    /*!
      \brief Hash
      \param s : state
      \return hash value for s

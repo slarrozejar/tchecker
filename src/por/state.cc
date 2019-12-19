@@ -37,6 +37,12 @@ namespace tchecker {
     }
     
     
+    bool operator<= (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2)
+    {
+      return s1.rank() <= s2.rank();
+    }
+    
+    
     std::size_t hash_value(tchecker::por::state_t const & s)
     {
       return s.rank();

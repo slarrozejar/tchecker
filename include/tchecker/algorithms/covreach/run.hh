@@ -244,6 +244,8 @@ namespace tchecker {
                 return h;
               }
               
+#define PERMISSIVE_COVERING
+              
               class state_predicate_t {
               public:
                 using node_ptr_t = typename tchecker::covreach::details::por::async_zg::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
@@ -253,8 +255,13 @@ namespace tchecker {
                   return ((static_cast<tchecker::ta::state_t const &>(*n1)
                            == static_cast<tchecker::ta::state_t const &>(*n2))
                           &&
+#ifdef PERMISSIVE_COVERING
+                          (static_cast<tchecker::por::state_t const &>(*n2)     // n2 is more permissive than n1
+                           <= static_cast<tchecker::por::state_t const &>(*n1))
+#else
                           (static_cast<tchecker::por::state_t const &>(*n1)
-                           == static_cast<tchecker::por::state_t const &>(*n2))
+                           == static_cast<tchecker::por::state_t const &>(*n2)) // n2 and n1 equally permissive
+#endif // PERMISSIVE_COVERING
                           );
                 }
               };
