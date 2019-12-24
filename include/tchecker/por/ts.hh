@@ -12,6 +12,8 @@
 #include <tuple>
 #include <type_traits>
 
+#include <boost/dynamic_bitset.hpp>
+
 #include "tchecker/basictypes.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
@@ -29,6 +31,86 @@ namespace tchecker {
     namespace details {
       
       /*!
+       \class global_edge_map_t
+       \brief Tells for each location in a system whether it has an outgoing global edge
+       \note THIS SHOULD BE STORED IN A MODEL IN ORDER TO BE SAFE WRT UPDATABLE MODELS
+       */
+      class global_edge_map_t {
+      public:
+        template <class SYSTEM>
+        global_edge_map_t(SYSTEM const & system)
+        : _map(system.locations_count(), 0), _turn_all(system.processes_count())
+        {
+          auto edges = system.edges();
+          for (auto const * edge : edges)
+            if (! system.asynchronous(edge->pid(), edge->event_id()))
+              _map[edge->src()->id()] = 1;
+        }
+        
+        /*!
+         \brief Copy constructor
+         */
+        global_edge_map_t(tchecker::por::details::global_edge_map_t const &) = default;
+        
+        /*!
+         \brief Move constructor
+         */
+        global_edge_map_t(tchecker::por::details::global_edge_map_t &&) = default;
+        
+        /*!
+         \brief Destructor
+         */
+        ~global_edge_map_t() = default;
+        
+        /*!
+         \brief Assignment operator
+         */
+        tchecker::por::details::global_edge_map_t &
+        operator=(tchecker::por::details::global_edge_map_t const &) = delete;
+        
+        /*!
+         \brief Move-assignment operator
+         */
+        tchecker::por::details::global_edge_map_t &
+        operator=(tchecker::por::details::global_edge_map_t &&) = delete;
+        
+        /*!
+         \brief Accessor
+         \return
+         */
+        inline tchecker::process_id_t turn_all() const
+        {
+          return _turn_all;
+        }
+        
+        /*!
+         \brief Accessor
+         \param s : state
+         \param r : rank
+         \tparam STATE : type of state s, should inherit from tchecker::por::state_t
+         \return first process with identifier greater than or equal to r that has no global action from s if any,
+         turn_all() otherwise
+         */
+        template <class STATE>
+        tchecker::process_id_t turn(STATE const & s) const
+        {
+          assert(r < _turn_all);
+          tchecker::process_id_t r = s.rank();
+          auto const & vloc = s.vloc();
+          for ( ; r < vloc.size(); ++r)
+            if (! _map[vloc[r]->id()])
+              return r;
+          return _turn_all;
+        }
+      private:
+        boost::dynamic_bitset<> _map;            /*!< Map : location ID -> has global outgoing edge */
+        tchecker::process_id_t const _turn_all;  /*!< Turn to all processes */
+      };
+      
+      
+      
+      
+      /*!
        \class gl_outgoing_iterator_t
        \brief Outgoing iterator for global-local transition system with POR
        \tparam OUTGOING_ITERATOR : type of outgoing iterator for underlying transition system
@@ -39,13 +121,12 @@ namespace tchecker {
         /*!
          \brief Constructor
          \param outgoing_it : outgoing iterator in underlying transition system
-         \param rank : rank of active processes
+         \param rank : rank of enabled process
          \param processes_count : number of processes
          \pre rank <= processes_count
          \throw std::invalid_argument : if rank > processes_count
-         \note this iterator filters outgoing_it by only allowing global transitions and local transitions of
-         processes with a PID greater than or equal to rank. If rank == processes_count, then only global
-         transitions are allowed
+         \note this iterator filters outgoing_it by only allowing local transitions from process with PID = rank if rank < processes_count,
+         and by allowing all transitions (local and global) when rank == processes_count
          */
         gl_outgoing_iterator_t(OUTGOING_ITERATOR const & outgoing_it,
                                tchecker::process_id_t rank,
@@ -154,10 +235,9 @@ namespace tchecker {
         }
       private:
         /*!
-         \brief Skip transitions that involve processes with a PID less than _rank
-         \post _outgoing_it points to the next transition that is either global, or that is local and that involves a process with
-         a PID greater than or equal to _rank, if any, and past-the-end otherwise.. If _rank == _processes_count, only global
-         transitions are allowed.
+         \brief Skip transitions which are not allowed
+         \post _outgoing_it points to the next allowed transition: either a transition from process _rank when _rank < _processes_count,
+         or any process if rank == _processes_count
          \throw std::runtime_error : if the model is not local/gobal
          */
         void skip()
@@ -177,12 +257,13 @@ namespace tchecker {
               throw std::runtime_error("System is not local/global");
             
             // Check if expected vedge found
-            if ((vedge_size == 1) && (_edge_rank >= _rank))
-              break;
-            else if (vedge_size == _processes_count) {
-              _edge_rank = _processes_count;
+            if (_rank == _processes_count) {   // all edges enabled
+              if (vedge_size == _processes_count)
+                _edge_rank = _processes_count; // signal global edge
               break;
             }
+            else if ((vedge_size == 1) && (_edge_rank == _rank)) // local edges from process _rank enabled
+              break;
               
             ++ _outgoing_it;
           }
@@ -272,7 +353,9 @@ namespace tchecker {
        */
       template <class ... ARGS>
       gl_ts_t(ARGS && ... args)
-      : _ts(args...), _processes_count(_ts.model().system().processes_count())
+      : _ts(args...),
+      _processes_count(_ts.model().system().processes_count()),
+      _global_edge_map(_ts.model().system())
       {}
       
       /*!
@@ -343,9 +426,10 @@ namespace tchecker {
       virtual tchecker::range_t<outgoing_edges_iterator_t> outgoing_edges(STATE const & s)
       {
         tchecker::range_t<typename TS::outgoing_edges_iterator_t> ts_outgoing_edges = _ts.outgoing_edges(s);
+        tchecker::process_id_t turn = _global_edge_map.turn(s);
         return tchecker::make_range
-        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), s.rank(), _processes_count),
-         outgoing_edges_iterator_t(ts_outgoing_edges.end(), s.rank(), _processes_count));
+        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), turn, _processes_count),
+         outgoing_edges_iterator_t(ts_outgoing_edges.end(), turn, _processes_count));
       }
       
       /*!
@@ -371,8 +455,9 @@ namespace tchecker {
         return state_status;
       }
     private:
-      TS _ts;                                   /*!< Underlying transition system */
-      tchecker::process_id_t _processes_count;  /*!< Number of processes */
+      TS _ts;                                                     /*!< Underlying transition system */
+      tchecker::process_id_t _processes_count;                    /*!< Number of processes */
+      tchecker::por::details::global_edge_map_t _global_edge_map; /*!< Map : location ID -> has global outgoing edge */
     };
     
   } // end of namespace por
