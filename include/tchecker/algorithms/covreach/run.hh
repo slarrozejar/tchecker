@@ -237,7 +237,7 @@ namespace tchecker {
               
               using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
               
-#define PERMISSIVE_COVERING
+#undef PERMISSIVE_COVERING
               
               static inline key_t node_to_key(node_ptr_t const & node)
               {
