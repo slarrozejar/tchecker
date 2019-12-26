@@ -39,7 +39,7 @@ namespace tchecker {
       public:
         template <class SYSTEM>
         global_edge_map_t(SYSTEM const & system)
-        : _map(system.locations_count(), 0), _turn_all(system.processes_count())
+        : _map(system.locations_count(), 0)
         {
           auto edges = system.edges();
           for (auto const * edge : edges)
@@ -76,35 +76,26 @@ namespace tchecker {
         
         /*!
          \brief Accessor
-         \return
-         */
-        inline tchecker::process_id_t turn_all() const
-        {
-          return _turn_all;
-        }
-        
-        /*!
-         \brief Accessor
          \param s : state
-         \param r : rank
          \tparam STATE : type of state s, should inherit from tchecker::por::state_t
-         \return first process with identifier greater than or equal to r that has no global action from s if any,
-         turn_all() otherwise
+         \pre s.active_pid() != tchecker::por::all_processes_active (checked by assertion)
+         \return first process with identifier greater than or equal to s.active_pid() that has no global action from s if any,
+         tchecker::por::all_processes_active otherwise
          */
         template <class STATE>
         tchecker::process_id_t turn(STATE const & s) const
         {
-          assert(r < _turn_all);
-          tchecker::process_id_t r = s.rank();
+          assert( ! s.all_active() );
+
+          tchecker::process_id_t active_pid = s.active_pid();
           auto const & vloc = s.vloc();
-          for ( ; r < vloc.size(); ++r)
-            if (! _map[vloc[r]->id()])
-              return r;
-          return _turn_all;
+          for ( ; active_pid < vloc.size(); ++active_pid)
+            if (! _map[vloc[active_pid]->id()])
+              return active_pid;
+          return tchecker::por::all_processes_active;
         }
       private:
         boost::dynamic_bitset<> _map;            /*!< Map : location ID -> has global outgoing edge */
-        tchecker::process_id_t const _turn_all;  /*!< Turn to all processes */
       };
       
       
@@ -121,23 +112,20 @@ namespace tchecker {
         /*!
          \brief Constructor
          \param outgoing_it : outgoing iterator in underlying transition system
-         \param rank : rank of enabled process
+         \param active_pid : identifier of active process
          \param processes_count : number of processes
-         \pre rank <= processes_count
-         \throw std::invalid_argument : if rank > processes_count
-         \note this iterator filters outgoing_it by only allowing local transitions from process with PID = rank if rank < processes_count,
-         and by allowing all transitions (local and global) when rank == processes_count
+         \note this iterator filters outgoing_it by only allowing local transitions from process with identifier active_pid if active_pid !=
+         tchecker::por::all_processes_active,
+         and by allowing all transitions (local and global) when active_pid is equal to tchecker::por::all_processes_active
          */
         gl_outgoing_iterator_t(OUTGOING_ITERATOR const & outgoing_it,
-                               tchecker::process_id_t rank,
+                               tchecker::process_id_t active_pid,
                                tchecker::process_id_t processes_count)
         : _outgoing_it(outgoing_it),
-        _rank(rank),
-        _processes_count(processes_count),
-        _edge_rank(0)
+        _active_pid(active_pid),
+        _vedge_active_pid(0),
+        _processes_count(processes_count)
         {
-          if (_rank > _processes_count)
-            throw std::invalid_argument("Invalid rank");
           skip();
         }
         
@@ -178,9 +166,9 @@ namespace tchecker {
         operator== (tchecker::por::details::gl_outgoing_iterator_t<OUTGOING_ITERATOR> const & it) const
         {
           return ((_outgoing_it == it._outgoing_it) &&
-                  (_rank == it._rank) &&
-                  (_processes_count == it._process_count) &&
-                  (_edge_rank == it._edge_rank));
+                  (_active_pid == it._active_pid) &&
+                  (_vedge_active_pid == it._vedge_active_pid) &&
+                  (_processes_count == it._processes_count));
         }
         
         /*!
@@ -218,7 +206,9 @@ namespace tchecker {
         }
         
         /*!
-         \brief Value type (edge rank, edge)
+         \brief Value type (edge active pid, edge)
+         \note The edge active pid is set to tchecker::por::all_processes_active on global edges, otherwise it is set to  the active process
+         id for local transitions
          */
         using value_type_t
         = std::tuple<tchecker::process_id_t, typename std::iterator_traits<OUTGOING_ITERATOR>::value_type>;
@@ -231,48 +221,62 @@ namespace tchecker {
         inline value_type_t operator* ()
         {
           assert(! at_end());
-          return std::make_tuple(_edge_rank, *_outgoing_it);
+          return std::make_tuple(_vedge_active_pid, *_outgoing_it);
         }
       private:
         /*!
          \brief Skip transitions which are not allowed
-         \post _outgoing_it points to the next allowed transition: either a transition from process _rank when _rank < _processes_count,
-         or any process if rank == _processes_count
+         \post _outgoing_it points to the next allowed transition: either a transition from process _active_pid when
+         _active_pid != tchecker::por::all_processes_active, ot from any process when _active_pid is equal to tchecker::por::all_processes_active.
+         _vedge_active_pid has been set to the process identifier in vedge if local, and it has been set to tchecker::por::all_processes_active if
+         the vedge is global
          \throw std::runtime_error : if the model is not local/gobal
          */
         void skip()
         {
           while (! _outgoing_it.at_end()) {
-            // Compute vedge size and edge rank
-            _edge_rank = _processes_count;  // not a PID
-            std::size_t vedge_size = 0;
-            for (auto it = (*_outgoing_it).begin(); it != (*_outgoing_it).end(); ++it) {
-              if (_edge_rank == _processes_count)
-                _edge_rank = (*it)->pid();
-              ++vedge_size;
-            }
-
-            // Check global/local system
-            if ((vedge_size != 1) && (vedge_size != _processes_count))
-              throw std::runtime_error("System is not local/global");
+            _vedge_active_pid = vedge_active_pid(*_outgoing_it);
             
-            // Check if expected vedge found
-            if (_rank == _processes_count) {   // all edges enabled
-              if (vedge_size == _processes_count)
-                _edge_rank = _processes_count; // signal global edge
-              break;
-            }
-            else if ((vedge_size == 1) && (_edge_rank == _rank)) // local edges from process _rank enabled
+            if ((_active_pid == tchecker::por::all_processes_active) ||
+                (_active_pid == _vedge_active_pid))
               break;
               
             ++ _outgoing_it;
           }
         }
+      
+        
+        /*!
+         \brief Compute size and active process of a vedge
+         \param vedge : a vedge
+         \pre vedge is either local (involves 1 process) or global (involves all processes)
+         \return the identifier of active process in vedge if vedge is local, otherwise returns tchecker::por::all_processes_active
+         if vedge is global
+         \throw std::runtime_error : if vedge is neither local nor global
+         */
+        template <class VEDGE>
+        tchecker::process_id_t vedge_active_pid(VEDGE const & vedge) const
+        {
+          // Compute vedge size and edge rank
+          tchecker::process_id_t vedge_active_pid = tchecker::por::all_processes_active;
+          std::size_t vedge_size = 0;
+          for (auto it = vedge.begin(); it != vedge.end(); ++it) {
+            if (vedge_active_pid == tchecker::por::all_processes_active)
+              vedge_active_pid = (*it)->pid();
+            ++vedge_size;
+          }
+
+          // Check global/local system
+          if ((vedge_size != 1) && (vedge_size != _processes_count))
+            throw std::runtime_error("System is not local/global");
+          
+          return (vedge_size == 1 ? vedge_active_pid : tchecker::por::all_processes_active);
+        }
                 
         OUTGOING_ITERATOR _outgoing_it;           /*!< Underlying iterator */
-        tchecker::process_id_t _rank;             /*!< Rank of active processes  */
+        tchecker::process_id_t _active_pid;       /*!< Identifier of active process */
+        tchecker::process_id_t _vedge_active_pid; /*!< identifier of active process on edge */
         tchecker::process_id_t _processes_count;  /*!< Number of processes */
-        tchecker::process_id_t _edge_rank;        /*!< Rank of current edge */
       };
       
     } // end of namespace details
@@ -405,7 +409,15 @@ namespace tchecker {
                                                               typename TS::transition_t & t,
                                                               typename TS::initial_iterator_value_t const & v)
       {
-        return _ts.initialize(s, t, v);
+        enum tchecker::state_status_t status = _ts.initialize(s, t, v);
+        if (status != tchecker::STATE_OK)
+          return status;
+        
+        // Compute active process
+        s.active_pid(0);
+        s.active_pid(_global_edge_map.turn(s));
+        
+        return tchecker::STATE_OK;
       }
       
       /*!
@@ -426,10 +438,9 @@ namespace tchecker {
       virtual tchecker::range_t<outgoing_edges_iterator_t> outgoing_edges(STATE const & s)
       {
         tchecker::range_t<typename TS::outgoing_edges_iterator_t> ts_outgoing_edges = _ts.outgoing_edges(s);
-        tchecker::process_id_t turn = _global_edge_map.turn(s);
         return tchecker::make_range
-        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), turn, _processes_count),
-         outgoing_edges_iterator_t(ts_outgoing_edges.end(), turn, _processes_count));
+        (outgoing_edges_iterator_t(ts_outgoing_edges.begin(), s.active_pid(), _processes_count),
+         outgoing_edges_iterator_t(ts_outgoing_edges.end(), s.active_pid(), _processes_count));
       }
       
       /*!
@@ -444,15 +455,19 @@ namespace tchecker {
                                                  typename TS::transition_t & t,
                                                  outgoing_edges_iterator_value_t const & v)
       {
-        tchecker::process_id_t edge_rank = std::get<0>(v);
+        tchecker::process_id_t vedge_active_pid = std::get<0>(v);
         typename TS::outgoing_edges_iterator_value_t const & vedge = std::get<1>(v);
+
+        assert(s.all_active() || (vedge_active_pid == s.active_pid()));
         
-        assert(s.rank() <= edge_rank);
+        enum tchecker::state_status_t status = _ts.next(s, t, vedge);
+        if (status != tchecker::STATE_OK)
+          return status;
         
-        enum tchecker::state_status_t state_status = _ts.next(s, t, vedge);
-        s.rank(edge_rank == _processes_count ? 0 : edge_rank);
-        
-        return state_status;
+        if (s.active_pid() == tchecker::por::all_processes_active)
+          s.active_pid(0);
+        s.active_pid(_global_edge_map.turn(s));
+        return tchecker::STATE_OK;
       }
     private:
       TS _ts;                                                     /*!< Underlying transition system */

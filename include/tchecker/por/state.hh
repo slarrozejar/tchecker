@@ -25,6 +25,8 @@ namespace tchecker {
   
   namespace por {
     
+    extern tchecker::process_id_t const all_processes_active; /*!< Process identifier corresponding to all processes active */
+    
     /*!
      \class state_t
      \brief State for POR transition systems
@@ -33,56 +35,61 @@ namespace tchecker {
     public:
       /*!
        \brief Constructor
-       \param rank : rank of active processes
-       \post processes with PID greater than or equal to rank are active
+       \post all processes are active
        */
-      state_t(tchecker::process_id_t rank = 0);
+      state_t();
       
       /*!
        \brief Accessor
-       \return Rank of active processes
+       \return true if all processes are active, false otherwise
        */
-      constexpr inline tchecker::process_id_t rank() const
+      constexpr bool all_active() const
       {
-        return _rank;
+        return _active_pid == tchecker::por::all_processes_active;
+      }
+      
+      /*!
+       \brief Accessor
+       \return identifier of active process, or tchecker::por::all_processes_active if all processes are active
+       */
+      constexpr inline tchecker::process_id_t active_pid() const
+      {
+        return _active_pid;
       }
       
       /*!
        \brief Set active process ID
-       \param pid : process ID
-       \post Rank of active processes has been set to pid
+       \param active_pid : active process ID
+       \post active process identifier has been set to active_pid
+       \note set to tchecker::por::all_processes_active to make all processes active
        */
-      void rank(tchecker::process_id_t pid);
+      void active_pid(tchecker::process_id_t active_pid);
+          
+      /*!
+       \brief Equality predicate
+       \param s : state
+       \return true if this and s have same active process, false otherwise
+       */
+      bool operator== (tchecker::por::state_t const & s) const;
+      
+      /*!
+       \brief Disequality predicate
+       \param s : state
+       \return true if this and s do not have the same active process, false otherwise
+       */
+      bool operator!= (tchecker::por::state_t const & s) const;
     private:
-      tchecker::process_id_t _rank;  /*!< Rank of active processes */
+      tchecker::process_id_t _active_pid;               /*!< Active process identifier */
     };
     
-    
+        
     /*!
-     \brief Equality predicate
+     \brief Permissive state predicate
      \param s1 : state
      \param s2 : state
-     \return true if s1 and s2 have same rank, false otherwise
+     \return true if all outgoing transitions from s1 exist from s2, false otherwise.
      */
-    bool operator== (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
-
-    
-    /*!
-     \brief Disequality predicate
-     \param s1 : state
-     \param s2 : state
-     \return false if s1 and s2 have same active process, true otherwise
-     */
-    bool operator!= (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
-    
-    
-    /*!
-     \brief Less-than-or-equal-to predicate
-     \param s1 : state
-     \param s2 : state
-     \return true if s1 has a rank smaller than or equal to the rank of s2 (i.e. s1 is more permissive than s2)
-     */
-    bool operator<= (tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
+    bool permissive_leq(tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
     
     
     /*!

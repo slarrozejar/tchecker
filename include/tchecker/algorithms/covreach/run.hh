@@ -237,16 +237,11 @@ namespace tchecker {
               
               using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
               
-#undef PERMISSIVE_COVERING
-              
               static inline key_t node_to_key(node_ptr_t const & node)
               {
-                std::size_t h = tchecker::ta::details::hash_value(*node);
-#ifndef PERMISSIVE_COVERING
-                boost::hash_combine
-                (h, tchecker::por::hash_value(static_cast<tchecker::por::state_t const &>(*node)));
-#endif
-                return h;
+                return tchecker::ta::details::hash_value(*node);
+                // NB: we don't hash node->active_pid() since we want to compare nodes with same ta state,
+                // but distinct active_pid
               }
               
               
@@ -259,13 +254,7 @@ namespace tchecker {
                   return ((static_cast<tchecker::ta::state_t const &>(*n1)
                            == static_cast<tchecker::ta::state_t const &>(*n2))
                           &&
-#ifdef PERMISSIVE_COVERING
-                          (static_cast<tchecker::por::state_t const &>(*n2)     // n2 is more permissive than n1
-                           <= static_cast<tchecker::por::state_t const &>(*n1))
-#else
-                          (static_cast<tchecker::por::state_t const &>(*n1)
-                           == static_cast<tchecker::por::state_t const &>(*n2)) // n2 and n1 equally permissive
-#endif // PERMISSIVE_COVERING
+                          tchecker::por::permissive_leq(*n1, *n2)
                           );
                 }
               };
