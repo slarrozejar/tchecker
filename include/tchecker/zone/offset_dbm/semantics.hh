@@ -327,8 +327,14 @@ namespace tchecker {
         tchecker::dbm::db_t * sync_dbm = sync_zone.dbm();
         auto sync_dim = sync_zone.dim();
         
+#ifdef EMPTY_SYNC_ZONE
         if (_sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
           EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, vloc);
+#else
+        if (! _sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
+          return tchecker::STATE_EMPTY_ZONE;
+        EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, vloc);
+#endif // EMPTY_SYNC_ZONE
         
         return tchecker::STATE_OK;
       }
@@ -432,8 +438,15 @@ namespace tchecker {
         tchecker::dbm::db_t * sync_dbm = sync_zone.dbm();
         auto sync_dim = sync_zone.dim();
         
+#ifdef EMPTY_SYNC_ZONE
         if (_sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
           EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, tgt_vloc);
+#else
+        if (! _sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
+          return tchecker::STATE_EMPTY_ZONE;
+        
+        EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, tgt_vloc);
+#endif // EMPTY_SYNC_ZONE
         
         return tchecker::STATE_OK;
       }
@@ -626,10 +639,15 @@ namespace tchecker {
         tchecker::dbm::db_t * sync_dbm = sync_zone.dbm();
         auto sync_dim = sync_zone.dim();
         
+#ifdef EMPTY_SYNC_ZONE
+        if (_sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
+          EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, vloc);
+#else
         if ( ! _sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim) )
           return tchecker::STATE_EMPTY_ZONE;
         
         EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, vloc);
+#endif // EMPTY_SYNC_ZONE
         
         return tchecker::STATE_OK;
       }
@@ -739,10 +757,15 @@ namespace tchecker {
         tchecker::dbm::db_t * sync_dbm = sync_zone.dbm();
         auto sync_dim = sync_zone.dim();
         
+#ifdef EMPTY_SYNC_ZONE
+        if (_sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim))
+          EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, tgt_vloc);
+#else
         if ( ! _sync_zone_computer->sync_zone(offset_zone.dbm(), offset_zone.dim(), sync_dbm, sync_dim) )
           return tchecker::STATE_EMPTY_ZONE;
         
         EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, tgt_vloc);
+#endif // EMPTY_SYNC_ZONE
         
         return tchecker::STATE_OK;
       }
