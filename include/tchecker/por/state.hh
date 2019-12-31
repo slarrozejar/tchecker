@@ -43,7 +43,7 @@ namespace tchecker {
        \brief Accessor
        \return true if all processes are active, false otherwise
        */
-      constexpr bool all_active() const
+      bool all_active() const
       {
         return _active_pid == tchecker::por::all_processes_active;
       }
@@ -52,7 +52,7 @@ namespace tchecker {
        \brief Accessor
        \return identifier of active process, or tchecker::por::all_processes_active if all processes are active
        */
-      constexpr inline tchecker::process_id_t active_pid() const
+      inline tchecker::process_id_t active_pid() const
       {
         return _active_pid;
       }
