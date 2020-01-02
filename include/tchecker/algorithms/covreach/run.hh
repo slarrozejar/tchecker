@@ -27,7 +27,7 @@
 #include "tchecker/parsing/declaration.hh"
 #include "tchecker/por/output.hh"
 #include "tchecker/por/state.hh"
-#include "tchecker/por/ts.hh"
+#include "tchecker/por/gl/strict/ts.hh"
 #include "tchecker/ts/allocators.hh"
 #include "tchecker/utils/gc.hh"
 #include "tchecker/utils/log.hh"
@@ -222,7 +222,7 @@ namespace tchecker {
               using model_t = tchecker::async_zg::ta::model_t;
               
               using state_t = tchecker::por::make_state_t<typename zone_semantics_t::ts_t::state_t>;
-              using ts_t = tchecker::por::gl_ts_t<typename zone_semantics_t::ts_t, state_t>;
+              using ts_t = tchecker::por::gl::strict::ts_t<typename zone_semantics_t::ts_t, state_t>;
               using transition_t = typename ts_t::transition_t;
               
               using key_t = std::size_t;
@@ -240,7 +240,7 @@ namespace tchecker {
               static inline key_t node_to_key(node_ptr_t const & node)
               {
                 return tchecker::ta::details::hash_value(*node);
-                // NB: we don't hash node->active_pid() since we want to compare nodes with same ta state,
+                // NB: we don't hash node->rank() since we want to compare nodes with same ta state,
                 // but distinct active_pid
               }
               
@@ -254,7 +254,7 @@ namespace tchecker {
                   return ((static_cast<tchecker::ta::state_t const &>(*n1)
                            == static_cast<tchecker::ta::state_t const &>(*n2))
                           &&
-                          tchecker::por::permissive_leq(*n1, *n2)
+                          tchecker::por::gl::strict::cover_leq(*n1, *n2)
                           );
                 }
               };

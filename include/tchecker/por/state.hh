@@ -25,46 +25,32 @@ namespace tchecker {
   
   namespace por {
     
-    extern tchecker::process_id_t const all_processes_active; /*!< Process identifier corresponding to all processes active */
-    
     /*!
      \class state_t
-     \brief State for POR transition systems
+     \brief State for POR transition systems equipped with a rank
      */
     class state_t {
     public:
       /*!
        \brief Constructor
-       \post all processes are active
+       \param rank : a rank
+       \post this state rank has been set to rank
        */
-      state_t();
+      state_t(tchecker::process_id_t rank = 0);
       
       /*!
        \brief Accessor
-       \return true if all processes are active, false otherwise
+       \return state rank
        */
-      bool all_active() const
-      {
-        return _active_pid == tchecker::por::all_processes_active;
-      }
+      tchecker::process_id_t rank() const;
       
       /*!
-       \brief Accessor
-       \return identifier of active process, or tchecker::por::all_processes_active if all processes are active
+       \brief Set state rank
+       \param rank : a rank
+       \post this state rank has been set to rank
        */
-      inline tchecker::process_id_t active_pid() const
-      {
-        return _active_pid;
-      }
-      
-      /*!
-       \brief Set active process ID
-       \param active_pid : active process ID
-       \post active process identifier has been set to active_pid
-       \note set to tchecker::por::all_processes_active to make all processes active
-       */
-      void active_pid(tchecker::process_id_t active_pid);
-          
+      void rank(tchecker::process_id_t rank);
+
       /*!
        \brief Equality predicate
        \param s : state
@@ -79,17 +65,8 @@ namespace tchecker {
        */
       bool operator!= (tchecker::por::state_t const & s) const;
     private:
-      tchecker::process_id_t _active_pid;               /*!< Active process identifier */
+      tchecker::process_id_t _rank;   /*!< Rank of active process */
     };
-    
-        
-    /*!
-     \brief Permissive state predicate
-     \param s1 : state
-     \param s2 : state
-     \return true if all outgoing transitions from s1 exist from s2, false otherwise.
-     */
-    bool permissive_leq(tchecker::por::state_t const & s1, tchecker::por::state_t const & s2);
     
     
     /*!

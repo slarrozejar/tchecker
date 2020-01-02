@@ -4,7 +4,8 @@
 
 set(POR_SRC
   ${CMAKE_CURRENT_SOURCE_DIR}/state.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/gl/strict/ts.cc
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/gl/strict/ts.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/output.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/state.hh
-  ${TCHECKER_INCLUDE_DIR}/tchecker/por/ts.hh
 PARENT_SCOPE)
