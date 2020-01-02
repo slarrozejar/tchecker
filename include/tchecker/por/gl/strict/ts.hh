@@ -275,6 +275,11 @@ namespace tchecker {
          \tparam STATE : type of states, should inherit from TS::state_t, and from tchecker::por::state_t
          \note ts_t<TS> implements a strict round-robin POR on top of TS: either one process can move, or all processes can move.
          TS is supposed to be global/local: every transition involves either one process (local) or all the processes (global)
+         \note This implementation is only correct for reachability of a global transition. When we give turn to a given process, we
+         do not check that this process has enabled transitions. So we may end up creating deadlock states if the chosen process
+         has no transition enabled. And we may miss some reachable states. However if we check reachability of a global transition,
+         this implementation is correct. Indeed, when we give turn to a process, it has no outgoing global transition in its current state.
+         If, furthermore, it has no enabled local transition, then it will never be able to perform any global transition.
          */
         template <class TS, class STATE>
         class ts_t final : public tchecker::por::gl::strict::details::ts_instance_t<TS, STATE> {
