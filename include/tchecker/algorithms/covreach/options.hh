@@ -46,8 +46,6 @@ namespace tchecker {
         UNKNOWN,
         ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L,
         ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L,
-        ASYNC_ZG_POR_ELAPSED_EXTRALU_PLUS_L,
-        ASYNC_ZG_POR_NON_ELAPSED_EXTRALU_PLUS_L,
         ZG_ELAPSED_NOEXTRA,
         ZG_ELAPSED_EXTRAM_G,
         ZG_ELAPSED_EXTRAM_L,
@@ -88,6 +86,14 @@ namespace tchecker {
       };
       
       /*!
+       \brief Source set
+       */
+      enum source_set_t {
+        SOURCE_SET_ALL,          /*!< All outgoing transitions */
+        SOURCE_SET_GL_STRICT,    /*!< Round-robin for global/local systems where either 1 process move or all processes move */
+      };
+      
+      /*!
        \brief Constructor
        \tparam MAP_ITERATOR : iterator on a map std::string -> std::string,
        should dereference to a pair of std::string (key, value)
@@ -105,12 +111,14 @@ namespace tchecker {
       _search_order(tchecker::covreach::options_t::DFS),
       _block_size(10000),
       _nodes_table_size(65536),
+      _source_set(tchecker::covreach::options_t::SOURCE_SET_ALL),
       _stats(0)
       {
         auto it = range.begin(), end = range.end();
         for ( ; it != end; ++it )
           set_option(it->first, it->second, log);
         check_mandatory_options(log);
+        check_source_set_model(log);
       }
       
       /*!
@@ -193,6 +201,12 @@ namespace tchecker {
       
       /*!
        \brief Accessor
+       \return source set selection
+       */
+      enum tchecker::covreach::options_t::source_set_t source_set() const;
+      
+      /*!
+       \brief Accessor
        \return true if stats should be output, false otherwise
        */
       bool stats() const;
@@ -203,6 +217,13 @@ namespace tchecker {
        \post All errors and warnings have been reported to log
        */
       void check_mandatory_options(tchecker::log_t & log) const;
+      
+      /*!
+       \brief Check that source set selection if compatible with model
+       \param log : logging facility
+       \post All errors and warnings have been reported to log
+       */
+      void check_source_set_model(tchecker::log_t & log) const;
       
       /*!
        \brief Short options string (getopt_long format)
@@ -221,6 +242,7 @@ namespace tchecker {
         {"model",        required_argument, 0, 'm'},
         {"output",       required_argument, 0, 'o'},
         {"search-order", required_argument, 0, 's'},
+        {"source-set",   required_argument, 0, 0},
         {"stats",        no_argument,       0, 'S'},
         {"block-size",   required_argument, 0, 0},
         {"table-size",   required_argument, 0, 0},
@@ -295,18 +317,6 @@ namespace tchecker {
       void set_algorithm_model_async_zg(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log);
 
       /*!
-       \brief Set algorithm model for asynchronous zone graphs with POR
-       \param semantics : a semantics
-       \param extrapolation : an extrapolation
-       \param log : logging facility
-       \post algorithm model has been set to asynchronous zone graph with POR,  with semantics and
-       extrapolation
-       An error has been reported to log if semantics or extrapolation is not
-       admissible
-       */
-      void set_algorithm_model_async_zg_por(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log);
-      
-      /*!
        \brief Set algorithm model for zone graphs
        \param semantics : a semantics
        \param extrapolation : an extrapolation
@@ -355,6 +365,15 @@ namespace tchecker {
       void set_nodes_table_size(std::string const & value, tchecker::log_t & log);
       
       /*!
+       \brief Set source set
+       \param value : option value
+       \param log : logging facility
+       \post source set has been set to value.
+       An error has been reported to log if value is not admissible.
+       */
+      void set_source_set(std::string const & value, tchecker::log_t & log);
+      
+      /*!
        \brief Set stats flag
        \param value : option value
        \param log : logging facility
@@ -370,6 +389,7 @@ namespace tchecker {
       enum search_order_t _search_order;           /*!< Search order */
       std::size_t _block_size;                     /*!< Size of allocation blocks */
       std::size_t _nodes_table_size;               /*!< Size of nodes table */
+      enum source_set_t _source_set;               /*!< Source set */
       unsigned _stats : 1;                         /*!< Statistics */
     };
     

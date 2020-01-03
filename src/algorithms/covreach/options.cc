@@ -25,6 +25,7 @@ namespace tchecker {
     _search_order(std::move(options._search_order)),
     _block_size(std::move(options._block_size)),
     _nodes_table_size(std::move(options._nodes_table_size)),
+    _source_set(std::move(options._source_set)),
     _stats(options._stats)
     {
       options._os = nullptr;
@@ -51,6 +52,7 @@ namespace tchecker {
         _search_order = std::move(options._search_order);
         _block_size = options._block_size;
         _nodes_table_size = options._nodes_table_size;
+        _source_set = options._source_set;
         _stats = options._stats;
       }
       return *this;
@@ -105,6 +107,12 @@ namespace tchecker {
     }
     
     
+    enum tchecker::covreach::options_t::source_set_t options_t::source_set() const
+    {
+      return _source_set;
+    }
+    
+    
     bool options_t::stats() const
     {
       return (_stats == 1);
@@ -131,6 +139,8 @@ namespace tchecker {
         set_block_size(value, log);
       else if (key == "table-size")
         set_nodes_table_size(value, log);
+      else if (key == "source-set")
+        set_source_set(value, log);
       else if (key == "S")
         set_stats(value, log);
       else
@@ -193,8 +203,6 @@ namespace tchecker {
       
       if (graph == "async_zg")
         set_algorithm_model_async_zg(semantics, extrapolation, log);
-      else if (graph == "async_zg_por")
-        set_algorithm_model_async_zg_por(semantics, extrapolation, log);
       else if (graph == "zg")
         set_algorithm_model_zg(semantics, extrapolation, log);
       else
@@ -214,26 +222,6 @@ namespace tchecker {
       else if (semantics == "non-elapsed") {
         if (extrapolation == "extraLU+l")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L;
-        else
-          log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
-      }
-      else
-        log.error("Unknown semantics: " + semantics + " for command line parameter -m");
-    }
-    
-    
-    void options_t::set_algorithm_model_async_zg_por
-    (std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log)
-    {
-      if (semantics == "elapsed") {
-        if (extrapolation == "extraLU+l")
-          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_POR_ELAPSED_EXTRALU_PLUS_L;
-        else
-          log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
-      }
-      else if (semantics == "non-elapsed") {
-        if (extrapolation == "extraLU+l")
-          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_POR_NON_ELAPSED_EXTRALU_PLUS_L;
         else
           log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
       }
@@ -340,6 +328,15 @@ namespace tchecker {
     }
     
     
+    void options_t::set_source_set(std::string const & value, tchecker::log_t & log)
+    {
+      if (value == "gl_strict")
+        _source_set = tchecker::covreach::options_t::SOURCE_SET_GL_STRICT;
+      else
+        log.error("Unknown source set: " + value);
+    }
+    
+    
     void options_t::set_stats(std::string const & value, tchecker::log_t & log)
     {
       _stats = 1;
@@ -350,6 +347,15 @@ namespace tchecker {
     {
       if (_algorithm_model == UNKNOWN)
         log.error("model must be set, use -m command line option");
+    }
+    
+    
+    void options_t::check_source_set_model(tchecker::log_t & log) const
+    {
+      if ((_source_set != tchecker::covreach::options_t::SOURCE_SET_ALL) &&
+          (_algorithm_model != ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L) &&
+          (_algorithm_model != ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L))
+        log.error("source set can only be used with asynchronous zone graph models");
     }
     
     
@@ -384,6 +390,8 @@ namespace tchecker {
       os << "-o filename      output graph to filename" << std::endl;
       os << "-s (bfs|dfs)     search order (breadth-first search or depth-first search)" << std::endl;
       os << "-S               output stats" << std::endl;
+      os << "--source-set ss  where ss is one of:" << std::endl;
+      os << "                 gl_strict     round-robin for global/local models, strict selection" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;
