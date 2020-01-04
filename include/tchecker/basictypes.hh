@@ -143,6 +143,7 @@ const integer_t int_minval = INT16_MIN;
     STATE_CLOCKS_SRC_INVARIANT_VIOLATED,    /*!< state computation failed due to clocks source invariant violation */
     STATE_CLOCKS_TGT_INVARIANT_VIOLATED,    /*!< state computation failed due to clocks target invariant violation */
     STATE_EMPTY_ZONE,                       /*!< state computation resulted in an empty zone (no details provided) */
+    STATE_POR_REMOVED,                      /*!< state removed by partial-order reduction */
   };
   
 } // end of namespace tchecker
