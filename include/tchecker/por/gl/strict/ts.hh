@@ -13,8 +13,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <boost/dynamic_bitset.hpp>
-
 #include "tchecker/basictypes.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
@@ -179,7 +177,7 @@ namespace tchecker {
             
             
             /*!
-             \brief Compute  process invovled in a vedge
+             \brief Compute  process involved in a vedge
              \param vedge : a vedge
              \pre system is global/local, i.e. vedge involves either one process (local) or all the processes (global)
              \return the identifier of active process in vedge if vedge is local,
@@ -220,7 +218,7 @@ namespace tchecker {
 
 
 /*!
- \brief Iterator traits for tchecker::por::details::gl_outgoing_iterator_t
+ \brief Iterator traits for tchecker::por::gl::strict::details::outgoing_iterator_t
  */
 template <class OUTGOING_ITERATOR>
 struct std::iterator_traits<tchecker::por::gl::strict::details::outgoing_iterator_t<OUTGOING_ITERATOR>> {
