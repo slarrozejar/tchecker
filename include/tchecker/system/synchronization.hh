@@ -197,6 +197,14 @@ namespace tchecker {
     {
       return tchecker::make_range(_constraints.begin(), _constraints.end());
     }
+    
+    /*!
+     \brief Checks if a process event is synchronized
+     \param pid : process identifier
+     \param event_id : event identifier
+     \return true if process event (pid, event_id) is synchronized by this synchronization, false otherwise
+     */
+    bool synchronizes(tchecker::process_id_t pid, tchecker::event_id_t event_id) const;
   private:
     tchecker::sync_id_t _id;                                /*!< Identifier */
     std::vector<tchecker::sync_constraint_t> _constraints;  /*!< Sync constraints */
