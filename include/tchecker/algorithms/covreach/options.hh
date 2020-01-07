@@ -89,9 +89,8 @@ namespace tchecker {
        \brief Source set
        */
       enum source_set_t {
-        SOURCE_SET_ALL,          /*!< All outgoing transitions */
-        SOURCE_SET_GL_STRICT,    /*!< Round-robin for global/local systems where either 1 process move or all processes move */
-        SOURCE_SET_GL_LARGE,     /*!< Round-robin for global/local systems where all processes above current rank move */
+        SOURCE_SET_ALL,    /*!< All outgoing transitions */
+        SOURCE_SET_GL,     /*!< Round-robin POR for global/local systems */
       };
       
       /*!
