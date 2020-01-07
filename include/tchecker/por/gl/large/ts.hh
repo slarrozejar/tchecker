@@ -13,9 +13,12 @@
 #include <tuple>
 #include <type_traits>
 
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>
+
 #include "tchecker/basictypes.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
+#include "tchecker/por/synchronizable.hh"
 #include "tchecker/system/static_analysis.hh"
 #include "tchecker/ts/ts.hh"
 
@@ -299,7 +302,7 @@ namespace tchecker {
           template <class ... ARGS>
           ts_t(ARGS && ... args)
           : _ts(args...),
-          _location_sync_flag(tchecker::location_synchronisation_flags(_ts.model().system()))
+          _location_next_syncs(tchecker::location_next_syncs(_ts.model().system()))
           {
             if (! tchecker::global_local(_ts.model().system()))
               throw std::invalid_argument("System is not global/local");
@@ -360,6 +363,9 @@ namespace tchecker {
             
             s.rank(0);
             
+            if (! synchronizable(s))
+              return tchecker::STATE_POR_REMOVED;
+            
             return tchecker::STATE_OK;
           }
           
@@ -406,33 +412,25 @@ namespace tchecker {
             
             s.rank(vedge_pid);
             
-            if (! global_below_rank(s))
+            if (! synchronizable(s))
               return tchecker::STATE_POR_REMOVED;
             
             return tchecker::STATE_OK;
           }
         private:
           /*!
-           \brief Optimize POR
+           \brief Checks can lead to a global action
            \param s : state
-           \return true if all processes below s.rank() have a global transition, false otherwise
+           \return true if all processes can reach a common global action from s, false otherwise
            */
-          bool global_below_rank(STATE const & s) const
+          bool synchronizable(STATE const & s) const
           {
-            tchecker::process_id_t const srank = s.rank();
-
-            if (srank == tchecker::por::gl::large::details::global)
-              return true;
-            
-            auto const & vloc = s.vloc();
-            for (tchecker::process_id_t pid = 0; pid < srank; ++pid)
-              if (! _location_sync_flag.has_synchronized_event(vloc[pid]->id()))
-                return false;
-            return true;
+            tchecker::process_id_t rank = (s.rank() == tchecker::por::gl::large::details::global ? 0 : s.rank());
+            return tchecker::por::synchronizable(s.vloc(), rank, _location_next_syncs);
           }
           
-          TS _ts;                                                   /*!< Underlying transition system */
-          tchecker::location_sync_flag_t const _location_sync_flag; /*!< Synchronized event flag for locations */
+          TS _ts;                                                      /*!< Underlying transition system */
+          tchecker::location_next_syncs_t const _location_next_syncs;  /*!< Next synchronisations */
         };
         
         
