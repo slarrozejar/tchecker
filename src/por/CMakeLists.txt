@@ -8,5 +8,6 @@ set(POR_SRC
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/gl/ts.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/output.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/state.hh
-    ${TCHECKER_INCLUDE_DIR}/tchecker/por/synchronizable.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/synchronizable.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/ts.hh
 PARENT_SCOPE)

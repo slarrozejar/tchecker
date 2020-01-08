@@ -16,8 +16,8 @@ namespace tchecker {
       bool cover_leq(tchecker::por::state_t const & s1, tchecker::por::state_t const & s2)
       {
         // s2 allows more transitions than s1
-        return ((s2.rank() == tchecker::por::gl::details::global) ||
-                ((s1.rank() != tchecker::por::gl::details::global) && (s2.rank() <= s1.rank())));
+        return ((s2.rank() == tchecker::por::gl::global) ||
+                ((s1.rank() != tchecker::por::gl::global) && (s2.rank() <= s1.rank())));
       }
       
     } // end of namespace gl
