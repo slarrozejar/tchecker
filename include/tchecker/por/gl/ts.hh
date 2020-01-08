@@ -208,7 +208,7 @@ namespace tchecker {
                                                       _location_next_syncs);
         }
         
-        tchecker::location_next_syncs_t const _location_next_syncs;  /*!< Next synchronisations */
+        tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
       };
     
  

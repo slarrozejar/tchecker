@@ -6,8 +6,6 @@
 
 # Check parameters
 
-K=10
-
 function usage() {
     echo "Usage: $0 N";
     echo "       N number of processes";
@@ -34,7 +32,7 @@ echo "#clock:size:name
 #   events is a colon-separated list of process@event
 "
 
-echo "system:por_gl_igor
+echo "system:por_gl_abcd
 "
 
 # Events
