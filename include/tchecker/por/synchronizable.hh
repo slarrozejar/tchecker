@@ -56,6 +56,29 @@ namespace tchecker {
       return true;
     }
     
+    
+    
+    /*!
+     \brief Check if a tuple of locations can lead to a communication for a given process
+     \param vloc : tuple of locations
+     \param pid : process identifier
+     \param server_pid : server process identifier
+     \param lns : location next syncs
+     \return true if server process server_pid can do a sync action that reachable for process pid from vloc, false otherwise
+     */
+    template <class VLOC>
+    bool synchronizable_server(VLOC const & vloc,
+                               tchecker::process_id_t pid,
+                               tchecker::process_id_t server_pid,
+                               tchecker::location_next_syncs_t const & lns)
+    {
+      boost::dynamic_bitset<> next_syncs = lns.next_syncs(vloc[server_pid]->id(),
+                                                          tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+      next_syncs &= lns.next_syncs(vloc[pid]->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+      
+      return next_syncs.any();
+    }
+    
   } // end of namespace por
   
 } // end of namespace tchecker

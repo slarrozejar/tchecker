@@ -90,6 +90,7 @@ namespace tchecker {
        */
       enum source_set_t {
         SOURCE_SET_ALL,    /*!< All outgoing transitions */
+        SOURCE_SET_CS,     /*!< Round-robin POR for client/server systems */
         SOURCE_SET_GL,     /*!< Round-robin POR for global/local systems */
       };
       

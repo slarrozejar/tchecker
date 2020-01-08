@@ -330,7 +330,9 @@ namespace tchecker {
     
     void options_t::set_source_set(std::string const & value, tchecker::log_t & log)
     {
-      if (value == "gl")
+      if (value == "cs")
+        _source_set = tchecker::covreach::options_t::SOURCE_SET_CS;
+      else if (value == "gl")
         _source_set = tchecker::covreach::options_t::SOURCE_SET_GL;
       else
         log.error("Unknown source set: " + value);
@@ -391,7 +393,8 @@ namespace tchecker {
       os << "-s (bfs|dfs)     search order (breadth-first search or depth-first search)" << std::endl;
       os << "-S               output stats" << std::endl;
       os << "--source-set ss  where ss is one of:" << std::endl;
-      os << "                 gl      round-robin POR for global/local models" << std::endl;
+      os << "                 cs   round-robin POR for client/server models" << std::endl;
+      os << "                 gl   round-robin POR for global/local models" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;

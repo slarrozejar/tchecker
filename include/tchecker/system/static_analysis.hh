@@ -348,6 +348,51 @@ namespace tchecker {
     return true;
   }
   
+  
+  
+  
+  /*!
+   \brief Checks if s system is client/server
+   \tparam LOC : type of locations
+   \tparam EDGE : type of edges
+   \param system : a system of processes
+   \param server_pid : process ID of server (set by function call)
+   \return true if every edge in system involves either a single process or two processes, and there is one process (the server)
+   that is involved in every edge with two processes, false otherwise
+   \post server_pid is the identifier of the server process if the system is client/server
+   */
+  template <class LOC, class EDGE>
+  bool client_server(tchecker::system_t<LOC, EDGE> const & system, tchecker::process_id_t & server_pid)
+  {
+    std::size_t const processes_count = system.processes_count();
+    boost::dynamic_bitset<> common_processes(processes_count);
+    common_processes.set();
+    
+    for (tchecker::synchronization_t const & sync : system.synchronizations()) {
+      std::size_t size = 0;
+      boost::dynamic_bitset<> sync_processes(processes_count, 0);
+      
+      for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints()) {
+        if (constr.strength() != tchecker::SYNC_STRONG)
+          return false;
+        ++size;
+        sync_processes[constr.pid()] = 1;
+      }
+      
+      if (size != 2)
+        return false;
+      
+      common_processes &= sync_processes;
+    }
+    
+    if (common_processes.count() != 1)
+      return false;
+    
+    server_pid = common_processes.find_first();
+    
+    return true;
+  }
+  
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
