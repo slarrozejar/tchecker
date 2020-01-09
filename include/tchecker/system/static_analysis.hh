@@ -246,6 +246,67 @@ namespace tchecker {
   
   
   /*!
+   \brief Compute locations next global synchronizations
+   \tparam LOC : type of locations
+   \tparam EDGE : type of edges
+   \param system : a system of processes
+   \return Map that indicates for each location which global synchronisation can be activated in the location, and which global synchronisations
+   are reachable through a (potentially empty) sequence of asynchronous or partially synchronized transitions.
+   */
+  template <class LOC, class EDGE>
+  tchecker::location_next_syncs_t location_next_global_syncs(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    tchecker::process_id_t const processes_count = system.processes_count();
+    
+    tchecker::location_next_syncs_t map(system.locations_count(), system.synchronizations_count());
+    
+    // Location next global syncs
+    for (auto const * edge : system.edges())
+      for (auto const & sync : system.synchronizations())
+        if (sync.synchronizes(edge->pid(), edge->event_id()) && (sync.size() == processes_count))
+          map.add_next_sync(sync.id(), edge->src()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    // Copy to reachable next global syncs
+    tchecker::loc_id_t const locations_count = system.locations_count();
+    for (tchecker::loc_id_t loc_id = 0; loc_id < locations_count; ++loc_id)
+      map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE)
+      = map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    // Checks if a process event (pid, event_id) only appears in global synchronizations or is asynchronous
+    auto only_globally_sync = [&] (tchecker::process_id_t pid, tchecker::event_id_t event_id) -> bool {
+      if (system.asynchronous(pid, event_id))
+        return false;
+      for (auto const & sync : system.synchronizations())
+        if (sync.synchronizes(pid, event_id) && (sync.size() < processes_count))
+          return false;
+      return true;
+    };
+    
+    // Propagate reachable next global syncs along edges that do not only appear on global synchronisations
+    bool fixed_point = true;
+    do {
+      fixed_point = true;
+      for (auto const * edge : system.edges())
+        if (! only_globally_sync(edge->pid(), edge->event_id())) {
+          boost::dynamic_bitset<> const & tgt_syncs
+          = map.next_syncs(edge->tgt()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+          boost::dynamic_bitset<> & src_syncs
+          = map.next_syncs(edge->src()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+          if (! tgt_syncs.is_subset_of(src_syncs)) {
+            fixed_point = false;
+            src_syncs |= tgt_syncs;
+          }
+        }
+    }
+    while ( ! fixed_point );
+        
+    return map;
+  }
+  
+  
+  
+  
+  /*!
    \brief Checks if a system is global/local
    \tparam LOC : type of locations
    \tparam EDGE : type of edges

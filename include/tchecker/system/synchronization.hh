@@ -199,6 +199,15 @@ namespace tchecker {
     }
     
     /*!
+     \brief Accessor
+     \return size of the synchronization vector (number of synchronization constraints)
+     */
+    inline std::size_t size() const
+    {
+      return _constraints.size();
+    }
+    
+    /*!
      \brief Checks if a process event is synchronized
      \param pid : process identifier
      \param event_id : event identifier
