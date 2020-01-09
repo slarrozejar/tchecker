@@ -8,10 +8,12 @@
 #ifndef TCHECKER_POR_GL_TS_HH
 #define TCHECKER_POR_GL_TS_HH
 
+#include <algorithm>
 #include <limits>
 #include <type_traits>
 
 #include "tchecker/basictypes.hh"
+#include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
 #include "tchecker/por/synchronizable.hh"
 #include "tchecker/por/ts.hh"
@@ -21,6 +23,8 @@
  \file ts.hh
  \brief Transition system with POR for global/local systems
  */
+
+#define PARTIAL_SYNCS_ALLOWED  // allows partial synchronizations in global/local systems
 
 namespace tchecker {
   
@@ -62,6 +66,23 @@ namespace tchecker {
       
       
       /*!
+       \brief Compute the size of a vedge
+       \param vedge : a vedge
+       \return number of transitions in vedge
+       */
+      template <class VEDGE>
+      std::size_t vedge_size(VEDGE const & vedge)
+      {
+        std::size_t vedge_size = 0;
+        auto end = vedge.end();
+        for (auto it = vedge.begin(); it != end; ++it)
+          ++vedge_size;
+        return vedge_size;
+      }
+      
+      
+      
+      /*!
        \class source_set_t
        \brief Source set for global/local systems
        \tparam STATE : type of state, should derive from tchecker::por::state_t
@@ -84,7 +105,16 @@ namespace tchecker {
         template <class VEDGE>
         bool operator() (STATE const & s, VEDGE const & vedge)
         {
+#ifdef PARTIAL_SYNCS_ALLOWED
+          // Partial syncs are considered local and allowed if all processes above s.rank()
+          if (s.rank() == tchecker::por::gl::global)
+            return true;
+          std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
+          return ((tchecker::por::gl::vedge_size(vedge) == s.vloc().size())                    // global
+                  || (* std::min_element(vedge_pids.begin(), vedge_pids.end())) >= s.rank());
+#else
           return (s.rank() == tchecker::por::gl::global) || (tchecker::por::gl::vedge_pid(vedge) >= s.rank());
+#endif // PARTIAL_SYNCS_ALLOWED
         }
       };
       
@@ -106,16 +136,22 @@ namespace tchecker {
         /*!
          \brief Constructor
          \param model : a model
-         \throw std::invalid_argument : if model is not global/local
+         \throw std::invalid_argument : if model has partial synchronizations (only if compiled with LOCAL_ONE_PROCESS)
          \note TS should have a constructor TS(MODEL &)
          */
         template <class MODEL>
         ts_t(MODEL & model)
         : base_ts_t(model),
+#ifdef PARTIAL_SYNCS_ALLOWED
+        _location_next_syncs(tchecker::location_next_global_syncs(model.system()))
+#else
         _location_next_syncs(tchecker::location_next_syncs(model.system()))
+#endif // PARTIAL_SYNCS_ALLOWED
         {
+#ifndef PARTIAL_SYNCS_ALLOWED
           if (! tchecker::global_local(model.system()))
             throw std::invalid_argument("System is not global/local");
+#endif // PARTIAL_SYNCS_ALLOWED
         }
         
         /*!
@@ -185,8 +221,13 @@ namespace tchecker {
           enum tchecker::state_status_t status = base_ts_t::next(s, t, v);
           if (status != tchecker::STATE_OK)
             return status;
-          
+         
+#ifdef PARTIAL_SYNCS_ALLOWED
+          std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(v);
+          s.rank(* std::min_element(vedge_pids.begin(), vedge_pids.end()));
+#else
           s.rank(tchecker::por::gl::vedge_pid(v));
+#endif // PARTIAL_SYNCS_ALLOWED
           
           if (! synchronizable(s))
             return tchecker::STATE_POR_DISABLED;
