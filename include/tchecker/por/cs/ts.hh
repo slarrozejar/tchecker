@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include "tchecker/basictypes.hh"
+#include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
 #include "tchecker/por/synchronizable.hh"
 #include "tchecker/por/ts.hh"
@@ -32,27 +33,8 @@ namespace tchecker {
       /*! Rank value of client-server communications */
       constexpr tchecker::process_id_t const communication = std::numeric_limits<tchecker::process_id_t>::max();
       
-      
-      
-      
-      /*!
-       \brief Compute  processes involved in a vedge
-       \param vedge : a vedge
-       \return the identifiers of the processes involved in vedge
-       */
-      template <class VEDGE>
-      std::set<tchecker::process_id_t> vedge_pids(VEDGE const & vedge)
-      {
-        std::set<tchecker::process_id_t> pids;
-        
-        auto end = vedge.end();
-        for (auto it = vedge.begin(); it != end; ++it)
-          pids.insert((*it)->pid());
-        
-        return pids;
-      }
-      
-      
+    
+    
       
       /*!
        \class source_set_t
@@ -79,7 +61,7 @@ namespace tchecker {
         bool operator() (STATE const & s, VEDGE const & vedge)
         {
           return (s.rank() == tchecker::por::cs::communication) ||
-          (tchecker::por::cs::vedge_pids(vedge).count(s.rank()) >= 1);
+          (tchecker::vedge_pids(vedge).count(s.rank()) >= 1);
         }
       };
       
@@ -181,7 +163,7 @@ namespace tchecker {
           if (status != tchecker::STATE_OK)
             return status;
           
-          std::set<tchecker::process_id_t> vedge_pids = tchecker::por::cs::vedge_pids(v);
+          std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(v);
           if (vedge_pids.size() == 2)
             s.rank(tchecker::por::cs::communication);
           else

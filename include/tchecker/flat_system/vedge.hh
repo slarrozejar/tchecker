@@ -8,6 +8,9 @@
 #ifndef TCHECKER_VEDGE_HH
 #define TCHECKER_VEDGE_HH
 
+#include <set>
+
+#include "tchecker/basictypes.hh"
 #include "tchecker/utils/iterator.hh"
 
 /*!
@@ -155,6 +158,23 @@ namespace tchecker {
     EDGE const * _edge;   /*!< Single edge in vedge (if not nullptr) */
     EDGE_ITERATOR _it;    /*!< Iterator (if _edge is nullptr) */
   };
+  
+  
+  
+  
+  /*!
+   \brief Compute  processes involved in a vedge
+   \param vedge : a vedge (a range of tchecker::vedge_iterator_t)
+   \return the identifiers of the processes involved in vedge
+   */
+  template <class VEDGE>
+  std::set<tchecker::process_id_t> vedge_pids(VEDGE const & vedge)
+  {
+    std::set<tchecker::process_id_t> pids;
+    for (auto const * edge : vedge)
+      pids.insert(edge->pid());
+    return pids;
+  }
   
 } // end of namespace tchecker
 
