@@ -50,28 +50,6 @@ namespace tchecker {
   
   
   
-  /* location_sync_flag_t */
-
-   location_sync_flag_t::location_sync_flag_t(tchecker::loc_id_t locations_count)
-  : _flags(locations_count, 0)
-  {}
-
-
-  void location_sync_flag_t::sync(tchecker::loc_id_t loc_id)
-  {
-    assert(loc_id < _flags.size());
-    _flags[loc_id] = 1;
-  }
-  
-
-  bool location_sync_flag_t::has_synchronized_event(tchecker::loc_id_t loc_id) const
-  {
-    assert(loc_id < _flags.size());
-    return (_flags[loc_id] == 1);
-  }
-  
-  
-  
   
   /* location_next_syncs_t */
   
