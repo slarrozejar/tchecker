@@ -151,7 +151,8 @@ namespace tchecker {
           if (status != tchecker::STATE_OK)
             return status;
           translate_invariant(invariant);
-          return _async_zone_semantics.initialize(offset_zone, tchecker::ta::delay_allowed(vloc), _offset_src_invariant, vloc);
+          return _async_zone_semantics.initialize(offset_zone, tchecker::ta::delay_allowed(vloc),
+                                                  _offset_src_invariant, vloc);
         }
         
         /*!
@@ -242,7 +243,8 @@ namespace tchecker {
           bool tgt_delay_allowed = tchecker::ta::delay_allowed(vloc);
           translate_guard_reset_invariants(src_invariant, guard, clkreset, tgt_invariant);
           reference_clock_synchronization(vedge, _offset_guard);
-          return _async_zone_semantics.next(offset_zone, src_delay_allowed, _offset_src_invariant, _offset_guard, _offset_clkreset,
+          return _async_zone_semantics.next(offset_zone, src_delay_allowed, _offset_src_invariant,
+                                            _offset_guard, _offset_clkreset,
                                             tgt_delay_allowed, _offset_tgt_invariant, vloc);
         }
         
@@ -278,8 +280,10 @@ namespace tchecker {
           bool tgt_delay_allowed = tchecker::ta::delay_allowed(vloc);
           translate_guard_reset_invariants(src_invariant, guard, clkreset, tgt_invariant);
           reference_clock_synchronization(vedge, _offset_guard);
-          return _async_zone_semantics.next(offset_zone, sync_zone, src_delay_allowed, _offset_src_invariant, _offset_guard,
-                                            _offset_clkreset, tgt_delay_allowed, _offset_tgt_invariant, vloc);
+          return _async_zone_semantics.next(offset_zone, sync_zone, src_delay_allowed, _offset_src_invariant,
+                                            _offset_guard, _offset_clkreset, tgt_delay_allowed,
+                                            _offset_tgt_invariant, vloc);
+                                            
         }
         
         /*!
@@ -344,12 +348,12 @@ namespace tchecker {
           for (auto & c : constraints) {
             if ((c.id1() == tchecker::zero_clock_id) && (c.id2() == tchecker::zero_clock_id))
               throw std::invalid_argument("cannot translate clock constraint of the form 0-0 <= c");
-            offset_id1
-            = (c.id1() == tchecker::zero_clock_id ? tchecker::offset_dbm::reference_id(c.id2(), _refcount, _refmap)
-               : tchecker::offset_dbm::offset_id(c.id1(), _refcount));
-            offset_id2
-            = (c.id2() == tchecker::zero_clock_id ? tchecker::offset_dbm::reference_id(c.id1(), _refcount, _refmap)
-               : tchecker::offset_dbm::offset_id(c.id2(), _refcount));
+            offset_id1 = (c.id1() == tchecker::zero_clock_id
+                          ? tchecker::offset_dbm::reference_id(c.id2(), _refcount, _refmap)
+                          : tchecker::offset_dbm::offset_id(c.id1(), _refcount));
+            offset_id2 = (c.id2() == tchecker::zero_clock_id
+                          ? tchecker::offset_dbm::reference_id(c.id1(), _refcount, _refmap)
+                          : tchecker::offset_dbm::offset_id(c.id2(), _refcount));
             offset_constraints.emplace_back(offset_id1, offset_id2, c.comparator(), c.value());
           }
         }
@@ -363,13 +367,15 @@ namespace tchecker {
          \post every clock reset in resets has been translated into an offset clock reset in offset_resets
          \throw std::invalid_argument : if resets cannot be translated (e.g. no-zero reset)
          */
-        void translate(tchecker::clock_reset_container_t const & resets, tchecker::clock_reset_container_t & offset_resets)
+        void translate(tchecker::clock_reset_container_t const & resets,
+                       tchecker::clock_reset_container_t & offset_resets)
         {
           for (auto & r : resets) {
             if (! r.reset_to_zero())
               throw std::invalid_argument("cannot translate non-zero clock resets");
             tchecker::clock_id_t offset_left = tchecker::offset_dbm::offset_id(r.left_id(), _refcount);
-            tchecker::clock_id_t offset_right = tchecker::offset_dbm::reference_id(r.left_id(), _refcount, _refmap);
+            tchecker::clock_id_t offset_right = tchecker::offset_dbm::reference_id(r.left_id(), _refcount,
+                                                                                   _refmap);
             offset_resets.emplace_back(offset_left, offset_right, r.value());
           }
         }
