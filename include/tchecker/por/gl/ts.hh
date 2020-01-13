@@ -224,12 +224,15 @@ namespace tchecker {
          
 #ifdef PARTIAL_SYNCS_ALLOWED
           std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(v);
-          s.rank(* std::min_element(vedge_pids.begin(), vedge_pids.end()));
+          if (vedge_pids.size() == s.vloc().size())
+            s.rank(tchecker::por::gl::global);
+          else
+            s.rank(* std::min_element(vedge_pids.begin(), vedge_pids.end()));
 #else
           s.rank(tchecker::por::gl::vedge_pid(v));
 #endif // PARTIAL_SYNCS_ALLOWED
           
-          if (! synchronizable(s))
+          if ((s.rank() != tchecker::por::gl::global) && (! synchronizable(s)))
             return tchecker::STATE_POR_DISABLED;
           
           return tchecker::STATE_OK;
