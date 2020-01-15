@@ -65,7 +65,8 @@ TEST_CASE( "is_positive, structural test for offset DBMs", "[offset_dbm]" ) {
         OFFSET_DBM(i,j) = tchecker::dbm::LT_INFINITY;
       OFFSET_DBM(i,i) = tchecker::dbm::LE_ZERO;
       if (i >= refcount)
-        OFFSET_DBM(refmap[i], i) = tchecker::dbm::db(tchecker::dbm::LE, (tchecker::integer_t)refcount - (tchecker::integer_t)i);
+        OFFSET_DBM(refmap[i], i) = tchecker::dbm::db(tchecker::dbm::LE,
+                                                     (tchecker::integer_t)refcount - (tchecker::integer_t)i);
     }
     
     REQUIRE(tchecker::offset_dbm::is_positive(offset_dbm, offset_dim, refcount, refmap));
@@ -134,11 +135,48 @@ TEST_CASE( "is_universal_positive, structural test for offset DBMs", "[offset_db
         OFFSET_DBM(i,j) = tchecker::dbm::LT_INFINITY;
       OFFSET_DBM(i,i) = tchecker::dbm::LE_ZERO;
       if (i >= refcount)
-        OFFSET_DBM(refmap[i], i) = tchecker::dbm::db(tchecker::dbm::LE, (tchecker::integer_t)refcount-(tchecker::integer_t)i);
+        OFFSET_DBM(refmap[i], i) = tchecker::dbm::db(tchecker::dbm::LE,
+                                                     (tchecker::integer_t)refcount-(tchecker::integer_t)i);
     }
     OFFSET_DBM(refcount, refcount + 1) = tchecker::dbm::db(tchecker::dbm::LT, 4);
     
     REQUIRE_FALSE(tchecker::offset_dbm::is_universal_positive(offset_dbm, offset_dim, refcount, refmap));
+  }
+}
+
+
+
+TEST_CASE( "is_spread_bounded, structural test for offset DBMs", "[offset_dbm]" ) {
+
+  tchecker::clock_id_t const dim = 3;
+  tchecker::clock_id_t const refcount = 3;
+  tchecker::clock_id_t const offset_dim = dim - 1 + refcount;
+  tchecker::clock_id_t const refmap[] = {0, 1, 2, 0, 1};
+  
+  tchecker::clock_id_t const r0 = 0;
+  tchecker::clock_id_t const r1 = 1;
+  tchecker::clock_id_t const r2 = 2;
+  
+  tchecker::dbm::db_t offset_dbm[offset_dim * offset_dim];
+  tchecker::offset_dbm::universal_positive(offset_dbm, offset_dim, refcount, refmap);
+  OFFSET_DBM(r0,r1) = tchecker::dbm::LE_ZERO;
+  OFFSET_DBM(r0,r2) = tchecker::dbm::db(tchecker::dbm::LE, -1);
+  OFFSET_DBM(r1,r0) = tchecker::dbm::db(tchecker::dbm::LE, 1);
+  OFFSET_DBM(r1,r2) = tchecker::dbm::db(tchecker::dbm::LE, -1);
+  OFFSET_DBM(r2,r0) = tchecker::dbm::db(tchecker::dbm::LE, 3);
+  OFFSET_DBM(r2,r1) = tchecker::dbm::db(tchecker::dbm::LE, 3);
+  
+  auto tight = tchecker::offset_dbm::tighten(offset_dbm, offset_dim);
+  REQUIRE(tight == tchecker::dbm::NON_EMPTY);
+  
+  SECTION( "spread bounded offset DBM" ) {
+    tchecker::integer_t const spread = 3;
+    REQUIRE(tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, refcount, spread));
+  }
+  
+  SECTION( "offset DBM that is not spread bounded" ) {
+    tchecker::integer_t const spread = 2;
+    REQUIRE_FALSE(tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, refcount, spread));
   }
 }
 
@@ -168,7 +206,9 @@ TEST_CASE( "is_synchronized, structural test for offset DBMs", "[offset_dbm]" ) 
     tchecker::dbm::db_t offset_dbm[offset_dim * offset_dim];
     for (tchecker::clock_id_t i = 0; i < offset_dim; ++i) {
       for (tchecker::clock_id_t j = 0; j < offset_dim; ++j)
-        OFFSET_DBM(i, j) = ((i < refcount) && (j < refcount) ? tchecker::dbm::LE_ZERO : tchecker::dbm::LT_INFINITY);
+        OFFSET_DBM(i, j) = ((i < refcount) && (j < refcount)
+                            ? tchecker::dbm::LE_ZERO
+                            : tchecker::dbm::LT_INFINITY);
       OFFSET_DBM(i, i) = tchecker::dbm::LE_ZERO;
     }
     
@@ -209,6 +249,117 @@ TEST_CASE( "universal_positive offset DBMs", "[offset_dbm]" ) {
     REQUIRE(tchecker::offset_dbm::is_universal_positive(offset_dbm, offset_dim, refcount, refmap));
   }
   
+}
+
+
+
+TEST_CASE( "bound spread offset DBMs", "[offset_dbm]" ) {
+
+  tchecker::clock_id_t const dim = 3;
+  tchecker::clock_id_t const refcount = 3;
+  tchecker::clock_id_t const offset_dim = dim - 1 + refcount;
+  tchecker::clock_id_t const refmap[] = {0, 1, 2, 0, 1};
+  tchecker::clock_id_t const r0 = 0;
+  tchecker::clock_id_t const r1 = 1;
+  tchecker::clock_id_t const r2 = 2;
+  tchecker::clock_id_t const x = 3;
+  tchecker::clock_id_t const y = 4;
+ 
+  SECTION( "bound spread of universal DBM, dimension refcount" ) {
+    tchecker::dbm::db_t offset_dbm[refcount * refcount];
+    tchecker::offset_dbm::universal_positive(offset_dbm, refcount, refcount, refmap);
+    
+    tchecker::integer_t const spread = 2;
+    auto res = tchecker::offset_dbm::bound_spread(offset_dbm, refcount, refcount, spread);
+    REQUIRE(res == tchecker::dbm::NON_EMPTY);
+    REQUIRE(tchecker::offset_dbm::is_spread_bounded(offset_dbm, refcount, refcount, spread));
+    
+    tchecker::dbm::db_t le_spread = tchecker::dbm::db(tchecker::dbm::LE, spread);
+    tchecker::dbm::db_t expected[] =
+    { tchecker::dbm::LE_ZERO, le_spread, le_spread,
+      le_spread, tchecker::dbm::LE_ZERO, le_spread,
+      le_spread, le_spread, tchecker::dbm::LE_ZERO
+    };
+    
+    for (tchecker::clock_id_t r = 0; r < refcount * refcount; ++r)
+      REQUIRE(offset_dbm[r] == expected[r]);
+  }
+  
+  SECTION( "bound spread of non-universal DBM, dimension refcount" ) {
+    tchecker::dbm::db_t offset_dbm[refcount * refcount];
+    tchecker::offset_dbm::universal_positive(offset_dbm, refcount, refcount, refmap);
+    offset_dbm[r0*refcount+r1] = tchecker::dbm::db(tchecker::dbm::LE, -1);
+    offset_dbm[r2*refcount+r1] = tchecker::dbm::db(tchecker::dbm::LE, 3);
+    
+    tchecker::integer_t const spread = 1;
+    auto res = tchecker::offset_dbm::bound_spread(offset_dbm, refcount, refcount, spread);
+    REQUIRE(res == tchecker::dbm::NON_EMPTY);
+    REQUIRE(tchecker::offset_dbm::is_spread_bounded(offset_dbm, refcount, refcount, spread));
+    
+    tchecker::dbm::db_t le_spread = tchecker::dbm::db(tchecker::dbm::LE, spread);
+    tchecker::dbm::db_t expected[] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::db(tchecker::dbm::LE, -1), tchecker::dbm::LE_ZERO,
+      le_spread, tchecker::dbm::LE_ZERO, le_spread,
+      le_spread, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO
+    };
+    
+    for (tchecker::clock_id_t r = 0; r < refcount * refcount; ++r)
+      REQUIRE(offset_dbm[r] == expected[r]);
+  }
+  
+  SECTION( "bound spread makes DBM empty, dimension refcount" ) {
+    tchecker::dbm::db_t offset_dbm[refcount * refcount];
+    tchecker::offset_dbm::universal_positive(offset_dbm, refcount, refcount, refmap);
+    offset_dbm[r0*refcount+r1] = tchecker::dbm::db(tchecker::dbm::LE, -2);
+    offset_dbm[r2*refcount+r1] = tchecker::dbm::db(tchecker::dbm::LE, 2);
+    
+    tchecker::integer_t const spread = 1;
+    auto res = tchecker::offset_dbm::bound_spread(offset_dbm, refcount, refcount, spread);
+    REQUIRE(res == tchecker::dbm::EMPTY);
+  }
+  
+  SECTION( "bound spread of a DBM, dimension > refcount" ) {
+    tchecker::dbm::db_t offset_dbm[offset_dim * offset_dim];
+    tchecker::offset_dbm::universal_positive(offset_dbm, offset_dim, refcount, refmap);
+    OFFSET_DBM(x,r1) = tchecker::dbm::db(tchecker::dbm::LE, 3);
+    OFFSET_DBM(r0,x) = tchecker::dbm::db(tchecker::dbm::LE, 1);
+    OFFSET_DBM(x,y) = tchecker::dbm::LE_ZERO;
+    OFFSET_DBM(y,x) = tchecker::dbm::LE_ZERO;
+    auto tighten = tchecker::offset_dbm::tighten(offset_dbm, offset_dim);
+    REQUIRE(tighten == tchecker::dbm::NON_EMPTY);
+    
+    tchecker::integer_t const spread = 1;
+    auto res = tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, refcount, spread);
+    REQUIRE(res == tchecker::dbm::NON_EMPTY);
+    REQUIRE(tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, refcount, spread));
+    
+    tchecker::dbm::db_t le_1 = tchecker::dbm::db(tchecker::dbm::LE, 1);
+    tchecker::dbm::db_t le_3 = tchecker::dbm::db(tchecker::dbm::LE, 3);
+    tchecker::dbm::db_t le_4 = tchecker::dbm::db(tchecker::dbm::LE, 4);
+    tchecker::dbm::db_t expected[] =
+    { tchecker::dbm::LE_ZERO, le_1, le_1, le_1, le_1,
+      le_1, tchecker::dbm::LE_ZERO, le_1, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      le_1, le_1, tchecker::dbm::LE_ZERO, le_1, le_1,
+      le_4, le_3, le_4, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      le_4, le_3, le_4, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO
+    };
+    
+    for (tchecker::clock_id_t r = 0; r < offset_dim * offset_dim; ++r)
+      REQUIRE(offset_dbm[r] == expected[r]);
+  }
+  
+  SECTION( "bound spread makes DBM empty, dimension > refcount" ) {
+    tchecker::dbm::db_t offset_dbm[offset_dim * offset_dim];
+    tchecker::offset_dbm::universal_positive(offset_dbm, offset_dim, refcount, refmap);
+    OFFSET_DBM(y,r1) = tchecker::dbm::db(tchecker::dbm::LE, 1);
+    OFFSET_DBM(x,y) = tchecker::dbm::db(tchecker::dbm::LT, -7);
+    auto tighten = tchecker::offset_dbm::tighten(offset_dbm, offset_dim);
+    REQUIRE(tighten == tchecker::dbm::NON_EMPTY);
+    
+    tchecker::integer_t const spread = 4;
+    auto res = tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, refcount, spread);
+    REQUIRE(res == tchecker::dbm::EMPTY);
+  }
 }
 
 

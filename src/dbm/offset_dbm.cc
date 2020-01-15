@@ -120,6 +120,25 @@ namespace tchecker {
     }
     
     
+    bool is_spread_bounded(tchecker::dbm::db_t const * offset_dbm, tchecker::clock_id_t offset_dim,
+                           tchecker::clock_id_t refcount, tchecker::integer_t spread)
+    {
+      assert(offset_dbm != nullptr);
+      assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
+      assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
+      assert(1 <= refcount);
+      assert(refcount <= offset_dim);
+      assert(0 <= spread);
+      
+      tchecker::dbm::db_t le_spread = tchecker::dbm::db(tchecker::dbm::LE, spread);
+      for (tchecker::clock_id_t r1 = 0; r1 < refcount; ++r1)
+        for (tchecker::clock_id_t r2 = 0; r2 < refcount; ++r2)
+          if (OFFSET_DBM(r1, r2) > le_spread)
+            return false;
+      return true;
+    }
+    
+    
     bool is_synchronized(tchecker::dbm::db_t const * offset_dbm, tchecker::clock_id_t offset_dim,
                          tchecker::clock_id_t refcount)
     {
@@ -129,12 +148,7 @@ namespace tchecker {
       assert(1 <= refcount);
       assert(refcount <= offset_dim);
       
-      for (tchecker::clock_id_t i = 0; i < refcount - 1; ++i) {
-        tchecker::clock_id_t j = i+1;
-        if ((OFFSET_DBM(i,j) != tchecker::dbm::LE_ZERO) || (OFFSET_DBM(j,i) != tchecker::dbm::LE_ZERO))
-          return false;
-      }
-      return true;
+      return tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, refcount, 0);
     }
     
     
@@ -244,20 +258,22 @@ namespace tchecker {
     }
     
     
-    enum tchecker::dbm::status_t synchronize(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
-                                             tchecker::clock_id_t refcount)
+    enum tchecker::dbm::status_t bound_spread(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
+                                              tchecker::clock_id_t refcount, tchecker::integer_t spread)
     {
       assert(offset_dbm != nullptr);
       assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
       assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
       assert(1 <= refcount);
       assert(refcount <= offset_dim);
+      assert(0 <= spread);
       
-      for (tchecker::clock_id_t x = 0; x < refcount - 1; ++x) {
-        OFFSET_DBM(x, x+1) = tchecker::dbm::min(OFFSET_DBM(x, x+1), tchecker::dbm::LE_ZERO);
-        OFFSET_DBM(x+1, x) = tchecker::dbm::min(OFFSET_DBM(x+1, x), tchecker::dbm::LE_ZERO);
-      }
+      tchecker::dbm::db_t le_spread = tchecker::dbm::db(tchecker::dbm::LE, spread);
       
+      for (tchecker::clock_id_t r1 = 0; r1 < refcount; ++r1)
+        for (tchecker::clock_id_t r2 = 0; r2 < refcount; ++r2)
+          OFFSET_DBM(r1, r2) = tchecker::dbm::min(OFFSET_DBM(r1, r2), le_spread);
+
       // Optimized tightening: Floyd-Warshall algorithm w.r.t. reference clocks
       for (tchecker::clock_id_t r = 0; r < refcount; ++r) {
         for (tchecker::clock_id_t x = 0; x < offset_dim; ++x) {
@@ -283,6 +299,19 @@ namespace tchecker {
       assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
       
       return tchecker::dbm::NON_EMPTY;
+    }
+    
+    
+    enum tchecker::dbm::status_t synchronize(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
+                                             tchecker::clock_id_t refcount)
+    {
+      assert(offset_dbm != nullptr);
+      assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
+      assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
+      assert(1 <= refcount);
+      assert(refcount <= offset_dim);
+      
+      return tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, refcount, 0);
     }
     
     

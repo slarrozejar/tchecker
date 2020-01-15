@@ -201,6 +201,24 @@ namespace tchecker {
     bool is_tight(tchecker::dbm::db_t const * offset_dbm, tchecker::clock_id_t offset_dim);
     
     /*!
+     \brief Spread bounded predicate
+     \param offset_dbm : an offset DBM
+     \param offset_dim : dimension of offset_dbm
+     \param refcount : number of reference clocks
+     \param spread : bound on spread between reference clocks
+     \pre offset_dbm is not nullptr (checked by assertion)
+     offset_dbm is a offset_dim*offset_dim array of difference bounds
+     offset_dbm is consistent (checked by assertion)
+     offset_dbm is tight (checked by assertion)
+     1 <= refcount <= offset_dim (checked by assertion)
+     the first refcount clocks of offset_dbm are reference clocks.
+     spread >= 0 (checked by assertion)
+     \return true if the spread between reference clocks is bounded by spread, false otherwise
+     */
+    bool is_spread_bounded(tchecker::dbm::db_t const * offset_dbm, tchecker::clock_id_t offset_dim,
+                           tchecker::clock_id_t refcount, tchecker::integer_t spread);
+    
+    /*!
      \brief Synchronized predicate
      \param offset_dbm : an offset DBM
      \param offset_dim : dimension of offset_dbm
@@ -310,6 +328,26 @@ namespace tchecker {
     enum tchecker::dbm::status_t
     constrain(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim, tchecker::clock_id_t x,
               tchecker::clock_id_t y, tchecker::dbm::comparator_t cmp, tchecker::integer_t value);
+    
+    /*!
+     \brief Restriction to spread bounded valuations
+     \param offset_dbm : an offset DBM
+     \param offset_dim : dimension of offset_dbm
+     \param refcount : number of reference clocks
+     \param spread : bound on spread between reference clocks
+     \pre offset_dbm is not nullptr (checked by assertion)
+     offset_dbm is a offset_dim*offset_dim array of difference bounds
+     offset_dbm is consistent (checked by assertion)
+     offset_dbm is tight (checked by assertion)
+     1 <= refcount <= offset_dim (checked by assertion)
+     0 <= spread (checked by assertion)
+     (<=,spread) should be representable as a tchecker::dbm::db_t value
+     \post offset_dbm has been restricted to its subset of valuations with spread bounded by spread
+     \return tchecker::dbm::EMPTY if spread-bounded offset_dbm is empty, tchecker::dbm::NON_EMPTY otherwise
+     \throw std::invalid_argument : if (<=,spread) cannot be represented (see tchecker::dbm::db for details)
+     */
+    enum tchecker::dbm::status_t bound_spread(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
+                                              tchecker::clock_id_t refcount, tchecker::integer_t spread);
     
     /*!
      \brief Restriction to synchronized valuations
