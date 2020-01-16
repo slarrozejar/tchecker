@@ -16,4 +16,5 @@
 #include "test-offset_clock_variables.hh"
 #include "test-offset_dbm.hh"
 #include "test-ordering.hh"
+#include "test-process-synchronizations.hh"
 #include "test-variables-access.hh"

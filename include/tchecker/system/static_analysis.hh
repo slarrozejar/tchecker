@@ -8,6 +8,7 @@
 #ifndef TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
 #define TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
 
+#include <set>
 #include <vector>
 
 #include <boost/container/flat_set.hpp>
@@ -301,6 +302,73 @@ namespace tchecker {
     while ( ! fixed_point );
         
     return map;
+  }
+  
+  
+  
+  
+  /*!
+   \class process_synchronizations_t
+   \brief Set of process synchronizations. A process synchronization is a set of processes involved in a synchronization vector
+   */
+  class process_synchronizations_t {
+  public:
+    using process_synchronization_t = std::set<tchecker::process_id_t>;
+    using process_synchronization_set_t = std::set<process_synchronization_t>;
+
+    /*!
+     \brief Add process synchronization
+     \param sync : synchronization vector
+     \post The set of processes involved in sync has been added
+     */
+    void add(tchecker::synchronization_t const & sync);
+    
+    /*!
+     \class const_iterator_t
+     \brief Iterator on synchronizations
+     */
+    class const_iterator_t : public process_synchronization_set_t::const_iterator {
+    public:
+      using process_synchronization_set_t::const_iterator::const_iterator;
+      
+      /*!
+       \brief Constructor
+       */
+      const_iterator_t
+      (tchecker::process_synchronizations_t::process_synchronization_set_t::const_iterator const &);
+      
+      /*!
+       \brief Dereference iterator
+       \pre this is not past-the-end
+       \return range of PIDs in this process synchronization
+       */
+      tchecker::range_t<process_synchronization_t::const_iterator> operator* () const;
+    };
+    
+    /*!
+     \brief Accessor
+     \return range of iterators on process synchronization
+     */
+    tchecker::range_t<const_iterator_t> process_synchronizations() const;
+  private:
+    process_synchronization_set_t _process_synchronization_set; /*!< Set of process synchronizations */
+  };
+  
+  
+  
+  
+  /*!
+   \brief Compute process synchronizations
+   \param system : a system of processes
+   \return process synchronizations in system
+   */
+  template <class LOC, class EDGE>
+  tchecker::process_synchronizations_t process_synchronizations(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    process_synchronizations_t psyncs;
+    for (tchecker::synchronization_t const & sync : system.synchronizations())
+      psyncs.add(sync);
+    return psyncs;
   }
   
   
