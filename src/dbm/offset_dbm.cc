@@ -349,8 +349,33 @@ namespace tchecker {
       assert(1 <= refcount);
       assert(refcount <= offset_dim);
       
-      // RX - X < inf for all X and RX (including X=RY)
+      // X - R < inf for all X and R (including X=R')
       for (tchecker::clock_id_t r = 0; r < refcount; ++r) {
+        for (tchecker::clock_id_t i = 0; i < offset_dim; ++i)
+          OFFSET_DBM(i,r) = tchecker::dbm::LT_INFINITY;
+        OFFSET_DBM(r,r) = tchecker::dbm::LE_ZERO;
+      }
+      
+      assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
+      assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
+    }
+    
+    
+    void asynchronous_open_up(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
+                              tchecker::clock_id_t refcount, boost::dynamic_bitset<> const & delay_allowed)
+    {
+      assert(offset_dbm != nullptr);
+      assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
+      assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
+      assert(1 <= refcount);
+      assert(refcount <= offset_dim);
+      assert(refcount == delay_allowed.size());
+      
+      // X - R < inf for all X and R (including X=R')
+      for (tchecker::clock_id_t r = 0; r < refcount; ++r) {
+        if (! delay_allowed[r])
+          continue;
+        
         for (tchecker::clock_id_t i = 0; i < offset_dim; ++i)
           OFFSET_DBM(i,r) = tchecker::dbm::LT_INFINITY;
         OFFSET_DBM(r,r) = tchecker::dbm::LE_ZERO;

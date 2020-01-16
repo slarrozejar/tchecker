@@ -8,6 +8,8 @@
 #ifndef TCHECKER_OFFSET_DBM_HH
 #define TCHECKER_OFFSET_DBM_HH
 
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>
+
 #include "tchecker/basictypes.hh"
 #include "tchecker/dbm/db.hh"
 #include "tchecker/dbm/dbm.hh"
@@ -398,12 +400,32 @@ namespace tchecker {
      offset_dbm is tight (checked by assertion)
      1 <= refcount <= offset_dim (checked by assertion)
      the first refcount variables of offset_dbm are reference clocks.
-     \post reference clocks in offset_dbm have no upper bound and are not related to each other
-     (i.e. r1 - r2 < inf, for any two reference clocks r1 and r2, r1 != r2).
+     \post reference clocks in offset_dbm are unbounded (i.e. x-r<inf for every reference clock r and any variable x, including x=r')
      offset_dbm is tight.
      */
     void asynchronous_open_up(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
                               tchecker::clock_id_t refcount);
+    
+    /*!
+     \brief Asynchronous open-up (delay)
+     \param offset_dbm : an offset DBM
+     \param offset_dim : dimension of offset_dbm
+     \param refcount : number of reference clocks
+     \param delay_allowed : reference clocks allowed to delay
+     \pre offset_dbm is not nullptr (checked by assertion)
+     offset_dbm is a offset_dim*offset_dim array of difference bounds
+     offset_dbm is consistent (checked by assertion)
+     offset_dbm is tight (checked by assertion)
+     1 <= refcount <= offset_dim (checked by assertion)
+     the first refcount variables of offset_dbm are reference clocks.
+     delay_allowed has size refcount (checked by assertion)
+     \post reference clocks in offset_dbm with delay_allowed are unbounded (i.e. x-r<inf for every reference clock r and
+     any variable x, including x=r').
+     reference clocks in offset_dbm without delay_allowed are unchanged
+     offset_dbm is tight.
+     */
+    void asynchronous_open_up(tchecker::dbm::db_t * offset_dbm, tchecker::clock_id_t offset_dim,
+                              tchecker::clock_id_t refcount, boost::dynamic_bitset<> const & delay_allowed);
     
     /*!
      \brief Tighten an offset DBM
