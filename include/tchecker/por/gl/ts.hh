@@ -150,22 +150,7 @@ namespace tchecker {
 #endif // PARTIAL_SYNCS_ALLOWED
         {
 #ifdef PARTIAL_SYNCS_ALLOWED
-          // IMPLEMENTATION NOTE: non-global synchronizations define group of processes that
-          // synchronize on local actions (i.e. actions that are local to the group of processes).
-          // To each group, we associate a group ID (the smallest PID in the group). The group ID
-          // is used as state rank
-          tchecker::process_id_t processes_count = model.system().processes_count();
-          
-          for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid)
-            _group_id[pid] = pid;
-          
-          for (tchecker::synchronization_t const & sync : model.system().synchronizations()) {
-            if (sync.size() == processes_count) // global
-              continue;
-            tchecker::process_id_t sync_group_id = smallest_pid(sync);
-            for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
-              _group_id[constr.pid()] = std::min(_group_id[constr.pid()], sync_group_id);
-          }
+          compute_groups_from_non_global_synchronizations(model.system(), _group_id);
 #else
           if (! tchecker::global_local(model.system()))
             throw std::invalid_argument("System is not global/local");
@@ -268,6 +253,50 @@ namespace tchecker {
           return tchecker::por::synchronizable_global(s.vloc(),
                                                       (s.rank() == tchecker::por::gl::global ? 0 : s.rank()),
                                                       _location_next_syncs);
+        }
+        
+        /*!
+         \brief Compute process groups from synchronization vectors
+         \param system : system of processes
+         \param group_id : map process IDs to group IDs
+         \post group_id maps each process ID to the smallest process ID in its synchronization group. Two processes p and q are
+         in the same group if there is a path of synchronizations from p to q
+         */
+        template <class SYSTEM>
+        void compute_groups_from_non_global_synchronizations(SYSTEM const & system,
+                                                             std::vector<tchecker::process_id_t> & group_id) const
+        {
+          // IMPLEMENTATION NOTE: non-global synchronizations define group of processes that
+          // synchronize on local actions (i.e. actions that are local to the group of processes).
+          // To each group, we associate a group ID (the smallest PID in the group). The group ID
+          // is used as state rank
+          tchecker::process_id_t processes_count = system.processes_count();
+          
+          // Initialization: each process belongs to its own group
+          for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid)
+            group_id[pid] = pid;
+          
+          // From each synchronization vector: each process belongs to the group of the smallest process
+          // it synchronizes with
+          for (tchecker::synchronization_t const & sync : system.synchronizations()) {
+            if (sync.size() == processes_count) // global
+              continue;
+            tchecker::process_id_t sync_group_id = smallest_pid(sync);
+            for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
+              group_id[constr.pid()] = std::min(group_id[constr.pid()], sync_group_id);
+          }
+          
+          // Propagation: by transitivity of synchronizations
+          bool modified;
+          do {
+            modified = false;
+            for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid)
+              if (group_id[pid] != group_id[group_id[pid]]) {
+                group_id[pid] = group_id[group_id[pid]];
+                modified = true;
+              }
+          }
+          while (modified);
         }
         
         /*!
