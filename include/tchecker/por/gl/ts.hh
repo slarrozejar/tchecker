@@ -143,12 +143,25 @@ namespace tchecker {
         ts_t(MODEL & model)
         : base_ts_t(model),
 #ifdef PARTIAL_SYNCS_ALLOWED
-        _location_next_syncs(tchecker::location_next_global_syncs(model.system()))
+        _location_next_syncs(tchecker::location_next_global_syncs(model.system())),
+        _group_id(model.system().processes_count(), std::numeric_limits<tchecker::process_id_t>::max())
 #else
         _location_next_syncs(tchecker::location_next_syncs(model.system()))
 #endif // PARTIAL_SYNCS_ALLOWED
         {
-#ifndef PARTIAL_SYNCS_ALLOWED
+#ifdef PARTIAL_SYNCS_ALLOWED
+          // IMPLEMENTATION NOTE: non-global synchronizations define group of processes that
+          // synchronize on local actions (i.e. actions that are local to the group of processes).
+          // To each group, we associate a group ID (the smallest PID in the group). The group ID
+          // is used as state rank
+          for (tchecker::synchronization_t const & sync : model.system().synchronizations()) {
+            if (sync.size() == model.system().processes_count()) // global
+              continue;
+            tchecker::process_id_t sync_group_id = smallest_pid(sync);
+            for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
+              _group_id[constr.pid()] = std::min(_group_id[constr.pid()], sync_group_id);
+          }
+#else
           if (! tchecker::global_local(model.system()))
             throw std::invalid_argument("System is not global/local");
 #endif // PARTIAL_SYNCS_ALLOWED
@@ -227,7 +240,7 @@ namespace tchecker {
           if (vedge_pids.size() == s.vloc().size())
             s.rank(tchecker::por::gl::global);
           else
-            s.rank(* std::min_element(vedge_pids.begin(), vedge_pids.end()));
+            s.rank(_group_id[* vedge_pids.begin()]);
 #else
           s.rank(tchecker::por::gl::vedge_pid(v));
 #endif // PARTIAL_SYNCS_ALLOWED
@@ -252,7 +265,23 @@ namespace tchecker {
                                                       _location_next_syncs);
         }
         
+        /*!
+         \brief Compute the smallest PID in a synchronization
+         \param sync : synchronization
+         \return smallest process identifier involved in sync
+         */
+        tchecker::process_id_t smallest_pid(tchecker::synchronization_t const & sync) const
+        {
+          tchecker::process_id_t pid = std::numeric_limits<tchecker::process_id_t>::max();
+          for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
+            pid = std::min(pid, constr.pid());
+          return pid;
+        }
+        
         tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
+#ifdef PARTIAL_SYNCS_ALLOWED
+        std::vector<tchecker::process_id_t> _group_id;         /*!< Map PID -> group ID */
+#endif // PARTIAL_SYNCS_ALLOWED
       };
     
  
