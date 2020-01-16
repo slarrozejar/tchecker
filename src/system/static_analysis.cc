@@ -89,42 +89,4 @@ namespace tchecker {
     return _syncs_count;
   }
   
-  
-  
-  
-  /* process_synchronizations_t */
-  
-  void process_synchronizations_t::add(tchecker::synchronization_t const & sync)
-  {
-    process_synchronization_t psync;
-    for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
-      psync.insert(constr.pid());
-    _process_synchronization_set.insert(psync);
-  }
-    
-  
-  process_synchronizations_t::const_iterator_t::const_iterator_t
-  (tchecker::process_synchronizations_t::process_synchronization_set_t::const_iterator const & it)
-  : tchecker::process_synchronizations_t::process_synchronization_set_t::const_iterator(it)
-  {}
-
-
-  tchecker::range_t<tchecker::process_synchronizations_t::process_synchronization_t::const_iterator>
-  process_synchronizations_t::const_iterator_t::operator* () const
-  {
-    process_synchronization_t const & psync = process_synchronization_set_t::const_iterator::operator*();
-    return tchecker::make_range(psync.begin(), psync.end());
-  }
-    
-
-  tchecker::range_t<tchecker::process_synchronizations_t::const_iterator_t>
-  process_synchronizations_t::process_synchronizations() const
-  {
-    tchecker::process_synchronizations_t::const_iterator_t
-    begin(_process_synchronization_set.begin()),
-    end(_process_synchronization_set.end());
-    
-    return tchecker::make_range(begin, end);
-  }
-  
 } // end of namespace tchecker
