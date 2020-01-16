@@ -144,7 +144,7 @@ namespace tchecker {
         : base_ts_t(model),
 #ifdef PARTIAL_SYNCS_ALLOWED
         _location_next_syncs(tchecker::location_next_global_syncs(model.system())),
-        _group_id(model.system().processes_count(), std::numeric_limits<tchecker::process_id_t>::max())
+        _group_id(model.system().processes_count(), tchecker::por::gl::global)
 #else
         _location_next_syncs(tchecker::location_next_syncs(model.system()))
 #endif // PARTIAL_SYNCS_ALLOWED
@@ -154,8 +154,13 @@ namespace tchecker {
           // synchronize on local actions (i.e. actions that are local to the group of processes).
           // To each group, we associate a group ID (the smallest PID in the group). The group ID
           // is used as state rank
+          tchecker::process_id_t processes_count = model.system().processes_count();
+          
+          for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid)
+            _group_id[pid] = pid;
+          
           for (tchecker::synchronization_t const & sync : model.system().synchronizations()) {
-            if (sync.size() == model.system().processes_count()) // global
+            if (sync.size() == processes_count) // global
               continue;
             tchecker::process_id_t sync_group_id = smallest_pid(sync);
             for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
