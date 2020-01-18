@@ -284,13 +284,78 @@ namespace tchecker {
         } // end of namespace details
         
         
+        using elapsed_no_extrapolation_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_no_extrapolation_t>;
+        
+        using elapsed_extraLU_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraLU_local_t>;
+        
+        using elapsed_extraLU_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraLU_global_t>;
+        
         using elapsed_extraLUplus_local_t
         = tchecker::async_zg::sync_zones::ta::details::instance_types_t
         <tchecker::offset_dbm::elapsed_extraLUplus_local_t>;
         
+        using elapsed_extraLUplus_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraLUplus_global_t>;
+        
+        using elapsed_extraM_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraM_local_t>;
+        
+        using elapsed_extraM_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraM_global_t>;
+        
+        using elapsed_extraMplus_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraMplus_local_t>;
+        
+        using elapsed_extraMplus_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::elapsed_extraMplus_global_t>;
+        
+        using non_elapsed_no_extrapolation_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_no_extrapolation_t>;
+        
+        using non_elapsed_extraLU_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraLU_local_t>;
+        
+        using non_elapsed_extraLU_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraLU_global_t>;
+        
         using non_elapsed_extraLUplus_local_t
         = tchecker::async_zg::sync_zones::ta::details::instance_types_t
         <tchecker::offset_dbm::non_elapsed_extraLUplus_local_t>;
+        
+        using non_elapsed_extraLUplus_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraLUplus_global_t>;
+        
+        using non_elapsed_extraM_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraM_local_t>;
+        
+        using non_elapsed_extraM_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraM_global_t>;
+        
+        using non_elapsed_extraMplus_local_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraMplus_local_t>;
+        
+        using non_elapsed_extraMplus_global_t
+        = tchecker::async_zg::sync_zones::ta::details::instance_types_t
+        <tchecker::offset_dbm::non_elapsed_extraMplus_global_t>;
+        
         
       } // end of namespace ta
       

@@ -214,13 +214,45 @@ namespace tchecker {
                                                  tchecker::log_t & log)
     {
       if (semantics == "elapsed") {
-        if (extrapolation == "extraLU+l")
+        if (extrapolation == "NOextra")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA;
+        else if (extrapolation == "extraMg")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_G;
+        else if (extrapolation == "extraMl")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_L;
+        else if (extrapolation == "extraM+g")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_G;
+        else if (extrapolation == "extraM+l")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_L;
+        else if (extrapolation == "extraLUg")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_G;
+        else if (extrapolation == "extraLUl")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_L;
+        else if (extrapolation == "extraLU+g")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_G;
+        else if (extrapolation == "extraLU+l")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L;
         else
           log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
       }
       else if (semantics == "non-elapsed") {
-        if (extrapolation == "extraLU+l")
+        if (extrapolation == "NOextra")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_NOEXTRA;
+        else if (extrapolation == "extraMg")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_G;
+        else if (extrapolation == "extraMl")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_L;
+        else if (extrapolation == "extraM+g")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_G;
+        else if (extrapolation == "extraM+l")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_L;
+        else if (extrapolation == "extraLUg")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_G;
+        else if (extrapolation == "extraLUl")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_L;
+        else if (extrapolation == "extraLU+g")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_G;
+        else if (extrapolation == "extraLU+l")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L;
         else
           log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
@@ -355,8 +387,8 @@ namespace tchecker {
     void options_t::check_source_set_model(tchecker::log_t & log) const
     {
       if ((_source_set != tchecker::covreach::options_t::SOURCE_SET_ALL) &&
-          (_algorithm_model != ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L) &&
-          (_algorithm_model != ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L))
+          ((_algorithm_model < ASYNC_ZG_ELAPSED_NOEXTRA) ||
+           (_algorithm_model > ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L)))
         log.error("source set can only be used with asynchronous zone graph models");
     }
     
@@ -373,7 +405,9 @@ namespace tchecker {
       os << "-h               this help screen" << std::endl;
       os << "-l labels        accepting labels, where labels is a column-separated list of identifiers" << std::endl;
       os << "-m model         where model is one of the following:" << std::endl;
-      os << "                 zg:semantics:extrapolation        zone graph with:" << std::endl;
+      os << "                 graph:semantics:extrapolation     zone graph with:" << std::endl;
+      os << "                   graph:          async_zg        asynchronous zone graph" << std::endl;
+      os << "                                   zg              zone graph" << std::endl;
       os << "                   semantics:      elapsed         time-elapsed semantics" << std::endl;
       os << "                                   non-elapsed     non time-elapsed semantics" << std::endl;
       os << "                   extrapolation:  NOextra         no zone extrapolation" << std::endl;
@@ -385,10 +419,6 @@ namespace tchecker {
       os << "                                   extraLUl        ExtraLU with local clock bounds" << std::endl;
       os << "                                   extraLU+g       ExtraLU+ with global clock bounds" << std::endl;
       os << "                                   extraLU+l       ExtraLU+ with local clock bounds" << std::endl;
-      os << "                 async_zg:semantics:extrapolation  asynchronous zone graph with:" << std::endl;
-      os << "                   semantics:      elapsed         time-elapsed semantics" << std::endl;
-      os << "                                   non-elapsed     non time-elapsed semantics" << std::endl;
-      os << "                   extrapolation:  extraLU+l       ExtraLU+ with local clock bounds" << std::endl;
       os << "-o filename      output graph to filename" << std::endl;
       os << "-s (bfs|dfs)     search order (breadth-first search or depth-first search)" << std::endl;
       os << "-S               output stats" << std::endl;

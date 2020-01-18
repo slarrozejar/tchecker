@@ -629,6 +629,34 @@ namespace tchecker {
                                         tchecker::log_t & log)
       {
         switch (options.algorithm_model()) {
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
             <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
@@ -636,10 +664,95 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+            //
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
           case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
-            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta
-            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_local_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
@@ -669,17 +782,130 @@ namespace tchecker {
                                        tchecker::log_t & log)
       {
         switch (options.algorithm_model()) {
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
-            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta
-            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_local_t>,
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+            //
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_global_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
           case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
-            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta
-            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
+            algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_local_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
@@ -718,6 +944,34 @@ namespace tchecker {
         }
         
         switch (options.algorithm_model()) {
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
             <tchecker::covreach::details::async_zg::sync_zones::ta
@@ -725,10 +979,95 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraMplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+            //
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_NOEXTRA:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_no_extrapolation_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLU_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
           case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L:
             tchecker::covreach::details::run_async_zg
             <tchecker::covreach::details::async_zg::sync_zones::ta
             ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraM_local_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_G:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_global_t>,
+            GRAPH_OUTPUTTER, WAITING>
+            (sysdecl, options, log);
+            break;
+          case tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_PLUS_L:
+            tchecker::covreach::details::run_async_zg
+            <tchecker::covreach::details::async_zg::sync_zones::ta
+            ::algorithm_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraMplus_local_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
