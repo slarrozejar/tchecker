@@ -349,6 +349,46 @@ namespace tchecker {
       }
       
       /*!
+       \brief Compute initial zone
+       \param offset_zone : an offset zone
+       \param spread : bound on spread between reference clocks
+       \param delay_allowed : bit vector telling which process is allowed to delay
+       \param invariant : invariant
+       \param vloc : tuple of initial locations
+       \pre invariant is on offset variables, offset_zone dimension == _offset_dim (checked by assertion)
+       delay_allowed and vloc have the same size (checked by assertion)
+       0 <= spread (checked by assertion)
+       \post offset_zone is the zero zone elapsed (for processes allowed to delay, then intersected with invariant,
+       and spread bounded
+       \return STATE_OK if the resulting zones are not empty,
+       STATE_CLOCKS_SRC_INVARIANT_VIOLATED if invariant does not hold in the initial zone,
+       and STATE_EMPTY_ZONE if there is no spread bounded valuations in the resulting zone
+       */
+      template <class VLOC>
+      enum tchecker::state_status_t initialize(tchecker::offset_dbm::zone_t & offset_zone,
+                                               tchecker::integer_t spread,
+                                               boost::dynamic_bitset<> const & delay_allowed,
+                                               tchecker::clock_constraint_container_t const & invariant,
+                                               VLOC const & vloc)
+      {
+        assert(spread >= 0);
+        
+        enum tchecker::state_status_t status = initialize(offset_zone, delay_allowed, invariant, vloc);
+        if (status != tchecker::STATE_OK)
+          return status;
+        
+        tchecker::dbm::db_t * offset_dbm = offset_zone.dbm();
+        auto offset_dim = offset_zone.dim();
+        
+        auto res = tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, _refcount, spread);
+        
+        if (res != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_EMPTY_ZONE;
+        
+        return tchecker::STATE_OK;
+      }
+      
+      /*!
        \brief Compute next zone
        \param offset_zone : an offset zone
        \param src_delay_allowed : bit vector telling which process is allowed to delay in source state
@@ -462,6 +502,62 @@ namespace tchecker {
         
         EXTRAPOLATION::extrapolate(sync_dbm, sync_dim, tgt_vloc);
 #endif // EMPTY_SYNC_ZONE
+        
+        return tchecker::STATE_OK;
+      }
+      
+      /*!
+       \brief Compute next zone
+       \param offset_zone : an offset zone
+       \param spread : bound on spread between reference clocks
+       \param src_delay_allowed : bit vector telling which process is allowed to delay in source state
+       \param src_invariant : invariant in source state
+       \param guard : transition guard
+       \param clkreset : transition reset
+       \param tgt_delay_allowed : bit vector telling which process is allowed to delay in target state
+       \param tgt_invariant : invariant in target state
+       \param tgt_vloc : tuple of locations in target state
+       \pre src_invariant, guard and tgt_invariant are on offset variables.
+       clkreset is on offset variables and it only contains resets of variables to
+       the corresponding reference clock.
+       offset_zone dimension == _offset_dim
+       srd_delay_allowed and tgt_delay_allowed have the same size as tgt_vloc (checked by assertion)
+       0 <= spread (checked by assertion)
+       \post zone has been updated to:
+       delay((zone \cap guard)[clkreset] \cap tgt_invariant) \cap tgt_invariant
+       where delay is applied only to processes which are allowed to delay in target state,
+       and spread bounded
+       \return STATE_OK if the resulting zone is not empty, STATE_CLOCKS_GUARD_VIOLATED
+       if guard does not hold in zone, STATE_CLOCKS_TGT_INVARIANT_VIOLATED does not
+       hold in (zone \cap guatd)[clkreset] or in delay((zone \cap guard)[clkreset]), and STATE_ZONE_EMPTY if there is
+       bounded spread valuation in the resulting zone
+       */
+      template <class VLOC>
+      enum tchecker::state_status_t next(tchecker::offset_dbm::zone_t & offset_zone,
+                                         tchecker::integer_t spread,
+                                         boost::dynamic_bitset<> const & src_delay_allowed,
+                                         tchecker::clock_constraint_container_t const & src_invariant,
+                                         tchecker::clock_constraint_container_t const & guard,
+                                         tchecker::clock_reset_container_t const & clkreset,
+                                         boost::dynamic_bitset<> const & tgt_delay_allowed,
+                                         tchecker::clock_constraint_container_t const & tgt_invariant,
+                                         VLOC const & tgt_vloc)
+      {
+        assert(0 <= spread);
+        
+        enum tchecker::state_status_t status = next(offset_zone, src_delay_allowed, src_invariant, guard,
+                                                    clkreset, tgt_delay_allowed, tgt_invariant, tgt_vloc);
+        
+        if (status != tchecker::STATE_OK)
+          return status;
+        
+        tchecker::dbm::db_t * offset_dbm = offset_zone.dbm();
+        auto offset_dim = offset_zone.dim();
+        
+        auto res = tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, _refcount, spread);
+        
+        if (res != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_EMPTY_ZONE;
         
         return tchecker::STATE_OK;
       }
@@ -677,6 +773,38 @@ namespace tchecker {
       }
       
       /*!
+       \brief Compute initial zone
+       \param offset_zone : an offset zone
+       \param spread : bound on spread of reference clocks
+       \param delay_allowed : bit vector telling which process is allowed to delay
+       \param invariant : invariant
+       \param vloc : tuple of initial locations
+       \pre invariant is on offset variables.
+       offset_zone dimension == _ofsset_dim (checked by assertion)
+       delay_allowed has same size as vloc (checked by assertion)
+       0 <= spread (checked by assertion)
+       \post offset_zone is the zero zone intersected with invariant and spread bounded
+       \return STATE_OK if the resulting zones are not empty,
+       and STATE_CLOCKS_SRC_INVARIANT_VIOLATED if invariant does not hold in the initial zones
+       \note the resulting zone has spread 0 by construction
+       */
+      template <class VLOC>
+      enum tchecker::state_status_t initialize(tchecker::offset_dbm::zone_t & offset_zone,
+                                               tchecker::integer_t spread,
+                                               boost::dynamic_bitset<> const & delay_allowed,
+                                               tchecker::clock_constraint_container_t const & invariant,
+                                               VLOC const & vloc)
+      {
+        assert(0 <= spread);
+        
+        auto status = initialize(offset_zone, delay_allowed, invariant, vloc);
+        
+        assert(tchecker::offset_dbm::is_spread_bounded(offset_zone.dbm(), offset_zone.dim(), _refcount, spread));
+        
+        return status;
+      }
+      
+      /*!
        \brief Compute next zone
        \param offset_zone : an offset zone
        \param src_delay_allowed : bit vector telling which process is allowed to delay in source state
@@ -799,11 +927,85 @@ namespace tchecker {
         
         return tchecker::STATE_OK;
       }
+      
+      /*!
+       \brief Compute next zone
+       \param offset_zone : an offset zone
+       \param spread : bound on spread between reference clocks
+       \param src_delay_allowed : bit vector telling which process is allowed to delay in source state
+       \param src_invariant : invariant in source state
+       \param guard : transition guard
+       \param clkreset : transition reset
+       \param tgt_delay_allowed : bit vector telling which process is allowed to delay in target state
+       \param tgt_invariant : invariant in target state
+       \param tgt_vloc : tuple of locations in target state
+       \pre zone satisfies the invariant in the source state (guaranteed if zone
+       was returned by this class).
+       src_invariant, guard and tgt_invariant are on offset variables.
+       clkreset is on offset variables and it only contains resets of variables to
+       the corresponding reference clock.
+       offset_zone dimension == _offset_dim (checked by assertion)
+       src_delay_allowed and tgt_delay_allowed have same size as tgt_vloc (checked by assertion)
+       0 <= spread (checked by assertion)
+       \post offset_zone has been updated to
+       (delay(zone) \cap src_invariant \cap guard)[clkreset] \cap tgt_invariant
+       where delay is applied only to proceses allowed to delay in source state
+       and spread bounded
+       \return STATE_OK if the resulting zones are not empty,
+       STATE_CLOCKS_SRC_INVARIANT_VIOLATED if src_invariant does bot hold in delay(zone) (should never occur thanks due to precond)
+       STATE_CLOCKS_GUARD_VIOLATED if guard does not hold in (delay(zone) \cap src_invariant),
+       STATE_CLOCKS_TGT_INVARIANT_VIOLATED does not hold in (delay(zone) \cap src_invariant \cap guard)[clkreset]
+       and STATE_EMPTY_ZONE if there is no spread-bounded valuation in the resulting zone
+       */
+      template <class VLOC>
+      enum tchecker::state_status_t next(tchecker::offset_dbm::zone_t & offset_zone,
+                                         tchecker::integer_t spread,
+                                         boost::dynamic_bitset<> const & src_delay_allowed,
+                                         tchecker::clock_constraint_container_t const & src_invariant,
+                                         tchecker::clock_constraint_container_t const & guard,
+                                         tchecker::clock_reset_container_t const & clkreset,
+                                         boost::dynamic_bitset<> const & tgt_delay_allowed,
+                                         tchecker::clock_constraint_container_t const & tgt_invariant,
+                                         VLOC const & tgt_vloc)
+      {
+        assert( src_delay_allowed.size() == tgt_delay_allowed.size() );
+        assert( tgt_delay_allowed.size() == tgt_vloc.size() );
+        assert( 0 <= spread );
+        
+        tchecker::dbm::db_t * offset_dbm = offset_zone.dbm();
+        auto offset_dim = offset_zone.dim();
+        
+        assert(offset_dim == _offset_dim);
+        
+        tchecker::offset_dbm::asynchronous_open_up(offset_dbm, offset_dim, _refcount, src_delay_allowed);
+        
+        if (tchecker::offset_dbm::bound_spread(offset_dbm, offset_dim, _refcount, spread)
+            != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_EMPTY_ZONE;
+        
+        if (tchecker::offset_dbm::details::constrain(offset_dbm, offset_dim, src_invariant)
+            != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_CLOCKS_SRC_INVARIANT_VIOLATED;  // should never occur
+        
+        if (tchecker::offset_dbm::details::constrain(offset_dbm, offset_dim, guard)
+            != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_CLOCKS_GUARD_VIOLATED;
+        
+        tchecker::offset_dbm::details::reset(offset_dbm, offset_dim, _refcount, _refmap, clkreset);
+        
+        if (tchecker::offset_dbm::details::constrain(offset_dbm, offset_dim, tgt_invariant)
+            != tchecker::dbm::NON_EMPTY)
+          return tchecker::STATE_CLOCKS_TGT_INVARIANT_VIOLATED;
+        
+        assert(tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, _refcount, spread));
+        
+        return tchecker::STATE_OK;
+      }
     private:
-      tchecker::clock_id_t _offset_dim;                                           /*!< Dimension of offset zones */
-      tchecker::clock_id_t _refcount;                                             /*!< Number of reference clocks */
-      tchecker::clock_id_t * _refmap;                                             /*!< Map from variables to reference clock */
-      tchecker::offset_dbm::details::sync_zone_computer_t * _sync_zone_computer;  /*!< Synchronized zone computer */
+      tchecker::clock_id_t _offset_dim;                                          /*!< Dimension of offset zones */
+      tchecker::clock_id_t _refcount;                                            /*!< Number of reference clocks */
+      tchecker::clock_id_t * _refmap;                                            /*!< Map from variables to reference clock */
+      tchecker::offset_dbm::details::sync_zone_computer_t * _sync_zone_computer; /*!< Synchronized zone computer */
     };
     
     
