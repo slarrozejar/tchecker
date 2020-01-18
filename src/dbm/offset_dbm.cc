@@ -297,6 +297,7 @@ namespace tchecker {
       
       assert(tchecker::dbm::is_consistent(offset_dbm, offset_dim));
       assert(tchecker::offset_dbm::is_tight(offset_dbm, offset_dim));
+      assert(tchecker::offset_dbm::is_spread_bounded(offset_dbm, offset_dim, refcount, spread));
       
       return tchecker::dbm::NON_EMPTY;
     }
