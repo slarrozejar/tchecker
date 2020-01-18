@@ -4,6 +4,7 @@
 
 set(ASYNC_ZG_SRC
 ${CMAKE_CURRENT_SOURCE_DIR}/async_zg_ta.cc
+${CMAKE_CURRENT_SOURCE_DIR}/bounded_spread/async_zg_ta.cc
 ${CMAKE_CURRENT_SOURCE_DIR}/sync_zones/async_zg_ta.cc
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/async_zg_ta.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/details/allocators.hh
@@ -14,6 +15,15 @@ ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/details/transition.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/details/ts.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/details/variables.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/details/zg.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/async_zg_ta.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/allocators.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/model.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/output.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/state.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/transition.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/ts.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/variables.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/bounded_spread/details/zg.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/sync_zones/async_zg_ta.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/sync_zones/details/allocators.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/async_zg/sync_zones/details/model.hh
