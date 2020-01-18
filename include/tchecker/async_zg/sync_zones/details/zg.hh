@@ -65,7 +65,7 @@ namespace tchecker {
           
           /*!
            \brief Constructor
-           \tparam ASYNC_MODEL : type of model, should derive from tchecker::zg::async::details::model_t
+           \tparam ASYNC_MODEL : type of model, should derive from tchecker::async_zg::sync_zones::details::model_t
            \param model : a model
            \note this keeps a pointer to the refmap in model
            */
