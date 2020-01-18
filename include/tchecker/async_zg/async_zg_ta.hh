@@ -115,28 +115,24 @@ namespace tchecker {
       /*!
        \brief State of asynchronous zone graph over timed automaton
        \tparam OFFSET_ZONE : type of offset zone
-       \tparam SYNC_ZONE : type of synchronized zone
        */
-      template <class OFFSET_ZONE, class SYNC_ZONE>
+      template <class OFFSET_ZONE>
       using state_t = tchecker::async_zg::details::state_t<
       tchecker::async_zg::ta::shared_vloc_t,
       tchecker::async_zg::ta::shared_intvars_valuation_t,
       tchecker::async_zg::ta::shared_zone_t<OFFSET_ZONE>,
-      tchecker::async_zg::ta::shared_zone_t<SYNC_ZONE>,
       tchecker::intrusive_shared_ptr_t<tchecker::async_zg::ta::shared_vloc_t>,
       tchecker::intrusive_shared_ptr_t<tchecker::async_zg::ta::shared_intvars_valuation_t>,
-      tchecker::intrusive_shared_ptr_t<tchecker::async_zg::ta::shared_zone_t<OFFSET_ZONE>>,
-      tchecker::intrusive_shared_ptr_t<tchecker::async_zg::ta::shared_zone_t<SYNC_ZONE>>
+      tchecker::intrusive_shared_ptr_t<tchecker::async_zg::ta::shared_zone_t<OFFSET_ZONE>>
       >;
       
       
       /*!
-       \brief Asynchronous one graph shared state
+       \brief Asynchronous zone graph shared state
        \tparam OFFSET_ZONE : type of offset zone
-       \tparam SYNC_ZONE : type of synchronized zone
        */
-      template <class OFFSET_ZONE, class SYNC_ZONE>
-      using shared_state_t = tchecker::make_shared_t<tchecker::async_zg::ta::state_t<OFFSET_ZONE, SYNC_ZONE>>;
+      template <class OFFSET_ZONE>
+      using shared_state_t = tchecker::make_shared_t<tchecker::async_zg::ta::state_t<OFFSET_ZONE>>;
       
       
       /*!
@@ -157,7 +153,7 @@ namespace tchecker {
         (alloc_nb,
          alloc_nb, model.system().processes_count(),
          alloc_nb, model.flattened_integer_variables().flattened_size(),
-         alloc_nb, model.flattened_offset_clock_variables().flattened_size(), model.flattened_clock_variables().flattened_size())
+         alloc_nb, model.flattened_offset_clock_variables().flattened_size())
         {}
       };
       
@@ -184,10 +180,14 @@ namespace tchecker {
        \tparam TRANSITION : type of transition, should derive from tchecker::async_zg::ta::transiton_t
        */
       template <class TRANSITION>
-      class transition_singleton_allocator_t : public tchecker::async_zg::details::transition_singleton_allocator_t<TRANSITION> {
+      class transition_singleton_allocator_t
+      : public tchecker::async_zg::details::transition_singleton_allocator_t<TRANSITION>
+      {
         static_assert(std::is_base_of<tchecker::async_zg::ta::transition_t, TRANSITION>::value, "");
       public:
-        using tchecker::async_zg::details::transition_singleton_allocator_t<TRANSITION>::transition_singleton_allocator_t;
+        using
+        tchecker::async_zg::details::transition_singleton_allocator_t<TRANSITION>
+        ::transition_singleton_allocator_t;
       };
       
       
@@ -198,7 +198,7 @@ namespace tchecker {
       template <class ZONE_SEMANTICS>
       using ts_t
       = tchecker::async_zg::details::ts_t
-      <tchecker::async_zg::ta::state_t<typename ZONE_SEMANTICS::offset_zone_t, typename ZONE_SEMANTICS::sync_zone_t>,
+      <tchecker::async_zg::ta::state_t<typename ZONE_SEMANTICS::offset_zone_t>,
       tchecker::async_zg::ta::transition_t,
       tchecker::async_zg::ta::zg_t<ZONE_SEMANTICS>>;
       
@@ -226,13 +226,13 @@ namespace tchecker {
            \brief Type of state
            */
           using state_t
-          = tchecker::async_zg::ta::state_t<typename ZONE_SEMANTICS::offset_zone_t, typename ZONE_SEMANTICS::sync_zone_t>;
+          = tchecker::async_zg::ta::state_t<typename ZONE_SEMANTICS::offset_zone_t>;
           
           /*!
            \brief Type of shared state
            */
           using shared_state_t
-          = tchecker::async_zg::ta::shared_state_t<typename ZONE_SEMANTICS::offset_zone_t, typename ZONE_SEMANTICS::sync_zone_t>;
+          = tchecker::async_zg::ta::shared_state_t<typename ZONE_SEMANTICS::offset_zone_t>;
           
           /*!
            \brief Type of pointer to shared state
@@ -256,7 +256,8 @@ namespace tchecker {
            \tparam TRANSITION : type of transitons, should derive from transition_t
            */
           template <class TRANSITION=transition_t>
-          using transition_singleton_allocator_t = tchecker::async_zg::ta::transition_singleton_allocator_t<TRANSITION>;
+          using transition_singleton_allocator_t
+          = tchecker::async_zg::ta::transition_singleton_allocator_t<TRANSITION>;
           
           /*!
            \brief Type of transition system
@@ -280,17 +281,15 @@ namespace tchecker {
   /*!
    \brief Allocation size for states
    */
-  template <class OFFSET_ZONE, class SYNC_ZONE>
-  class allocation_size_t<tchecker::async_zg::ta::state_t<OFFSET_ZONE, SYNC_ZONE>> {
+  template <class OFFSET_ZONE>
+  class allocation_size_t<tchecker::async_zg::ta::state_t<OFFSET_ZONE>> {
   public:
     static constexpr std::size_t alloc_size()
     {
-      return sizeof(tchecker::async_zg::ta::state_t<OFFSET_ZONE, SYNC_ZONE>);
+      return sizeof(tchecker::async_zg::ta::state_t<OFFSET_ZONE>);
     }
   };
   
 } // end of namespace tchecker
 
 #endif // TCHECKER_ASYNC_ZG_TA_HH
-
-

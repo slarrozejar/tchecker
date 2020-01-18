@@ -11,7 +11,7 @@
 #include "tchecker/algorithms/explore/algorithm.hh"
 #include "tchecker/algorithms/explore/graph.hh"
 #include "tchecker/algorithms/explore/options.hh"
-#include "tchecker/async_zg/async_zg_ta.hh"
+#include "tchecker/async_zg/sync_zones/async_zg_ta.hh"
 #include "tchecker/fsm/fsm.hh"
 #include "tchecker/graph/allocators.hh"
 #include "tchecker/graph/output.hh"
@@ -134,44 +134,51 @@ namespace tchecker {
       
       namespace async_zg {
         
-        namespace ta {
+        namespace sync_zones {
           
-          /*!
-           \class explored_model_t
-           \brief Explored model for asynchronous zone graphs of timed automata
-           */
-          template <class ZONE_SEMANTICS>
-          class explored_model_t {
-          public:
-            using zone_semantics_t = ZONE_SEMANTICS;
-            using model_t = tchecker::async_zg::ta::model_t;
-            using ts_t = typename zone_semantics_t::ts_t;
-            using node_t = tchecker::explore::node_t<typename ts_t::state_t>;
-            using edge_t = tchecker::explore::edge_t<typename ts_t::transition_t>;
-            using node_outputter_t = tchecker::async_zg::ta::state_outputter_t;
-            using edge_outputter_t = tchecker::async_zg::ta::transition_outputter_t;
-            using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<tchecker::make_shared_t<node_t>>;
-            using edge_allocator_t = typename zone_semantics_t::template transition_singleton_allocator_t<edge_t>;
-            using graph_allocator_t = tchecker::graph::graph_allocator_t<node_allocator_t, edge_allocator_t>;
+          namespace ta {
             
-            static std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &, tchecker::clock_index_t const &>
-            node_outputter_args(tchecker::explore::details::async_zg::ta::explored_model_t<ZONE_SEMANTICS>::model_t const & model)
-            {
-              return std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &, tchecker::clock_index_t const &>
-              (model.flattened_integer_variables().index(),
-               model.flattened_offset_clock_variables().index(),
-               model.flattened_clock_variables().index());
-            }
+            /*!
+             \class explored_model_t
+             \brief Explored model for asynchronous zone graphs of timed automata
+             */
+            template <class ZONE_SEMANTICS>
+            class explored_model_t {
+            public:
+              using zone_semantics_t = ZONE_SEMANTICS;
+              using model_t = tchecker::async_zg::sync_zones::ta::model_t;
+              using ts_t = typename zone_semantics_t::ts_t;
+              using node_t = tchecker::explore::node_t<typename ts_t::state_t>;
+              using edge_t = tchecker::explore::edge_t<typename ts_t::transition_t>;
+              using node_outputter_t = tchecker::async_zg::sync_zones::ta::state_outputter_t;
+              using edge_outputter_t = tchecker::async_zg::sync_zones::ta::transition_outputter_t;
+              using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<tchecker::make_shared_t<node_t>>;
+              using edge_allocator_t = typename zone_semantics_t::template transition_singleton_allocator_t<edge_t>;
+              using graph_allocator_t = tchecker::graph::graph_allocator_t<node_allocator_t, edge_allocator_t>;
+              
+              static std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &,
+              tchecker::clock_index_t const &>
+              node_outputter_args
+              (tchecker::explore::details::async_zg::sync_zones::ta
+               ::explored_model_t<ZONE_SEMANTICS>::model_t const & model)
+              {
+                return std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &, tchecker::clock_index_t const &>
+                (model.flattened_integer_variables().index(),
+                 model.flattened_offset_clock_variables().index(),
+                 model.flattened_clock_variables().index());
+              }
+              
+              static std::tuple<tchecker::clock_index_t const &>
+              edge_outputter_args(tchecker::explore::details::async_zg::sync_zones::ta::explored_model_t<ZONE_SEMANTICS>::model_t const & model)
+              {
+                // display invariants, guards and resets w.r.t. system clocks
+                return std::tuple<tchecker::clock_index_t const &>(model.flattened_clock_variables().index());
+              }
+            };
             
-            static std::tuple<tchecker::clock_index_t const &>
-            edge_outputter_args(tchecker::explore::details::async_zg::ta::explored_model_t<ZONE_SEMANTICS>::model_t const & model)
-            {
-              // display invariants, guards and resets w.r.t. system clocks
-              return std::tuple<tchecker::clock_index_t const &>(model.flattened_clock_variables().index());
-            }
-          };
+          } // end of namespace ta
           
-        } // end of namespace ta
+        } // end of namespace sync_zones
         
       } // end of namespace async_zg
       
@@ -378,13 +385,13 @@ namespace tchecker {
             break;
           case tchecker::explore::options_t::ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L:
             tchecker::explore::details::run
-            <tchecker::explore::details::async_zg::ta::explored_model_t<tchecker::async_zg::ta::elapsed_extraLUplus_local_t>,
+            <tchecker::explore::details::async_zg::sync_zones::ta::explored_model_t<tchecker::async_zg::sync_zones::ta::elapsed_extraLUplus_local_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
           case tchecker::explore::options_t::ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L:
             tchecker::explore::details::run
-            <tchecker::explore::details::async_zg::ta::explored_model_t<tchecker::async_zg::ta::non_elapsed_extraLUplus_local_t>,
+            <tchecker::explore::details::async_zg::sync_zones::ta::explored_model_t<tchecker::async_zg::sync_zones::ta::non_elapsed_extraLUplus_local_t>,
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;

@@ -31,7 +31,6 @@ namespace tchecker {
        For instance, STATE::offset_zone_t can be tchecker::make_shared_t<Z> for some zone implementation Z
        whereas ASYNC_ZG::offset_zone_t is Z itself as STATE::offset_zone_t needs to take into account memory
        management contingencies.
-       Similarly for STATE::sync_zone_t and ASYNC_ZG::sync_zone_t.
        tchecker::make_shared_t<Z> and Z are compatible types for the operations done by
        ASYNC_ZG on the zones in STATE
        */
@@ -106,7 +105,7 @@ namespace tchecker {
                                                          TRANSITION & t,
                                                          typename ASYNC_ZG::initial_iterator_value_t const & v)
         {
-          return _async_zg.initialize(*s.vloc_ptr(), *s.intvars_val_ptr(), *s.offset_zone_ptr(), *s.sync_zone_ptr(),
+          return _async_zg.initialize(*s.vloc_ptr(), *s.intvars_val_ptr(), *s.offset_zone_ptr(),
                                       v, t.src_invariant_container());
         }
         
@@ -125,7 +124,7 @@ namespace tchecker {
                                                    TRANSITION & t,
                                                    typename ASYNC_ZG::outgoing_edges_iterator_value_t const & v)
         {
-          return _async_zg.next(*s.vloc_ptr(), *s.intvars_val_ptr(), *s.offset_zone_ptr(), *s.sync_zone_ptr(), v,
+          return _async_zg.next(*s.vloc_ptr(), *s.intvars_val_ptr(), *s.offset_zone_ptr(), v,
                                 t.src_invariant_container(), t.guard_container(), t.reset_container(),
                                 t.tgt_invariant_container());
         }

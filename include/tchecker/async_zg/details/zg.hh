@@ -53,14 +53,8 @@ namespace tchecker {
         using offset_zone_t = typename ASYNC_ZONE_SEMANTICS::offset_zone_t;
         
         /*!
-         \brief Type of synchronized zones
-         */
-        using sync_zone_t = typename ASYNC_ZONE_SEMANTICS::sync_zone_t;
-        
-        
-        /*!
          \brief Constructor
-         \tparam ASYNC_MODEL : type of model, should derive from tchecker::zg::async::details::model_t
+         \tparam ASYNC_MODEL : type of model, should derive from tchecker::zg_async::details::model_t
          \param model : a model
          \note this keeps a pointer to the refmap in model
          */
@@ -159,34 +153,6 @@ namespace tchecker {
         }
         
         /*!
-         \brief Initialize state
-         \param vloc : tuple of locations
-         \param intvars_val : valuation of integer variables
-         \param offset_zone : an offset zone
-         \param sync_zone : a synchronized zone
-         \param initial_range : range of locations
-         \param invariant : a tchecker::clock_constraint_t container
-         \pre sync_zone has dimension corresponding to number of (non-offset) clocks. See initialize() for other parameters
-         \post sync_zone is the set of synchronized valuations in offset_zone. See initialize() for other parameters
-         \return STATE_EMPTY_ZONE if sync_zone is empty. See initialize() for other return values
-         */
-        enum tchecker::state_status_t initialize(vloc_t & vloc,
-                                                 intvars_valuation_t & intvars_val,
-                                                 offset_zone_t & offset_zone,
-                                                 sync_zone_t & sync_zone,
-                                                 initial_iterator_value_t const & initial_range,
-                                                 tchecker::clock_constraint_container_t & invariant)
-        {
-          auto status = _ta.initialize(vloc, intvars_val, initial_range, invariant);
-          if (status != tchecker::STATE_OK)
-            return status;
-          translate_invariant(invariant);
-          tchecker::ta::delay_allowed(vloc, _src_delay_allowed);
-          return _async_zone_semantics.initialize(offset_zone, sync_zone, _src_delay_allowed,
-                                                  _offset_src_invariant, vloc);
-        }
-        
-        /*!
          \brief Type of iterator over outgoing edges
          */
         using outgoing_edges_iterator_t = typename TA::outgoing_edges_iterator_t;
@@ -254,44 +220,6 @@ namespace tchecker {
         }
         
         /*!
-         \brief Compute next state
-         \param vloc : tuple of locations
-         \param intvars_val : valuation of integer variables
-         \param offset_zone : an offset zone
-         \param sync_zone : a synchronized zone
-         \param vedge : range of synchronized edges
-         \param src_invariant : a tchecker::clock_constraint_t container
-         \param guard : a tchecker::clock_constraint_t container
-         \param clkreset : a tchecker::clock_reset_t container
-         \param tgt_invariant : a tchecker::clock_constraint_t container
-         \pre sync_zone has dimension corresponding to number of (non-offset) clocks. See next() for other parameters
-         \post sync_zone is the set of synchronized valuations in offset_zone. See next() for other parameters
-         \return STATE_EMPTY_ZONE if sync_zone is empty. See next() for other return values
-         */
-        enum tchecker::state_status_t next(vloc_t & vloc,
-                                           intvars_valuation_t & intvars_val,
-                                           offset_zone_t & offset_zone,
-                                           sync_zone_t & sync_zone,
-                                           outgoing_edges_iterator_value_t const & vedge,
-                                           tchecker::clock_constraint_container_t & src_invariant,
-                                           tchecker::clock_constraint_container_t & guard,
-                                           tchecker::clock_reset_container_t & clkreset,
-                                           tchecker::clock_constraint_container_t & tgt_invariant)
-        {
-          tchecker::ta::delay_allowed(vloc, _src_delay_allowed);
-          auto status = _ta.next(vloc, intvars_val, vedge, src_invariant, guard, clkreset, tgt_invariant);
-          if (status != tchecker::STATE_OK)
-            return status;
-          tchecker::ta::delay_allowed(vloc, _tgt_delay_allowed);
-          translate_guard_reset_invariants(src_invariant, guard, clkreset, tgt_invariant);
-          reference_clock_synchronization(vedge, _offset_guard);
-          return _async_zone_semantics.next(offset_zone, sync_zone, _src_delay_allowed, _offset_src_invariant,
-                                            _offset_guard, _offset_clkreset, _tgt_delay_allowed,
-                                            _offset_tgt_invariant, vloc);
-                                            
-        }
-        
-        /*!
          \brief Accessor
          \return Underlying model
          */
@@ -299,7 +227,7 @@ namespace tchecker {
         {
           return _ta.model();
         }
-      private:
+      protected:
         /*!
          \brief Translate invariant
          \param invariant : a tchecker::clock_constraint_t container
