@@ -76,6 +76,22 @@ namespace tchecker {
       bool operator<= (tchecker::offset_dbm::zone_t const & zone) const;
       
       /*!
+       \brief Checks inclusion wrt abstraction aM*
+       \param zone : a zone
+       \param refcount : number of reference clocks
+       \param refmap : map of reference clocks
+       \param m : clock bounds
+       \pre this zone and  zone has been built with refcount reference clocks
+       and offset variables mapped to reference clocks according to refmap
+       the offset variables in zone and this zone have IDs related to their corresponding clocks in m
+       \return true if this zone is include in aM*(zone), false otherwise
+       */
+      bool am_le(tchecker::offset_dbm::zone_t const & zone,
+                 tchecker::clock_id_t refcount,
+                 tchecker::clock_id_t const * refmap,
+                 tchecker::clockbounds::map_t const & m) const;
+      
+      /*!
        \brief Lexical ordering
        \param zone : a zone
        \return 0 if this and zone are equal, a negative value if this is smalelr than zone w.r.t.t lexical ordering on the clock constraints,
