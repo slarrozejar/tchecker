@@ -26,7 +26,8 @@ namespace tchecker {
     _block_size(std::move(options._block_size)),
     _nodes_table_size(std::move(options._nodes_table_size)),
     _source_set(std::move(options._source_set)),
-    _stats(options._stats)
+    _stats(options._stats),
+    _spread(options._spread)
     {
       options._os = nullptr;
     }
@@ -54,6 +55,7 @@ namespace tchecker {
         _nodes_table_size = options._nodes_table_size;
         _source_set = options._source_set;
         _stats = options._stats;
+        _spread = options._spread;
       }
       return *this;
     }
@@ -118,6 +120,11 @@ namespace tchecker {
       return (_stats == 1);
     }
     
+    tchecker::integer_t options_t::spread() const
+    {
+      return _spread;
+    }
+    
     
     void options_t::set_option(std::string const & key, std::string const & value, tchecker::log_t & log)
     {
@@ -141,6 +148,8 @@ namespace tchecker {
         set_nodes_table_size(value, log);
       else if (key == "source-set")
         set_source_set(value, log);
+      else if (key == "spread")
+        set_spread(value, log);
       else if (key == "S")
         set_stats(value, log);
       else
@@ -192,14 +201,16 @@ namespace tchecker {
       boost::tokenizer<boost::char_separator<char> > tokenizer(value, sep);
       auto begin = tokenizer.begin(), end = tokenizer.end();
       
-      if (std::distance(begin, end) != 3) {
+      std::size_t count = std::distance(begin, end);
+      
+      if ((count < 2) || (count > 3)) {
         log.error("Unknown model: " + value + " for command line parameter -m");
         return;
       }
       
       std::string graph = *(begin++);
       std::string semantics = *(begin++);
-      std::string extrapolation = *(begin++);
+      std::string extrapolation = (count == 2 ? "" : *(begin++));
       
       if (graph == "async_zg")
         set_algorithm_model_async_zg(semantics, extrapolation, log);
@@ -214,7 +225,9 @@ namespace tchecker {
                                                  tchecker::log_t & log)
     {
       if (semantics == "elapsed") {
-        if (extrapolation == "NOextra")
+        if (extrapolation == "")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED;
+        else if (extrapolation == "NOextra")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA;
         else if (extrapolation == "extraMg")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_EXTRAM_G;
@@ -236,7 +249,9 @@ namespace tchecker {
           log.error("Unsupported extrapolation: " + extrapolation + " for command line parameter -m");
       }
       else if (semantics == "non-elapsed") {
-        if (extrapolation == "NOextra")
+        if (extrapolation == "")
+          _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED;
+        else if (extrapolation == "NOextra")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_NOEXTRA;
         else if (extrapolation == "extraMg")
           _algorithm_model = tchecker::covreach::options_t::ASYNC_ZG_NON_ELAPSED_EXTRAM_G;
@@ -377,6 +392,22 @@ namespace tchecker {
     }
     
     
+    void options_t::set_spread(std::string const & value, tchecker::log_t & log)
+    {
+      for (auto c : value)
+      if (! isdigit(c)) {
+        log.error("Invalid value: " + value + " for command line option --spread, expecting an unsigned integer");
+        return;
+      }
+      
+      unsigned long spread = std::stoul(value);
+      if (spread >= tchecker::covreach::options_t::UNBOUNDED_SPREAD)
+        log.error("Out-of-bound spread " + value);
+      
+      _spread = static_cast<tchecker::integer_t>(spread);
+    }
+    
+    
     void options_t::check_mandatory_options(tchecker::log_t & log) const
     {
       if (_algorithm_model == UNKNOWN)
@@ -390,6 +421,17 @@ namespace tchecker {
           ((_algorithm_model < ASYNC_ZG_ELAPSED_NOEXTRA) ||
            (_algorithm_model > ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L)))
         log.error("source set can only be used with asynchronous zone graph models");
+    }
+    
+    
+    void options_t::check_spread(tchecker::log_t & log) const
+    {
+      if (_spread < 0)
+        log.error("spread should be >= 0");
+      if ((_spread > 0) &&
+          (_algorithm_model != ASYNC_ZG_ELAPSED) &&
+          (_algorithm_model != ASYNC_ZG_NON_ELAPSED))
+        log.error("spread should only be specified for models async_zg:elapsed and async_zg::non_elapsed");
     }
     
     
@@ -422,6 +464,7 @@ namespace tchecker {
       os << "-o filename      output graph to filename" << std::endl;
       os << "-s (bfs|dfs)     search order (breadth-first search or depth-first search)" << std::endl;
       os << "-S               output stats" << std::endl;
+      os << "--spread n       bound on spread for asynchronous zone graph" << std::endl;
       os << "--source-set ss  where ss is one of:" << std::endl;
       os << "                 cs   round-robin POR for client/server models" << std::endl;
       os << "                 gl   round-robin POR for global/local models" << std::endl;

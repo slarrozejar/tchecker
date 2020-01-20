@@ -67,9 +67,9 @@ namespace tchecker {
        \param model : a model
        \note TS should have a constructor TS(MODEL &)
        */
-      template <class MODEL>
-      ts_t(MODEL & model)
-      : _ts(model)
+      template <class MODEL, class ... ARGS>
+      ts_t(MODEL & model, ARGS && ... args)
+      : _ts(model, args...)
       {}
         
       /*!

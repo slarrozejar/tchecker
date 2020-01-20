@@ -10,9 +10,11 @@
 
 #include <getopt.h>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
+#include "tchecker/basictypes.hh"
 #include "tchecker/utils/iterator.hh"
 #include "tchecker/utils/log.hh"
 
@@ -44,6 +46,7 @@ namespace tchecker {
        */
       enum algorithm_model_t {
         UNKNOWN,
+        ASYNC_ZG_ELAPSED,
         ASYNC_ZG_ELAPSED_NOEXTRA,
         ASYNC_ZG_ELAPSED_EXTRAM_G,
         ASYNC_ZG_ELAPSED_EXTRAM_L,
@@ -53,6 +56,7 @@ namespace tchecker {
         ASYNC_ZG_ELAPSED_EXTRALU_L,
         ASYNC_ZG_ELAPSED_EXTRALU_PLUS_G,
         ASYNC_ZG_ELAPSED_EXTRALU_PLUS_L,
+        ASYNC_ZG_NON_ELAPSED,
         ASYNC_ZG_NON_ELAPSED_NOEXTRA,
         ASYNC_ZG_NON_ELAPSED_EXTRAM_G,
         ASYNC_ZG_NON_ELAPSED_EXTRAM_L,
@@ -111,6 +115,12 @@ namespace tchecker {
       };
       
       /*!
+       \brief unbounded spread
+       */
+      static constexpr tchecker::integer_t const UNBOUNDED_SPREAD
+      = std::numeric_limits<tchecker::integer_t>::max();
+            
+      /*!
        \brief Constructor
        \tparam MAP_ITERATOR : iterator on a map std::string -> std::string,
        should dereference to a pair of std::string (key, value)
@@ -129,13 +139,15 @@ namespace tchecker {
       _block_size(10000),
       _nodes_table_size(65536),
       _source_set(tchecker::covreach::options_t::SOURCE_SET_ALL),
-      _stats(0)
+      _stats(0),
+      _spread(tchecker::covreach::options_t::UNBOUNDED_SPREAD)
       {
         auto it = range.begin(), end = range.end();
         for ( ; it != end; ++it )
           set_option(it->first, it->second, log);
         check_mandatory_options(log);
         check_source_set_model(log);
+        check_spread(log);
       }
       
       /*!
@@ -229,6 +241,12 @@ namespace tchecker {
       bool stats() const;
       
       /*!
+       \brief Accessor
+       \return bound on spread for asynchronous zone graph
+       */
+      tchecker::integer_t spread() const;
+      
+      /*!
        \brief Check that mandatory options have been set
        \param log : a logging facility
        \post All errors and warnings have been reported to log
@@ -241,6 +259,13 @@ namespace tchecker {
        \post All errors and warnings have been reported to log
        */
       void check_source_set_model(tchecker::log_t & log) const;
+      
+      /*!
+       \brief Check spread is compatible with model
+       \param log : logging facility
+       \post All errors and warnings have been reported to log
+       */
+      void check_spread(tchecker::log_t & log) const;
       
       /*!
        \brief Short options string (getopt_long format)
@@ -260,6 +285,7 @@ namespace tchecker {
         {"output",       required_argument, 0, 'o'},
         {"search-order", required_argument, 0, 's'},
         {"source-set",   required_argument, 0, 0},
+        {"spread",       required_argument, 0, 0},
         {"stats",        no_argument,       0, 'S'},
         {"block-size",   required_argument, 0, 0},
         {"table-size",   required_argument, 0, 0},
@@ -398,6 +424,14 @@ namespace tchecker {
        */
       void set_stats(std::string const & value, tchecker::log_t & log);
       
+      /*!
+       \brief Set bound on spread for asynchronous zone graph
+       \param value : option value
+       \param log : logging facility
+       \post bound on spread has been set
+       */
+      void set_spread(std::string const & value, tchecker::log_t & log);
+      
       enum node_covering_t _node_covering;         /*!< Node covering */
       enum output_format_t _output_format;         /*!< Output format */
       std::vector<std::string> _accepting_labels;  /*!< Accepting labels */
@@ -408,6 +442,7 @@ namespace tchecker {
       std::size_t _nodes_table_size;               /*!< Size of nodes table */
       enum source_set_t _source_set;               /*!< Source set */
       unsigned _stats : 1;                         /*!< Statistics */
+      tchecker::integer_t _spread;                 /*!< Bound on spread for asynchronous zone graph */
     };
     
   } // end of namespace covreach

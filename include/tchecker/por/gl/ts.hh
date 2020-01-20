@@ -139,9 +139,9 @@ namespace tchecker {
          \throw std::invalid_argument : if model has partial synchronizations (only if compiled with LOCAL_ONE_PROCESS)
          \note TS should have a constructor TS(MODEL &)
          */
-        template <class MODEL>
-        ts_t(MODEL & model)
-        : base_ts_t(model),
+        template <class MODEL, class ... ARGS>
+        ts_t(MODEL & model, ARGS && ... args)
+        : base_ts_t(model, args...),
 #ifdef PARTIAL_SYNCS_ALLOWED
         _location_next_syncs(tchecker::location_next_global_syncs(model.system())),
         _group_id(model.system().processes_count(), tchecker::por::gl::global)

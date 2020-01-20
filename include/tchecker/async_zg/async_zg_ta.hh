@@ -268,10 +268,10 @@ namespace tchecker {
       } // end of namespace details
       
       
-      using elapsed_extraLUplus_local_t
-      = tchecker::async_zg::ta::details::instance_types_t<tchecker::offset_dbm::elapsed_extraLUplus_local_t>;
-      using non_elapsed_extraLUplus_local_t
-      = tchecker::async_zg::ta::details::instance_types_t<tchecker::offset_dbm::non_elapsed_extraLUplus_local_t>;
+      using elapsed_no_extrapolation_t
+      = tchecker::async_zg::ta::details::instance_types_t<tchecker::offset_dbm::elapsed_no_extrapolation_t>;
+      using non_elapsed_no_extrapolation_t
+      = tchecker::async_zg::ta::details::instance_types_t<tchecker::offset_dbm::non_elapsed_no_extrapolation_t>;
       
     } // end of namespace ta
     

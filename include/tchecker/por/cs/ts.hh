@@ -86,9 +86,9 @@ namespace tchecker {
          \throw std::invalid_argument : if model is not client/server
          \note TS should have a constructor TS(MODEL &)
          */
-        template <class MODEL>
-        ts_t(MODEL & model)
-        : base_ts_t(model),
+        template <class MODEL, class ... ARGS>
+        ts_t(MODEL & model, ARGS && ... args)
+        : base_ts_t(model, args...),
         _location_next_syncs(tchecker::location_next_syncs(model.system()))
         {
           if (! tchecker::client_server(model.system(), _server_pid))

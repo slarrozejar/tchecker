@@ -526,6 +526,74 @@ namespace tchecker {
       
       
       /*!
+       \class cover_async_zone_inclusion_t
+       \brief node covering w.r.t. inclusion of asynchronous (offset) zone
+       \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::async_zg::details::state_t
+       */
+      template <class NODE_PTR>
+      class cover_async_zone_inclusion_t {
+      public:
+        /*!
+         \brief Type of pointer to node
+         */
+        using node_ptr_t = NODE_PTR;
+        
+        /*!
+         \brief Constructor
+         \param model : a model
+         \tparam MODEL : type of model
+         */
+        template <class MODEL>
+        explicit cover_async_zone_inclusion_t(MODEL const & model)
+        {}
+        
+        /*!
+         \brief Copy constructor
+         */
+        cover_async_zone_inclusion_t
+        (tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR> const &)
+        = default;
+        
+        /*!
+         \brief Move constructor
+         */
+        cover_async_zone_inclusion_t
+        (tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR> &&)
+        = default;
+        
+        /*!
+         \brief Destructor
+         */
+        ~cover_async_zone_inclusion_t() = default;
+        
+        /*!
+         \brief Assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR> const &) = default;
+        
+        /*!
+         \brief Move-assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR>  &&) = default;
+        
+        /*!
+         \brief Covering predicate
+         \param n1 : a node
+         \param n2 : a node
+         \return true if the offset zone in n1 is included in the offset zone in n2, false otherwise
+         */
+        bool operator() (NODE_PTR const & n1, NODE_PTR const & n2)
+        {
+          return (n1->offset_zone() <= n2->offset_zone());
+        }
+      };
+      
+      
+      
+      
+      /*!
        \class cover_async_zone_am_global_t
        \brief node covering w.r.t. offset zone aM-inclusion and global clock bounds
        \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::aync_zg::details::state_t
@@ -633,7 +701,9 @@ namespace tchecker {
          */
         cover_async_zone_am_local_t
         (tchecker::covreach::details::cover_async_zone_am_local_t<NODE_PTR> const & c)
-        : _local_m_map(c._local_m_map)
+        : _local_m_map(c._local_m_map),
+        _refcount(c._refcount),
+        _refmap(c._refmap)
         {
           _M = tchecker::clockbounds::clone_map(*c._M);
         }
@@ -643,7 +713,10 @@ namespace tchecker {
          */
         cover_async_zone_am_local_t
         (tchecker::covreach::details::cover_async_zone_am_local_t<NODE_PTR> && c)
-        : _local_m_map(std::move(c._local_m_map)), _M(c._M)
+        : _local_m_map(std::move(c._local_m_map)),
+        _M(c._M),
+        _refcount(c._refcount),
+        _refmap(c._refmap)
         {
           c._M = nullptr;
         }
@@ -654,6 +727,7 @@ namespace tchecker {
         ~cover_async_zone_am_local_t()
         {
           tchecker::clockbounds::deallocate_map(_M);
+          // IMPLEMENTATION NOTE: do not destroy _refmap which is a reference stored as a pointer
         }
         
         /*!
@@ -666,6 +740,8 @@ namespace tchecker {
             _local_m_map = c._local_m_map;
             delete _M;
             _M = tchecker::clockbounds::clone_map(*c._M);
+            _refcount = c._refcount;
+            _refmap = c._refmap;
           }
           return *this;
         }
@@ -681,6 +757,8 @@ namespace tchecker {
             delete _M;
             _M = c._M;
             c._M = nullptr;
+            _refcount = c._refcount;
+            _refmap = c._refmap;
           }
           return *this;
         }
@@ -846,6 +924,18 @@ namespace tchecker {
     using cover_sync_inclusion_t
     = tchecker::covreach::details::cover_node_t
     <NODE_PTR, STATE_PREDICATE, tchecker::covreach::details::cover_sync_zone_inclusion_t<NODE_PTR>>;
+    
+    
+    /*!
+     \brief Node covering w.r.t. inclusion of asynchronous (offset) zone
+     \tparam NODE_PTR : type of pointer to node
+     \tparam STATE_PREDICATE : type of predicate on states in nodes
+     */
+    template <class NODE_PTR, class STATE_PREDICATE>
+    using cover_async_inclusion_t
+    = tchecker::covreach::details::cover_node_t
+    <NODE_PTR, STATE_PREDICATE, tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR>>;
+    
     
     /*!
      \brief Node covering w.r.t. offset zone aM*-inclusion and global M clock bounds

@@ -38,7 +38,8 @@ namespace tchecker {
         class OFFSET_ZONE=typename STATE::offset_zone_t
         >
         class state_pool_allocator_t
-        : protected tchecker::async_zg::details::state_pool_allocator_t<STATE, VLOC, INTVARS_VAL, OFFSET_ZONE> {
+        : public tchecker::async_zg::details::state_pool_allocator_t<STATE, VLOC, INTVARS_VAL, OFFSET_ZONE>
+        {
         public:
           /*!
            \brief Type of allocated states
