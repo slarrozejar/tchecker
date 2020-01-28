@@ -5,6 +5,7 @@
  *
  */
 
+#include "tchecker/clockbounds/clockbounds.hh"
 #include "tchecker/dbm/offset_dbm.hh"
 #include "tchecker/utils/ordering.hh"
 
@@ -193,44 +194,52 @@ namespace tchecker {
       assert(offset_dim >= 1);
       assert(m[0] == 0);
       
-      for (tchecker::clock_id_t r1 = 0; r1 < refcount; ++r1)
-        for (tchecker::clock_id_t r2 = 0; r2 < refcount; ++r2)
-          if (OFFSET_DBM1(r1,r2) > OFFSET_DBM2(r1,r2))
-            return false;
+      // Z is not included in aM*(Z') if:
+      //    Z{r1,r2} > Z'(r1,r2} for some reference clocks r1, r2
+      // or Z{ry,y} >= (<=,-My) and Z'{r,y} < Z{r,y} for some reference clock r and offset clock y
+      // or Z'{x,r} < Z{x,r} and Z'{x,r} + (<,-Mx) < Z{rx,r} for some reference clock r and offset clock x
+      // or Z{ry,y} >= (<=,-My) and Z’{x,y} < Z{x,y} and Z’{x,y} + (<,-Mx) < Z{rx,y} for some offset clocks x, y
       
-      for (tchecker::clock_id_t x = refcount; x < offset_dim; ++x) {
-        tchecker::integer_t const Mx = m[x-refcount+1];
-        if (Mx == -tchecker::dbm::INF_VALUE)
+      for (tchecker::clock_id_t y = refcount; y < offset_dim; ++y) {
+        tchecker::integer_t const My = m[y-refcount+1];
+        assert(My < tchecker::dbm::INF_VALUE);
+        if (My == tchecker::clockbounds::NO_BOUND)
           continue;
         
-        tchecker::dbm::db_t const lt_minus_Mx = tchecker::dbm::db(tchecker::dbm::LT, -Mx);
+        tchecker::clock_id_t const ry = refmap[y];
+        tchecker::dbm::db_t const lt_minus_My = tchecker::dbm::db(tchecker::dbm::LT, -My);
         
-        for (tchecker::clock_id_t y = refcount; y < offset_dim; ++y) {
-          if (x == y)
-            continue;
-          
-          tchecker::integer_t const My = m[y-refcount+1];
-          if (My == -tchecker::dbm::INF_VALUE)
+        for (tchecker::clock_id_t r = 0; r < refcount; ++r)
+          if ((OFFSET_DBM2(y, r) < OFFSET_DBM1(y, r)) &&
+              (tchecker::dbm::sum(OFFSET_DBM2(y, r), lt_minus_My) < OFFSET_DBM1(ry, r)))
+            return false;
+        
+        if (OFFSET_DBM1(ry, y) < tchecker::dbm::db(tchecker::dbm::LE, -My))
+          continue;
+        
+        for (tchecker::clock_id_t r = 0; r < refcount; ++r)
+          if (OFFSET_DBM2(r, y) < OFFSET_DBM1(r, y))
+            return false;
+        
+        for (tchecker::clock_id_t x = refcount; x < offset_dim; ++x) {
+          tchecker::integer_t const Mx = m[x-refcount+1];
+          assert(Mx < tchecker::dbm::INF_VALUE);
+          if (Mx == tchecker::clockbounds::NO_BOUND)
             continue;
           
           tchecker::clock_id_t const rx = refmap[x];
-          tchecker::clock_id_t const ry = refmap[y];
+          tchecker::dbm::db_t const lt_minus_Mx = tchecker::dbm::db(tchecker::dbm::LT, -Mx);
           
-          // IMPLEMENTATION NOTE: we use negation of OFFSET_DBM1 and OFFSET_DBM2 since the test
-          // is designed for offset zones with increasing time, whereas this implementation uses
-          // decreasing time
-          /* The checks reads as:
-               offset_dbm1(y,r(y)) >= (<=,-m(y)) &&
-               offset_dbm2(y,x) < offset_dbm1(y,x) &&
-               offset_dbm2(y,x) + (<,-m(x)) < offset_dbm1(y,r(x))
-           plus, we need negation of offset DBMs entries as observed above
-           */
-          if ((-OFFSET_DBM1(y,ry) >= tchecker::dbm::db(tchecker::dbm::LE, -My)) &&
-              (-OFFSET_DBM2(y,x) < -OFFSET_DBM1(y,x)) &&
-              (tchecker::dbm::sum(-OFFSET_DBM2(y,x), lt_minus_Mx) < -OFFSET_DBM1(y, rx)))
+          if ((OFFSET_DBM2(x, y) < OFFSET_DBM1(x, y)) &&
+              (tchecker::dbm::sum(OFFSET_DBM2(x, y), lt_minus_Mx) < OFFSET_DBM1(rx, y)))
             return false;
         }
       }
+      
+      for (tchecker::clock_id_t r1 = 0; r1 < refcount; ++r1)
+        for (tchecker::clock_id_t r2 = 0; r2 < refcount; ++r2)
+          if (OFFSET_DBM1(r1, r2) > OFFSET_DBM2(r1, r2))
+            return false;
       
       return true;
     }

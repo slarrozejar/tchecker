@@ -5,6 +5,7 @@
  *
  */
 
+#include "tchecker/clockbounds/clockbounds.hh"
 #include "tchecker/dbm/offset_dbm.hh"
 
 /* Tests are provided for functions over offset DBMs. We do not test functions
@@ -226,6 +227,140 @@ TEST_CASE( "is_synchronized, structural test for offset DBMs", "[offset_dbm]" ) 
     REQUIRE_FALSE(tchecker::offset_dbm::is_synchronized(offset_dbm, offset_dim, refcount));
   }
   
+}
+
+
+
+TEST_CASE ("is_am_le offset DBMs, inclusion in universal zone", "[offset_dbm]" ) {
+
+  tchecker::clock_id_t const dim = 3;
+  tchecker::clock_id_t const refcount = 2;
+  tchecker::clock_id_t const offset_dim = dim - 1 + refcount;
+  tchecker::clock_id_t const refmap[] = {0, 1, 0, 1};
+  
+  tchecker::clockbounds::map_t * M = tchecker::clockbounds::allocate_map(dim);
+  (*M)[0] = 0;
+  (*M)[1] = 1;
+  (*M)[2] = 1;
+  
+  tchecker::dbm::db_t universal_Z[offset_dim * offset_dim];
+  tchecker::offset_dbm::universal(universal_Z, offset_dim);
+  
+  SECTION( "Universal zone is included into itself" ) {
+    REQUIRE( tchecker::offset_dbm::is_am_le(universal_Z, universal_Z, offset_dim, refcount, refmap, M->ptr()));
+  }
+  
+  SECTION( "Non-empty, non-universal zone is included into universal zone" ) {
+    tchecker::dbm::db_t le_1 = tchecker::dbm::db(tchecker::dbm::LE, 1);
+    tchecker::dbm::db_t le_m1 = tchecker::dbm::db(tchecker::dbm::LE, -1);
+    
+    tchecker::dbm::db_t Z1[offset_dim * offset_dim] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_1, tchecker::dbm::LE_ZERO
+    };
+    
+    REQUIRE( tchecker::offset_dbm::is_am_le(Z1, universal_Z, offset_dim, refcount, refmap, M->ptr()));
+  }
+  
+  tchecker::clockbounds::deallocate_map(M);
+}
+
+
+
+TEST_CASE ("is_am_le offset DBMs, inclusion of the universal zone", "[offset_dbm]" ) {
+
+  tchecker::clock_id_t const dim = 3;
+  tchecker::clock_id_t const refcount = 2;
+  tchecker::clock_id_t const offset_dim = dim - 1 + refcount;
+  tchecker::clock_id_t const refmap[] = {0, 1, 0, 1};
+  
+  tchecker::clockbounds::map_t * M = tchecker::clockbounds::allocate_map(dim);
+  (*M)[0] = 0;
+  
+  tchecker::dbm::db_t universal_Z[offset_dim * offset_dim];
+  tchecker::offset_dbm::universal(universal_Z, offset_dim);
+  
+  tchecker::dbm::db_t le_1 = tchecker::dbm::db(tchecker::dbm::LE, 1);
+  tchecker::dbm::db_t le_m1 = tchecker::dbm::db(tchecker::dbm::LE, -1);
+  
+  tchecker::dbm::db_t Z1[offset_dim * offset_dim] =
+  { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+    tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1, tchecker::dbm::LE_ZERO,
+    tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+    tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_1, tchecker::dbm::LE_ZERO
+  };
+  
+  SECTION( "Universal zone is not cotained in Z1 with clock bounds 1,1" ) {
+    (*M)[1] = 1;
+    (*M)[2] = 1;
+    REQUIRE( ! tchecker::offset_dbm::is_am_le(universal_Z, Z1, offset_dim, refcount, refmap, M->ptr()));
+  }
+  
+  SECTION( "Universal zone is not cotained in Z1 with clock bounds -inf,-inf" ) {
+    (*M)[1] = tchecker::clockbounds::NO_BOUND;
+    (*M)[2] = tchecker::clockbounds::NO_BOUND;
+    REQUIRE( tchecker::offset_dbm::is_am_le(universal_Z, Z1, offset_dim, refcount, refmap, M->ptr()));
+  }
+  
+  tchecker::clockbounds::deallocate_map(M);
+}
+
+
+
+TEST_CASE ("is_am_le offset DBMs, non trivial zones, non trivial clock bounds", "[offset_dbm]" ) {
+  
+  tchecker::clock_id_t const dim = 3;
+  tchecker::clock_id_t const refcount = 2;
+  tchecker::clock_id_t const offset_dim = dim - 1 + refcount;
+  tchecker::clock_id_t const refmap[] = {0, 1, 0, 1};
+  
+  tchecker::clockbounds::map_t * M = tchecker::clockbounds::allocate_map(dim);
+  (*M)[0] = 0;
+  (*M)[1] = 1;
+  (*M)[2] = 1;
+  
+  tchecker::dbm::db_t le_1 = tchecker::dbm::db(tchecker::dbm::LE, 1);
+  tchecker::dbm::db_t le_m1 = tchecker::dbm::db(tchecker::dbm::LE, -1);
+  
+  SECTION( "First case" ) {
+    tchecker::dbm::db_t Z1[offset_dim * offset_dim] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_1, tchecker::dbm::LE_ZERO
+    };
+    
+    tchecker::dbm::db_t Z2[offset_dim * offset_dim] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO
+    };
+    
+    REQUIRE( ! tchecker::offset_dbm::is_am_le(Z1, Z2, offset_dim, refcount, refmap, M->ptr()) );
+  }
+  
+  SECTION( "Second case" ) {
+    tchecker::dbm::db_t Z1[offset_dim * offset_dim] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_m1, tchecker::dbm::LE_ZERO
+    };
+    
+    tchecker::dbm::db_t Z2[offset_dim * offset_dim] =
+    { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, tchecker::dbm::LE_ZERO
+    };
+    
+    REQUIRE( ! tchecker::offset_dbm::is_am_le(Z1, Z2, offset_dim, refcount, refmap, M->ptr()) );
+  }
+  
+  tchecker::clockbounds::deallocate_map(M);
 }
 
 
