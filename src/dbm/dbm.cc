@@ -13,6 +13,7 @@
 # include <boost/container_hash/hash.hpp>
 #endif
 
+#include "tchecker/clockbounds/clockbounds.hh"
 #include "tchecker/dbm/dbm.hh"
 #include "tchecker/utils/ordering.hh"
 
@@ -723,7 +724,7 @@ namespace tchecker {
         assert(u[x] < tchecker::dbm::INF_VALUE);
         
         // Skip x as 1st condition cannot be satisfied
-        if (u[x] == - tchecker::dbm::INF_VALUE)
+        if (u[x] == tchecker::clockbounds::NO_BOUND)
           continue;
         
         // Check 1st condition
@@ -737,7 +738,7 @@ namespace tchecker {
             continue;
           
           // Skip y as 3rd condition cannot be satisfied
-          if (l[y] == - tchecker::dbm::INF_VALUE)
+          if (l[y] == tchecker::clockbounds::NO_BOUND)
             continue;
           
           // Check 2nd and 3rd conditions
