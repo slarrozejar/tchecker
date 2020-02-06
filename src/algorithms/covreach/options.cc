@@ -418,7 +418,7 @@ namespace tchecker {
     void options_t::check_source_set_model(tchecker::log_t & log) const
     {
       if ((_source_set != tchecker::covreach::options_t::SOURCE_SET_ALL) &&
-          ((_algorithm_model < ASYNC_ZG_ELAPSED_NOEXTRA) ||
+          ((_algorithm_model < ASYNC_ZG_ELAPSED) ||
            (_algorithm_model > ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L)))
         log.error("source set can only be used with asynchronous zone graph models");
     }
@@ -429,6 +429,7 @@ namespace tchecker {
       if (_spread < 0)
         log.error("spread should be >= 0");
       if ((_spread > 0) &&
+          (_spread != tchecker::covreach::options_t::UNBOUNDED_SPREAD) &&
           (_algorithm_model != ASYNC_ZG_ELAPSED) &&
           (_algorithm_model != ASYNC_ZG_NON_ELAPSED))
         log.error("spread should only be specified for models async_zg:elapsed and async_zg::non_elapsed");
