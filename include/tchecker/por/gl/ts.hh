@@ -9,10 +9,12 @@
 #define TCHECKER_POR_GL_TS_HH
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <type_traits>
 
 #include "tchecker/basictypes.hh"
+#include "tchecker/dbm/offset_dbm.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
 #include "tchecker/por/synchronizable.hh"
@@ -155,6 +157,8 @@ namespace tchecker {
           if (! tchecker::global_local(model.system()))
             throw std::invalid_argument("System is not global/local");
 #endif // PARTIAL_SYNCS_ALLOWED
+          _offset_dim = model.flattened_offset_clock_variables().size();
+          _offset_dbm = new tchecker::dbm::db_t[_offset_dim * _offset_dim];
         }
         
         /*!
@@ -170,7 +174,10 @@ namespace tchecker {
         /*!
          \brief Destructor
          */
-        ~ts_t() = default;
+        ~ts_t()
+        {
+          delete[] _offset_dbm;
+        }
         
         /*!
          \brief Assignment operator
@@ -248,11 +255,27 @@ namespace tchecker {
          \note there is a reachable global action from s if all processes < s.rank() have a common global action that is also
          reachable from s for all processes >= s.rank()
          */
-        bool synchronizable(STATE const & s) const
+        bool synchronizable(STATE const & s)
         {
-          return tchecker::por::synchronizable_global(s.vloc(),
-                                                      (s.rank() == tchecker::por::gl::global ? 0 : s.rank()),
-                                                      _location_next_syncs);
+          return (tchecker::por::synchronizable_global(s.vloc(),
+                                                       (s.rank() == tchecker::por::gl::global ? 0 : s.rank()),
+                                                       _location_next_syncs) &&
+                  zone_synchronizable(s));
+        }
+        
+        /*!
+         \brief Check if the zone in a state can be partially synchronized
+         \param s : state
+         \return true if the zone in s can be synchronized w.r.t. processes with an id lower than the rank of s,
+         false otherwise
+         */
+        bool zone_synchronizable(STATE const & s)
+        {
+          assert(s.rank() < tchecker::por::gl::global);
+          std::memcpy(_offset_dbm, s.offset_zone().dbm(), _offset_dim * _offset_dim * sizeof(*_offset_dbm));
+          enum tchecker::dbm::status_t status = tchecker::offset_dbm::synchronize(_offset_dbm, _offset_dim,
+                                                                                  s.rank());
+          return (status == tchecker::dbm::NON_EMPTY);
         }
         
         /*!
@@ -313,6 +336,8 @@ namespace tchecker {
         }
         
         tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
+        tchecker::dbm::db_t * _offset_dbm;                     /*!< Offset DBM to check synchronizability */
+        tchecker::clock_id_t _offset_dim;                      /*!< Dimension of _offset_dbm */
 #ifdef PARTIAL_SYNCS_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;         /*!< Map PID -> group ID */
 #endif // PARTIAL_SYNCS_ALLOWED
