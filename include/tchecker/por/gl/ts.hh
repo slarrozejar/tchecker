@@ -157,8 +157,9 @@ namespace tchecker {
           if (! tchecker::global_local(model.system()))
             throw std::invalid_argument("System is not global/local");
 #endif // PARTIAL_SYNCS_ALLOWED
-          _offset_dim = model.flattened_offset_clock_variables().size();
+          _offset_dim = model.flattened_offset_clock_variables().flattened_size();
           _offset_dbm = new tchecker::dbm::db_t[_offset_dim * _offset_dim];
+          _refcount = model.flattened_offset_clock_variables().refcount();
         }
         
         /*!
@@ -271,10 +272,13 @@ namespace tchecker {
          */
         bool zone_synchronizable(STATE const & s)
         {
-          assert(s.rank() < tchecker::por::gl::global);
+          tchecker::clock_id_t refsync = std::min(s.rank(), _refcount);
+          if (refsync == 0)
+            return true;
+          
           std::memcpy(_offset_dbm, s.offset_zone().dbm(), _offset_dim * _offset_dim * sizeof(*_offset_dbm));
           enum tchecker::dbm::status_t status = tchecker::offset_dbm::synchronize(_offset_dbm, _offset_dim,
-                                                                                  s.rank());
+                                                                                  refsync);
           return (status == tchecker::dbm::NON_EMPTY);
         }
         
@@ -338,6 +342,7 @@ namespace tchecker {
         tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
         tchecker::dbm::db_t * _offset_dbm;                     /*!< Offset DBM to check synchronizability */
         tchecker::clock_id_t _offset_dim;                      /*!< Dimension of _offset_dbm */
+        tchecker::clock_id_t _refcount;                        /*!< Number of reference clocks */
 #ifdef PARTIAL_SYNCS_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;         /*!< Map PID -> group ID */
 #endif // PARTIAL_SYNCS_ALLOWED
