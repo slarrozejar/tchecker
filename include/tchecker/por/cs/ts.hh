@@ -123,6 +123,12 @@ namespace tchecker {
           if (status != tchecker::STATE_OK)
             return status;
           
+#ifdef PARTIAL_SYNC_ALLOWED
+          // Synchronize reference clocks from the same group
+          if (synchronize_groups(s) != tchecker::STATE_OK)
+            return tchecker::STATE_EMPTY_ZONE;
+#endif // PARTIAL_SYNC_ALLOWED
+          
           s.rank(tchecker::por::cs::communication);
           
           if (! synchronizable(s))
@@ -150,21 +156,9 @@ namespace tchecker {
           
 #ifdef PARTIAL_SYNC_ALLOWED
           // Synchronize reference clocks from the same group
-          tchecker::dbm::db_t * offset_dbm = s.offset_zone_ptr()->dbm();
-          for (tchecker::clock_id_t r = 0; r < _refcount; ++r) {
-            if (r == _group_id[r])
-              continue;
-            auto status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, r, _group_id[r],
-                                                          tchecker::dbm::LE, 0);
-            if (status == tchecker::dbm::EMPTY)
-              return tchecker::STATE_EMPTY_ZONE;
-            status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, _group_id[r], r,
-                                                     tchecker::dbm::LE, 0);
-            if (status == tchecker::dbm::EMPTY)
-              return tchecker::STATE_EMPTY_ZONE;
-          }
-          
-#endif // PARTIAL_SYNC_ALLOWER
+          if (synchronize_groups(s) != tchecker::STATE_OK)
+            return tchecker::STATE_EMPTY_ZONE;
+#endif // PARTIAL_SYNC_ALLOWED
           
           std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(v);
 #ifdef PARTIAL_SYNC_ALLOWED
@@ -211,6 +205,33 @@ namespace tchecker {
 #else
           return (s.rank() == tchecker::por::cs::communication) || (tchecker::vedge_pids(v).count(s.rank()) >= 1);
 #endif // PARTIAL_SYNC_ALLOWED
+        }
+        
+        /*!
+         \brief Synchronise reference clocks that belong to the same group
+         \param s : a state
+         \post the reference clocks that belong to the same group have been synchronised in the zone of s
+         \return tchecker::STATE_OK if the resulting zone is not empty,  tchecker::STATE_EMPTY_ZONE otherwise
+         */
+        enum tchecker::state_status_t synchronize_groups(STATE & s) const
+        {
+          tchecker::dbm::db_t * offset_dbm = s.offset_zone_ptr()->dbm();
+          for (tchecker::clock_id_t r = 0; r < _refcount; ++r) {
+            if (r == _group_id[r])
+              continue;
+            
+            auto status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, r, _group_id[r],
+                                                          tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+            
+            status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, _group_id[r], r,
+                                                     tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+          }
+          
+          return tchecker::STATE_OK;
         }
         
         /*!
