@@ -269,8 +269,7 @@ namespace tchecker {
           // Further check that, once all reference clocks below s.rank() have been synchronised,
           // synchronization with other reference clocks is possible
           for (tchecker::clock_id_t r = s.rank(); r < _refcount; ++r)
-            if (s.offset_zone().dbm(0, r) != tchecker::dbm::LT_INFINITY &&
-                s.offset_zone().dbm(0, r) > tchecker::dbm::LE_ZERO)
+            if (s.offset_zone().dbm(r, 0) < tchecker::dbm::LE_ZERO)
               return false;
           
           return true;

@@ -216,7 +216,6 @@ namespace tchecker {
           return _async_zone_semantics.next(offset_zone, _src_delay_allowed, _offset_src_invariant,
                                             _offset_guard, _offset_clkreset, _tgt_delay_allowed,
                                             _offset_tgt_invariant, vloc);
-                                            
         }
         
         /*!
