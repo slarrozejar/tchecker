@@ -259,10 +259,21 @@ namespace tchecker {
           if (refsync == 0)
             return true;
           
+          // Check that reference clocks below s.rank() can be synchronised
           std::memcpy(_offset_dbm, s.offset_zone().dbm(), _offset_dim * _offset_dim * sizeof(*_offset_dbm));
           enum tchecker::dbm::status_t status = tchecker::offset_dbm::synchronize(_offset_dbm, _offset_dim,
                                                                                   refsync);
-          return (status == tchecker::dbm::NON_EMPTY);
+          if (status == tchecker::dbm::EMPTY)
+            return false;
+          
+          // Further check that, once all reference clocks below s.rank() have been synchronised,
+          // synchronization with other reference clocks is possible
+          for (tchecker::clock_id_t r = s.rank(); r < _refcount; ++r)
+            if (s.offset_zone().dbm(0, r) != tchecker::dbm::LT_INFINITY &&
+                s.offset_zone().dbm(0, r) > tchecker::dbm::LE_ZERO)
+              return false;
+          
+          return true;
         }
         
         /*!

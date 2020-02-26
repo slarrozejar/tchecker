@@ -136,6 +136,17 @@ namespace tchecker {
       tchecker::dbm::db_t const * dbm() const;
       
       /*!
+       \brief Accessor
+       \param i : clock ID
+       \param j : clock ID
+       \return constraint on xi-xj in this DBM
+       */
+      constexpr tchecker::dbm::db_t dbm(tchecker::clock_id_t i, tchecker::clock_id_t j) const
+      {
+        return dbm_ptr()[i * _dim + j];
+      }
+      
+      /*!
        \brief Construction
        \tparam ARGS : type of arguments to a constructor of tchecker::offset_dbm::zone_t
        \tparam ptr : pointer to an allocated zone
@@ -194,17 +205,6 @@ namespace tchecker {
       constexpr tchecker::dbm::db_t * dbm_ptr() const
       {
         return static_cast<tchecker::dbm::db_t *>(static_cast<void *>(const_cast<tchecker::offset_dbm::zone_t *>(this) + 1));
-      }
-      
-      /*!
-       \brief Accessor
-       \param i : clock ID
-       \param j : clock ID
-       \return constraint on xi-xj in this DBM
-       */
-      constexpr tchecker::dbm::db_t dbm(tchecker::clock_id_t i, tchecker::clock_id_t j) const
-      {
-        return dbm_ptr()[i * _dim + j];
       }
       
       tchecker::clock_id_t _dim;  /*!< Dimension of DBM */
