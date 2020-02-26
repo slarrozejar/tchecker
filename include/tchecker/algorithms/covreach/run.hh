@@ -8,6 +8,8 @@
 #ifndef TCHECKER_ALGORITHMS_COVREACH_RUN_HH
 #define TCHECKER_ALGORITHMS_COVREACH_RUN_HH
 
+#include <string>
+
 #if BOOST_VERSION <= 106600
 # include <boost/functional/hash.hpp>
 #else
@@ -499,10 +501,10 @@ namespace tchecker {
                   return std::tuple<model_t const &>(model);
                 }
                 
-                static std::tuple<model_t &>
+                static std::tuple<model_t &, std::string const &>
                 ts_args(model_t & model, tchecker::covreach::options_t const & options)
                 {
-                  return std::tuple<model_t &>(model);
+                  return std::tuple<model_t &, std::string const &>(model, options.server_process());
                 }
                 
                 using node_outputter_t
@@ -602,10 +604,10 @@ namespace tchecker {
                     return std::tuple<model_t const &>(model);
                   }
                   
-                  static std::tuple<model_t &> ts_args(model_t & model,
-                                                       tchecker::covreach::options_t const & options)
+                  static std::tuple<model_t &, std::string const &>
+                  ts_args(model_t & model, tchecker::covreach::options_t const & options)
                   {
-                    return std::tuple<model_t &>(model);
+                    return std::tuple<model_t &, std::string const &>(model, options.server_process());
                   }
                   
                   using node_outputter_t
@@ -710,10 +712,11 @@ namespace tchecker {
                     return std::tuple<model_t const &>(model);
                   }
                   
-                  static std::tuple<model_t &, tchecker::integer_t>
+                  static std::tuple<model_t &, std::string const &, tchecker::integer_t>
                   ts_args(model_t & model, tchecker::covreach::options_t const & options)
                   {
-                    return std::tuple<model_t &, tchecker::integer_t>(model, options.spread());
+                    return std::tuple<model_t &, std::string const &, tchecker::integer_t>
+                    (model, options.server_process(), options.spread());
                   }
                   
                   using node_outputter_t

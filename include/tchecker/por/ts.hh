@@ -8,6 +8,7 @@
 #ifndef TCHECKER_POR_TS_HH
 #define TCHECKER_POR_TS_HH
 
+#include <tuple>
 #include <type_traits>
 
 #include "tchecker/basictypes.hh"
@@ -48,11 +49,9 @@ namespace tchecker {
      \brief Transition system with partial-order reduction
      \tparam TS : type of underlying transition system, should implement tchecker::ts::ts_t
      \tparam STATE : type of states, should inherit from TS::state_t, and from tchecker::por::state_t
-     \tparam SOURCE_SET : source set, should provide membership operator
-     bool operator() (STATE const &, tchecker::vedge_iterator_t const &)
      \note ts_t<TS> implements partial-order reduction on top of TS
      */
-    template <class TS, class STATE, class SOURCE_SET>
+    template <class TS, class STATE>
     class ts_t : public tchecker::por::details::ts_instance_t<TS, STATE> {
     
       static_assert(std::is_base_of<tchecker::por::state_t, STATE>::value,
@@ -65,6 +64,7 @@ namespace tchecker {
       /*!
        \brief Constructor
        \param model : a model
+       \param args : extra arguments to a constructor of TS
        \note TS should have a constructor TS(MODEL &)
        */
       template <class MODEL, class ... ARGS>
@@ -75,12 +75,12 @@ namespace tchecker {
       /*!
        \brief Copy constructor
        */
-      ts_t(tchecker::por::ts_t<TS, STATE, SOURCE_SET> const &) = default;
+      ts_t(tchecker::por::ts_t<TS, STATE> const &) = default;
         
       /*!
        \brief Move constructor
        */
-      ts_t(tchecker::por::ts_t<TS, STATE, SOURCE_SET> &&) = default;
+      ts_t(tchecker::por::ts_t<TS, STATE> &&) = default;
         
       /*!
        \brief Destructor
@@ -90,14 +90,14 @@ namespace tchecker {
       /*!
        \brief Assignment operator
        */
-      tchecker::por::ts_t<TS, STATE, SOURCE_SET> &
-      operator= (tchecker::por::ts_t<TS, STATE, SOURCE_SET> const &) = default;
+      tchecker::por::ts_t<TS, STATE> &
+      operator= (tchecker::por::ts_t<TS, STATE> const &) = default;
         
       /*!
        \brief Move-assignment oeprator
        */
-      tchecker::por::ts_t<TS, STATE, SOURCE_SET> &
-      operator= (tchecker::por::ts_t<TS, STATE, SOURCE_SET> &&) = default;
+      tchecker::por::ts_t<TS, STATE> &
+      operator= (tchecker::por::ts_t<TS, STATE> &&) = default;
        
       /*!
        \brief Accessor
@@ -150,14 +150,21 @@ namespace tchecker {
         if (status != tchecker::STATE_OK)
           return status;
         
-        if (! _source_set(s, v))
+        if (! in_source_set(s, v))
           return tchecker::STATE_POR_DISABLED;
         
         return tchecker::STATE_OK;
       }
     private:
+      /*!
+       \brief Source set selection
+       \param s : a state
+       \param v : a vedge
+       \return true if v is in the source set of state s, false otherwise
+       */
+      virtual bool in_source_set(STATE const & s, typename TS::outgoing_edges_iterator_value_t const & v) = 0;
+      
       TS _ts;                   /*!< Underlying transition system */
-      SOURCE_SET _source_set;   /*!< Source set */
     };
     
   } // end of namespace por

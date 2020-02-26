@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include "tchecker/basictypes.hh"
+#include "tchecker/dbm/offset_dbm.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/state.hh"
 #include "tchecker/por/synchronizable.hh"
@@ -33,39 +34,8 @@ namespace tchecker {
       /*! Rank value of client-server communications */
       constexpr tchecker::process_id_t const communication = std::numeric_limits<tchecker::process_id_t>::max();
       
-    
-    
       
-      /*!
-       \class source_set_t
-       \brief Source set for client/server systems
-       \tparam STATE : type of state, should derive from tchecker::por::state_t
-       */
-      template <class STATE>
-      class source_set_t {
-        
-        static_assert(std::is_base_of<tchecker::por::state_t, STATE>::value,
-                      "STATE should derive from tchecker::por::state_t");
-        
-      public:
-        /*!
-         \brief Membership predicate
-         \tparam VEDGE : type of vedge
-         \param s : state
-         \param vedge : a vedge
-         \return true if vedge shoud be included in the source set of s, false otherwise
-         \note vedge is in source_set(s) if either a communication has just happened (s.rank() == tchecker::por::cs::communication)
-         or if vedge is a local or communication action of current active process (s.rank() belongs to tchecker::por::cs::vedge_pids(vedge))
-         */
-        template <class VEDGE>
-        bool operator() (STATE const & s, VEDGE const & vedge)
-        {
-          return (s.rank() == tchecker::por::cs::communication) ||
-          (tchecker::vedge_pids(vedge).count(s.rank()) >= 1);
-        }
-      };
-      
-      
+#define PARTIAL_SYNC_ALLOWED
       
       
       /*!
@@ -77,22 +47,37 @@ namespace tchecker {
        \note ts_t<TS> implements partial-order reduction on top of TS, using client/server source sets
        */
       template <class TS, class STATE>
-      class ts_t final : public tchecker::por::ts_t<TS, STATE, tchecker::por::cs::source_set_t<STATE>> {
-        using base_ts_t = tchecker::por::ts_t<TS, STATE, tchecker::por::cs::source_set_t<STATE>>;
+      class ts_t final : public tchecker::por::ts_t<TS, STATE> {
+        using base_ts_t = tchecker::por::ts_t<TS, STATE>;
       public:
         /*!
          \brief Constructor
          \param model : a model
+         \param server : name of server process
+         \param args : arguments to a constructor of tchecker::por::ts_t
          \throw std::invalid_argument : if model is not client/server
          \note TS should have a constructor TS(MODEL &)
          */
         template <class MODEL, class ... ARGS>
-        ts_t(MODEL & model, ARGS && ... args)
+        ts_t(MODEL & model, std::string const & server, ARGS && ... args)
         : base_ts_t(model, args...),
-        _location_next_syncs(tchecker::location_next_syncs(model.system()))
+        _location_next_syncs(tchecker::location_next_syncs(model.system())),
+        _refcount(model.flattened_offset_clock_variables().refcount()),
+        _offset_dim(model.flattened_offset_clock_variables().flattened_size())
         {
+          try {
+            _server_pid = model.system().processes().key(server);
+          }
+          catch (...) {
+            throw std::invalid_argument("Unknown server process");
+          }
+#ifdef PARTIAL_SYNC_ALLOWED
+          _group_id = tchecker::client_server_groups(model.system(), _server_pid);
+          assert(_refcount == model.system().processes_count());
+#else
           if (! tchecker::client_server(model.system(), _server_pid))
             throw std::invalid_argument("System is not client/server");
+#endif // PARTIAL_SYNC_ALLOWED
         }
         
         /*!
@@ -163,11 +148,41 @@ namespace tchecker {
           if (status != tchecker::STATE_OK)
             return status;
           
+#ifdef PARTIAL_SYNC_ALLOWED
+          // Synchronize reference clocks from the same group
+          tchecker::dbm::db_t * offset_dbm = s.offset_zone_ptr()->dbm();
+          for (tchecker::clock_id_t r = 0; r < _refcount; ++r) {
+            if (r == _group_id[r])
+              continue;
+            auto status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, r, _group_id[r],
+                                                          tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+            status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, _group_id[r], r,
+                                                     tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+          }
+          
+#endif // PARTIAL_SYNC_ALLOWER
+          
           std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(v);
+#ifdef PARTIAL_SYNC_ALLOWED
+          tchecker::process_id_t rank = tchecker::por::cs::communication;
+          for (tchecker::process_id_t pid : vedge_pids)
+            if (pid == _server_pid) {
+              rank = tchecker::por::cs::communication;
+              break;
+            }
+            else
+              rank = _group_id[pid];
+          s.rank(rank);
+#else
           if (vedge_pids.size() == 2)
             s.rank(tchecker::por::cs::communication);
           else
             s.rank(* vedge_pids.begin());
+#endif // PARTIAL_SYNC_ALLOWED
           
           if (! synchronizable(s))
             return tchecker::STATE_POR_DISABLED;
@@ -175,6 +190,29 @@ namespace tchecker {
           return tchecker::STATE_OK;
         }
       private:
+        /*!
+         \brief Source set selection
+         \param s : a state
+         \param v : a vedge
+         \return true if v is in the source set of state s, false otherwise
+         \note called by base_ts_t::next
+         \note vedge is in source_set(s) if either a communication has just happened (s.rank() == tchecker::por::cs::communication)
+         or if vedge is a local or communication action of current active process (s.rank() belongs to tchecker::por::cs::vedge_pids(vedge))
+         */
+        virtual bool in_source_set(STATE const & s, typename TS::outgoing_edges_iterator_value_t const & v)
+        {
+#ifdef PARTIAL_SYNC_ALLOWED
+          if (s.rank() == tchecker::por::cs::communication)
+            return true;
+          for (tchecker::process_id_t pid : tchecker::vedge_pids(v))
+            if (pid != _server_pid)
+              return (_group_id[pid] == s.rank());
+          return false;
+#else
+          return (s.rank() == tchecker::por::cs::communication) || (tchecker::vedge_pids(v).count(s.rank()) >= 1);
+#endif // PARTIAL_SYNC_ALLOWED
+        }
+        
         /*!
          \brief Checks if a state can reach a communication
          \param s : state
@@ -191,6 +229,11 @@ namespace tchecker {
         
         tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
         tchecker::process_id_t _server_pid;                    /*!< Identifier of server process */
+#ifdef PARTIAL_SYNC_ALLOWED
+        std::vector<tchecker::process_id_t> _group_id;         /*!< Map : process ID -> group ID */
+        tchecker::clock_id_t _refcount;                        /*!< Number of reference clocks */
+        tchecker::clock_id_t _offset_dim;                      /*!< Dimension of offset DBMs */
+#endif // PARTIAL_SYNC_ALLOWED
       };
     
  

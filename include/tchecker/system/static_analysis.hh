@@ -8,6 +8,7 @@
 #ifndef TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
 #define TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
 
+#include <limits>
 #include <vector>
 
 #include <boost/container/flat_set.hpp>
@@ -338,41 +339,70 @@ namespace tchecker {
    \tparam LOC : type of locations
    \tparam EDGE : type of edges
    \param system : a system of processes
-   \param server_pid : process ID of server (set by function call)
-   \return true if every edge in system involves either a single process or two processes, and there is one process (the server)
-   that is involved in every edge with two processes, false otherwise
-   \post server_pid is the identifier of the server process if the system is client/server
+   \param server_pid : process ID of server
+   \return true if every edge in system involves either a single process or two processes, and one of them if server_pid,
+   false otherwise
    */
   template <class LOC, class EDGE>
-  bool client_server(tchecker::system_t<LOC, EDGE> const & system, tchecker::process_id_t & server_pid)
+  bool client_server(tchecker::system_t<LOC, EDGE> const & system, tchecker::process_id_t server_pid)
   {
-    std::size_t const processes_count = system.processes_count();
-    boost::dynamic_bitset<> common_processes(processes_count);
-    common_processes.set();
-    
     for (tchecker::synchronization_t const & sync : system.synchronizations()) {
       std::size_t size = 0;
-      boost::dynamic_bitset<> sync_processes(processes_count, 0);
+      bool server_sync = false;
       
       for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints()) {
         if (constr.strength() != tchecker::SYNC_STRONG)
           return false;
         ++size;
-        sync_processes[constr.pid()] = 1;
+        server_sync = server_sync || (constr.pid() == server_pid);
       }
       
-      if (size != 2)
+      if (size != 2 || !server_sync)
         return false;
-      
-      common_processes &= sync_processes;
     }
     
-    if (common_processes.count() != 1)
-      return false;
-    
-    server_pid = common_processes.find_first();
-    
     return true;
+  }
+  
+  
+  
+  
+  /*!
+   \brief Compute process groups for extended client/server POR
+   \tparam LOC : type of locations
+   \tparam EDGE : type of edges
+   \param system : a system of processes
+   \param server_pid : process identifier of the server process
+   \return A map : process ID -> group ID such that for any p and q distinct from server_pid, group_id(p) == group_id(q)
+   iff (p, q) belongs to the transitive closure of the synchronization relation induced by synchronization vectors in systems
+   */
+  template <class LOC, class EDGE>
+  std::vector<tchecker::process_id_t> client_server_groups(tchecker::system_t<LOC, EDGE> const & system,
+                                                           tchecker::process_id_t server_pid)
+  {
+    tchecker::process_id_t processes_count = system.processes_count();
+    std::vector<tchecker::process_id_t> group_id(processes_count, 0);
+    
+    // Initialize group_id as identity map
+    for (tchecker::process_id_t i = 0; i < processes_count; ++i)
+      group_id[i] = i;
+    
+    // Processes that synchronize belong to the same group (identified by smallest pid in the group)
+    for (tchecker::synchronization_t const & sync : system.synchronizations()) {
+      tchecker::process_id_t smallest_pid = std::numeric_limits<tchecker::process_id_t>::max();
+      for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
+        if (constr.pid() != server_pid)
+          smallest_pid = std::min(smallest_pid, group_id[constr.pid()]);
+      
+      if (smallest_pid == std::numeric_limits<tchecker::process_id_t>::max())
+        continue;
+      
+      for (tchecker::sync_constraint_t const & constr : sync.synchronization_constraints())
+        if (constr.pid() != server_pid)
+          group_id[constr.pid()] = smallest_pid;
+    }
+    
+    return group_id;
   }
   
 } // end of namespace tchecker

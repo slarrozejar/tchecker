@@ -84,44 +84,6 @@ namespace tchecker {
       
       
       
-      /*!
-       \class source_set_t
-       \brief Source set for global/local systems
-       \tparam STATE : type of state, should derive from tchecker::por::state_t
-       */
-      template <class STATE>
-      class source_set_t {
-        
-        static_assert(std::is_base_of<tchecker::por::state_t, STATE>::value,
-                      "STATE should derive from tchecker::por::state_t");
-        
-      public:
-        /*!
-         \brief Membership predicate
-         \tparam VEDGE : type of vedge
-         \param s : state
-         \param vedge : a vedge
-         \return true if vedge shoud be included in the source set of s, false otherwise
-         \note vedge is in source_set(s) if either vedge is global or vedge is local to a process >= rank of s
-         */
-        template <class VEDGE>
-        bool operator() (STATE const & s, VEDGE const & vedge)
-        {
-#ifdef PARTIAL_SYNCS_ALLOWED
-          // Partial syncs are considered local and allowed if all processes above s.rank()
-          if (s.rank() == tchecker::por::gl::global)
-            return true;
-          std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
-          return ((tchecker::por::gl::vedge_size(vedge) == s.vloc().size())                    // global
-                  || (* std::min_element(vedge_pids.begin(), vedge_pids.end())) >= s.rank());
-#else
-          return (s.rank() == tchecker::por::gl::global) || (tchecker::por::gl::vedge_pid(vedge) >= s.rank());
-#endif // PARTIAL_SYNCS_ALLOWED
-        }
-      };
-      
-      
-      
       
       /*!
        \brief Transition system with partial-order reduction for global/local systems
@@ -132,8 +94,8 @@ namespace tchecker {
        \note ts_t<TS> implements partial-order reduction on top of TS, using global/local source sets
        */
       template <class TS, class STATE>
-      class ts_t final : public tchecker::por::ts_t<TS, STATE, tchecker::por::gl::source_set_t<STATE>> {
-        using base_ts_t = tchecker::por::ts_t<TS, STATE, tchecker::por::gl::source_set_t<STATE>>;
+      class ts_t final : public tchecker::por::ts_t<TS, STATE> {
+        using base_ts_t = tchecker::por::ts_t<TS, STATE>;
       public:
         /*!
          \brief Constructor
@@ -249,6 +211,27 @@ namespace tchecker {
           return tchecker::STATE_OK;
         }
       private:
+        /*!
+         \brief Source set selection
+         \param s : a state
+         \param v : a vedge
+         \return true if v is in the source set of state s, false otherwise
+         \note called by base_ts_t::next
+        */
+        virtual bool in_source_set(STATE const & s, typename TS::outgoing_edges_iterator_value_t const & v)
+        {
+#ifdef PARTIAL_SYNCS_ALLOWED
+          // Partial syncs are considered local and allowed if all processes above s.rank()
+          if (s.rank() == tchecker::por::gl::global)
+            return true;
+          std::set<tchecker::process_id_t> v_pids = tchecker::vedge_pids(v);
+          return ((tchecker::por::gl::vedge_size(v) == s.vloc().size())                    // global
+                  || (* std::min_element(v_pids.begin(), v_pids.end())) >= s.rank());
+#else
+          return (s.rank() == tchecker::por::gl::global) || (tchecker::por::gl::vedge_pid(v) >= s.rank());
+#endif // PARTIAL_SYNCS_ALLOWED
+        }
+        
         /*!
          \brief Checks if a state can reach a global action
          \param s : state

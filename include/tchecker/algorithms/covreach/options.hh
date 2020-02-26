@@ -140,7 +140,8 @@ namespace tchecker {
       _nodes_table_size(65536),
       _source_set(tchecker::covreach::options_t::SOURCE_SET_ALL),
       _stats(0),
-      _spread(tchecker::covreach::options_t::UNBOUNDED_SPREAD)
+      _spread(tchecker::covreach::options_t::UNBOUNDED_SPREAD),
+      _server_process("")
       {
         auto it = range.begin(), end = range.end();
         for ( ; it != end; ++it )
@@ -247,6 +248,12 @@ namespace tchecker {
       tchecker::integer_t spread() const;
       
       /*!
+       \brief Accessor
+       \return server process name (client.server POR)
+       */
+      std::string const & server_process() const;
+      
+      /*!
        \brief Check that mandatory options have been set
        \param log : a logging facility
        \post All errors and warnings have been reported to log
@@ -284,6 +291,7 @@ namespace tchecker {
         {"model",        required_argument, 0, 'm'},
         {"output",       required_argument, 0, 'o'},
         {"search-order", required_argument, 0, 's'},
+        {"server",       required_argument, 0, 0},
         {"source-set",   required_argument, 0, 0},
         {"spread",       required_argument, 0, 0},
         {"stats",        no_argument,       0, 'S'},
@@ -432,6 +440,14 @@ namespace tchecker {
        */
       void set_spread(std::string const & value, tchecker::log_t & log);
       
+      /*!
+       \brief Set server process name (client/server POR)
+       \param value : option value
+       \param log : logging facility
+       \post server process name has been set
+       */
+      void set_server_process(std::string const & value, tchecker::log_t & log);
+      
       enum node_covering_t _node_covering;         /*!< Node covering */
       enum output_format_t _output_format;         /*!< Output format */
       std::vector<std::string> _accepting_labels;  /*!< Accepting labels */
@@ -443,6 +459,7 @@ namespace tchecker {
       enum source_set_t _source_set;               /*!< Source set */
       unsigned _stats : 1;                         /*!< Statistics */
       tchecker::integer_t _spread;                 /*!< Bound on spread for asynchronous zone graph */
+      std::string _server_process;                 /*!< Name of server process (client/server POR) */
     };
     
   } // end of namespace covreach

@@ -126,6 +126,12 @@ namespace tchecker {
     }
     
     
+    std::string const & options_t::server_process() const
+    {
+      return _server_process;
+    }
+    
+    
     void options_t::set_option(std::string const & key, std::string const & value, tchecker::log_t & log)
     {
       if (key == "c")
@@ -146,6 +152,8 @@ namespace tchecker {
         set_block_size(value, log);
       else if (key == "table-size")
         set_nodes_table_size(value, log);
+      else if (key == "server")
+        set_server_process(value, log);
       else if (key == "source-set")
         set_source_set(value, log);
       else if (key == "spread")
@@ -408,6 +416,12 @@ namespace tchecker {
     }
     
     
+    void options_t::set_server_process(std::string const & value, tchecker::log_t & log)
+    {
+      _server_process = value;
+    }
+    
+    
     void options_t::check_mandatory_options(tchecker::log_t & log) const
     {
       if (_algorithm_model == UNKNOWN)
@@ -421,6 +435,10 @@ namespace tchecker {
           ((_algorithm_model < ASYNC_ZG_ELAPSED) ||
            (_algorithm_model > ASYNC_ZG_NON_ELAPSED_EXTRALU_PLUS_L)))
         log.error("source set can only be used with asynchronous zone graph models");
+      else if (_source_set == options_t::SOURCE_SET_CS && _server_process == "")
+        log.error("server process not set for client/server POR");
+      else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS)
+        log.warning("server process ignored if not used in combination with client/server POR");
     }
     
     
@@ -465,6 +483,7 @@ namespace tchecker {
       os << "-o filename      output graph to filename" << std::endl;
       os << "-s (bfs|dfs)     search order (breadth-first search or depth-first search)" << std::endl;
       os << "-S               output stats" << std::endl;
+      os << "--server name    server process name (client/server POR)" << std::endl;
       os << "--spread n       bound on spread for asynchronous zone graph" << std::endl;
       os << "--source-set ss  where ss is one of:" << std::endl;
       os << "                 cs   round-robin POR for client/server models" << std::endl;
