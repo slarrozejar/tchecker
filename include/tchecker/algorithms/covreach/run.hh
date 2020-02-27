@@ -1216,6 +1216,14 @@ namespace tchecker {
           tchecker::covreach::details::run<tchecker::covreach::cover_async_inclusion_t, ALGORITHM_MODEL,
           GRAPH_OUTPUTTER, WAITING>
           (sysdecl, options, log);
+        else if (options.node_covering() == tchecker::covreach::options_t::ALU_G)
+          tchecker::covreach::details::run<tchecker::covreach::cover_async_alu_global_t, ALGORITHM_MODEL,
+          GRAPH_OUTPUTTER, WAITING>
+          (sysdecl, options, log);
+        else if (options.node_covering() == tchecker::covreach::options_t::ALU_L)
+          tchecker::covreach::details::run<tchecker::covreach::cover_async_alu_local_t, ALGORITHM_MODEL,
+          GRAPH_OUTPUTTER, WAITING>
+          (sysdecl, options, log);
         else if (options.node_covering() == tchecker::covreach::options_t::AM_G)
           tchecker::covreach::details::run<tchecker::covreach::cover_async_am_global_t, ALGORITHM_MODEL,
           GRAPH_OUTPUTTER, WAITING>

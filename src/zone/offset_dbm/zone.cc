@@ -55,6 +55,19 @@ namespace tchecker {
     }
     
     
+    bool zone_t::alu_le(tchecker::offset_dbm::zone_t const & zone,
+                        tchecker::clock_id_t refcount,
+                        tchecker::clock_id_t const * refmap,
+                        tchecker::clockbounds::map_t const & l,
+                        tchecker::clockbounds::map_t const & u) const
+    {
+      if (_dim != zone._dim)
+        return false;
+      return tchecker::offset_dbm::is_alu_le(dbm_ptr(), zone.dbm_ptr(), _dim, refcount, refmap, l.ptr(),
+                                             u.ptr());
+    }
+    
+    
     bool zone_t::am_le(tchecker::offset_dbm::zone_t const & zone,
                        tchecker::clock_id_t refcount,
                        tchecker::clock_id_t const * refmap,

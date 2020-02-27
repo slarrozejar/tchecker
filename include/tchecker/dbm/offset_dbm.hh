@@ -267,7 +267,34 @@ namespace tchecker {
                tchecker::clock_id_t offset_dim);
     
     /*!
-     \brief Checks inclusion w.r.t. abstraction aM
+     \brief Checks inclusion w.r.t. abstraction aLU*
+     \param offset_dbm1 : a first offset dbm
+     \param offset_dbm2 : a second offset dbm
+     \param offset_dim : dimension of offset_dbm1 and offset_dbm2
+     \param refcount : number of reference clocks
+     \param refmap : map to reference clocks
+     \param l : clock lower bounds
+     \param u : clock upper bounds
+     \pre offset_dbm1 and offset_dbm2 are not nullptr (checked by assertion)
+     offset_dbm1 and offset_dbm2 are offset_dim*offset_dim arrays of difference bounds
+     offset_dbm1 and offset_dbm2 are consistent (checked by assertion)
+     offset_dbm1 and offset_dbm2 are tight (checked by assertion)
+     offset_dim >= 1 (checked by assertion).
+     1 <= refcount <= offset_dim (checked by assertion)
+     refmap maps each variable in offset_dbm to its reference clock.
+     m is an array of size offset_dim - refcount
+     l[0] = 0 and u[0]=0 (checked by assertion)
+     l[i] < tchecker::dbm::INF_VALUE and u[i] < tchecker::dbm::INF_VALUE  for all i>0
+     \return true if offset_dbm1 <= aLU*(offset_dbm2), false otherwise.
+     \note set l[i] or u[i] to -tchecker::dbm::INF_VALUE if clock i has no ower/upper bound
+     */
+    bool is_alu_le(tchecker::dbm::db_t const * offset_dbm1, tchecker::dbm::db_t const * offset_dbm2,
+                   tchecker::clock_id_t offset_dim, tchecker::clock_id_t refcount,
+                   tchecker::clock_id_t const * refmap, tchecker::integer_t const * l,
+                   tchecker::integer_t const * u);
+    
+    /*!
+     \brief Checks inclusion w.r.t. abstraction aM*
      \param offset_dbm1 : a first offset dbm
      \param offset_dbm2 : a second offset dbm
      \param offset_dim : dimension of offset_dbm1 and offset_dbm2
@@ -284,7 +311,7 @@ namespace tchecker {
      m is an array of size offset_dim - refcount
      m[0] = 0 (checked by assertion)
      m[i] < tchecker::dbm::INF_VALUE for all i>0
-     \return true if offset_dbm1 <= aM(offset_dbm2), false otherwise.
+     \return true if offset_dbm1 <= aM*(offset_dbm2), false otherwise.
      \note set m[i] to -tchecker::dbm::INF_VALUE if clock i has no bound
      */
     bool is_am_le(tchecker::dbm::db_t const * offset_dbm1, tchecker::dbm::db_t const * offset_dbm2,

@@ -594,8 +594,213 @@ namespace tchecker {
       
       
       /*!
+       \class cover_async_zone_alu_global_t
+       \brief node covering w.r.t. offset zone aLU*-inclusion and global clock bounds
+       \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::aync_zg::details::state_t
+       */
+      template <class NODE_PTR>
+      class cover_async_zone_alu_global_t {
+      public:
+        /*!
+         \brief Type of pointer to node
+         */
+        using node_ptr_t = NODE_PTR;
+        
+        /*!
+         \brief Constructor
+         \param model : clock bounds model
+         \tparam MODEL : type of model, should inherit from tchecker::async_zg::details::model_t
+         \note this keeps a reference to the L and U maps in model.global_lu_map(), and a pointer to refmap in model
+         */
+        template <class MODEL>
+        explicit cover_async_zone_alu_global_t(MODEL const & model)
+        : _L(model.global_lu_map().L()),
+        _U(model.global_lu_map().U()),
+        _refcount(model.flattened_offset_clock_variables().refcount()),
+        _refmap(model.flattened_offset_clock_variables().refmap())
+        {}
+        
+        /*!
+         \brief Copy constructor
+         */
+        cover_async_zone_alu_global_t
+        (tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> const & c) = default;
+        
+        /*!
+         \brief Move constructor
+         */
+        cover_async_zone_alu_global_t
+        (tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> && c) = default;
+        
+        /*!
+         \brief Destructor
+         */
+        ~cover_async_zone_alu_global_t() = default;
+        
+        /*!
+         \brief Assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> const & c) = default;
+        
+        /*!
+         \brief Move assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR> && c) = default;
+        
+        /*!
+         \brief Node covering predicate
+         \param n1 : a node
+         \param n2 : a node
+         \return true if the offset zone in n1 is included into the aLU* abstraction of the offset zone in n2, false otherwise
+         */
+        bool operator() (NODE_PTR const & n1, NODE_PTR const & n2)
+        {
+          return n1->offset_zone().alu_le(n2->offset_zone(), _refcount, _refmap, _L.get(), _U.get());
+        }
+      private:
+        std::reference_wrapper<tchecker::clockbounds::map_t const> _L;  /*!< global L clock bounds map */
+        std::reference_wrapper<tchecker::clockbounds::map_t const> _U;  /*!< global U clock bounds map */
+        tchecker::clock_id_t _refcount;                                 /*!< Number of reference clocks */
+        tchecker::clock_id_t const * _refmap;                           /*!< Reference clock map */
+      };
+      
+      
+      
+      
+      /*!
+       \class cover_async_zone_alu_local_t
+       \brief node covering w.r.t. offset zone aLU*-inclusion and local clock bounds
+       \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::async_zg::details::state_t
+       */
+      template <class NODE_PTR>
+      class cover_async_zone_alu_local_t {
+      public:
+        /*!
+         \brief Type of pointer to node
+         */
+        using node_ptr_t = NODE_PTR;
+        
+        /*!
+         \brief Constructor
+         \param model : clock bounds model
+         \tparam MODEL : type of model, should inherit from tchecker::async_zg::details::model_t
+         \note this keeps a reference on model.local_lu_map()
+         */
+        template <class MODEL>
+        explicit cover_async_zone_alu_local_t(MODEL const & model)
+        : _local_lu_map(model.local_lu_map()),
+        _refcount(model.flattened_offset_clock_variables().refcount()),
+        _refmap(model.flattened_offset_clock_variables().refmap())
+        {
+          _L = tchecker::clockbounds::allocate_map(_local_lu_map.get().clock_number());
+          _U = tchecker::clockbounds::allocate_map(_local_lu_map.get().clock_number());
+        }
+        
+        /*!
+         \brief Copy constructor
+         */
+        cover_async_zone_alu_local_t
+        (tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> const & c)
+        : _local_lu_map(c._local_lu_map),
+        _refcount(c._refcount),
+        _refmap(c._refmap)
+        {
+          _L = tchecker::clockbounds::clone_map(*c._L);
+          _U = tchecker::clockbounds::clone_map(*c._U);
+        }
+        
+        /*!
+         \brief Move constructor
+         */
+        cover_async_zone_alu_local_t
+        (tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> && c)
+        : _local_lu_map(std::move(c._local_lu_map)),
+        _L(c._L),
+        _U(c._U),
+        _refcount(c._refcount),
+        _refmap(c._refmap)
+        {
+          c._L = nullptr;
+          c._U = nullptr;
+        }
+        
+        /*!
+         \brief Destructor
+         */
+        ~cover_async_zone_alu_local_t()
+        {
+          tchecker::clockbounds::deallocate_map(_L);
+          tchecker::clockbounds::deallocate_map(_U);
+          // IMPLEMENTATION NOTE: do not destroy _refmap which is a reference stored as a pointer
+        }
+        
+        /*!
+         \brief Assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> const & c)
+        {
+          if (this != &c) {
+            _local_lu_map = c._local_lu_map;
+            delete _L;
+            delete _U;
+            _L = tchecker::clockbounds::clone_map(*c._L);
+            _U = tchecker::clockbounds::clone_map(*c._U);
+            _refcount = c._refcount;
+            _refmap = c._refmap;
+          }
+          return *this;
+        }
+        
+        /*!
+         \brief Move assignment operator
+         */
+        tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> &
+        operator= (tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR> && c)
+        {
+          if (this != &c) {
+            _local_lu_map = std::move(c._local_lu_map);
+            delete _L;
+            delete _U;
+            _L = c._L;
+            _U = c._U;
+            c._L = nullptr;
+            c._U = nullptr;
+            _refcount = c._refcount;
+            _refmap = c._refmap;
+          }
+          return *this;
+        }
+        
+        /*!
+         \brief Node covering predicate
+         \param n1 : a node
+         \param n2 : a node
+         \return true if the offset zone in n1 is included in the aLU* abstraction of the offset  zone in n2 w.r.t. local
+         clock bounds in n2, false otherwise
+         */
+        bool operator() (NODE_PTR const & n1, NODE_PTR const & n2)
+        {
+          tchecker::clockbounds::vloc_bounds(_local_lu_map.get(), n2->vloc(), *_L, *_U);
+          return n1->offset_zone().alu_le(n2->offset_zone(), _refcount, _refmap, *_L, *_U);
+        }
+      private:
+        /*!< Local LU clockbounds map */
+        std::reference_wrapper<tchecker::clockbounds::local_lu_map_t const> _local_lu_map;
+        tchecker::clockbounds::map_t * _L;      /*!< L clock bounds map */
+        tchecker::clockbounds::map_t * _U;      /*!< U clock bounds map */
+        tchecker::clock_id_t _refcount;         /*!< Number of reference clocks */
+        tchecker::clock_id_t const * _refmap;   /*!< Reference clock map */
+      };
+      
+      
+      
+      
+      /*!
        \class cover_async_zone_am_global_t
-       \brief node covering w.r.t. offset zone aM-inclusion and global clock bounds
+       \brief node covering w.r.t. offset zone aM*-inclusion and global clock bounds
        \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::aync_zg::details::state_t
        */
       template <class NODE_PTR>
@@ -670,7 +875,7 @@ namespace tchecker {
       
       /*!
        \class cover_async_zone_am_local_t
-       \brief node covering w.r.t. offset zone aM-inclusion and local clock bounds
+       \brief node covering w.r.t. offset zone aM*-inclusion and local clock bounds
        \tparam NODE_PTR : type of pointer to node, *NODE_PTR should derive from tchecker::async_zg::details::state_t
        */
       template <class NODE_PTR>
@@ -935,6 +1140,28 @@ namespace tchecker {
     using cover_async_inclusion_t
     = tchecker::covreach::details::cover_node_t
     <NODE_PTR, STATE_PREDICATE, tchecker::covreach::details::cover_async_zone_inclusion_t<NODE_PTR>>;
+    
+    
+    /*!
+     \brief Node covering w.r.t. offset zone aLU*-inclusion and global LU clock bounds
+     \tparam NODE_PTR : type of pointer to node
+     \tparam STATE_PREDICATE : type of predicate on states in nodes
+     */
+    template <class NODE_PTR, class STATE_PREDICATE>
+    using cover_async_alu_global_t
+    = tchecker::covreach::details::cover_node_t
+    <NODE_PTR, STATE_PREDICATE, tchecker::covreach::details::cover_async_zone_alu_global_t<NODE_PTR>>;
+    
+    
+    /*!
+     \brief Node covering w.r.t. offset zone aM-inclusion and local LU clock bounds
+     \tparam NODE_PTR : type of pointer to node
+     \tparam STATE_PREDICATE : type of predicate on states in nodes
+     */
+    template <class NODE_PTR, class STATE_PREDICATE>
+    using cover_async_alu_local_t
+    = tchecker::covreach::details::cover_node_t
+    <NODE_PTR, STATE_PREDICATE, tchecker::covreach::details::cover_async_zone_alu_local_t<NODE_PTR>>;
     
     
     /*!

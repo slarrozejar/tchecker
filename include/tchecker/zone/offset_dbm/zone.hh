@@ -76,6 +76,24 @@ namespace tchecker {
       bool operator<= (tchecker::offset_dbm::zone_t const & zone) const;
       
       /*!
+       \brief Checks inclusion wrt abstraction aLU*
+       \param zone : a zone
+       \param refcount : number of reference clocks
+       \param refmap : map of reference clocks
+       \param l : clock lower bounds
+       \param u : clock upper bounds
+       \pre this zone and  zone has been built with refcount reference clocks
+       and offset variables mapped to reference clocks according to refmap
+       the offset variables in zone and this zone have IDs related to their corresponding clocks in l and u
+       \return true if this zone is include in aLU*(zone), false otherwise
+       */
+      bool alu_le(tchecker::offset_dbm::zone_t const & zone,
+                  tchecker::clock_id_t refcount,
+                  tchecker::clock_id_t const * refmap,
+                  tchecker::clockbounds::map_t const & l,
+                  tchecker::clockbounds::map_t const & u) const;
+      
+      /*!
        \brief Checks inclusion wrt abstraction aM*
        \param zone : a zone
        \param refcount : number of reference clocks

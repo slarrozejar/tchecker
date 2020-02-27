@@ -181,9 +181,10 @@ namespace tchecker {
     }
     
     
-    bool is_am_le(tchecker::dbm::db_t const * offset_dbm1, tchecker::dbm::db_t const * offset_dbm2,
-                  tchecker::clock_id_t offset_dim, tchecker::clock_id_t refcount,
-                  tchecker::clock_id_t const * refmap, tchecker::integer_t const * m)
+    bool is_alu_le(tchecker::dbm::db_t const * offset_dbm1, tchecker::dbm::db_t const * offset_dbm2,
+                   tchecker::clock_id_t offset_dim, tchecker::clock_id_t refcount,
+                   tchecker::clock_id_t const * refmap, tchecker::integer_t const * l,
+                   tchecker::integer_t const * u)
     {
       assert(offset_dbm1 != nullptr);
       assert(offset_dbm2 != nullptr);
@@ -192,29 +193,36 @@ namespace tchecker {
       assert(tchecker::dbm::is_consistent(offset_dbm1, offset_dim));
       assert(tchecker::dbm::is_consistent(offset_dbm2, offset_dim));
       assert(offset_dim >= 1);
-      assert(m[0] == 0);
+      assert(l[0] == 0);
+      assert(u[0] == 0);
       
-      // Z is not included in aM*(Z') if:
+      // Z is not included in aLU*(Z') if:
       //    Z{r1,r2} > Z'(r1,r2} for some reference clocks r1, r2
-      // or Z{ry,y} >= (<=,-My) and Z'{r,y} < Z{r,y} for some reference clock r and offset clock y
-      // or Z'{x,r} < Z{x,r} and Z'{x,r} + (<,-Mx) < Z{rx,r} for some reference clock r and offset clock x
-      // or Z{ry,y} >= (<=,-My) and Z’{x,y} < Z{x,y} and Z’{x,y} + (<,-Mx) < Z{rx,y} for some offset clocks x, y
+      // or Z{ry,y} >= (<=,-Uy) and Z'{r,y} < Z{r,y} for some reference clock r and offset clock y
+      // or Z'{x,r} < Z{x,r} and Z'{x,r} + (<,-Lx) < Z{rx,r} for some reference clock r and offset clock x
+      // or Z{ry,y} >= (<=,-Uy) and Z’{x,y} < Z{x,y} and Z’{x,y} + (<,-Lx) < Z{rx,y} for some offset clocks x, y
       
       for (tchecker::clock_id_t y = refcount; y < offset_dim; ++y) {
-        tchecker::integer_t const My = m[y-refcount+1];
-        assert(My < tchecker::dbm::INF_VALUE);
-        if (My == tchecker::clockbounds::NO_BOUND)
+        tchecker::integer_t const Ly = l[y-refcount+1];
+        tchecker::integer_t const Uy = u[y-refcount+1];
+        assert(Ly < tchecker::dbm::INF_VALUE);
+        assert(Uy < tchecker::dbm::INF_VALUE);
+        
+        if (Ly == tchecker::clockbounds::NO_BOUND)
           continue;
         
         tchecker::clock_id_t const ry = refmap[y];
-        tchecker::dbm::db_t const lt_minus_My = tchecker::dbm::db(tchecker::dbm::LT, -My);
+        tchecker::dbm::db_t const lt_minus_Ly = tchecker::dbm::db(tchecker::dbm::LT, -Ly);
         
         for (tchecker::clock_id_t r = 0; r < refcount; ++r)
           if ((OFFSET_DBM2(y, r) < OFFSET_DBM1(y, r)) &&
-              (tchecker::dbm::sum(OFFSET_DBM2(y, r), lt_minus_My) < OFFSET_DBM1(ry, r)))
+              (tchecker::dbm::sum(OFFSET_DBM2(y, r), lt_minus_Ly) < OFFSET_DBM1(ry, r)))
             return false;
         
-        if (OFFSET_DBM1(ry, y) < tchecker::dbm::db(tchecker::dbm::LE, -My))
+        if (Uy == tchecker::clockbounds::NO_BOUND)
+          continue;
+        
+        if (OFFSET_DBM1(ry, y) < tchecker::dbm::db(tchecker::dbm::LE, -Uy))
           continue;
         
         for (tchecker::clock_id_t r = 0; r < refcount; ++r)
@@ -222,16 +230,17 @@ namespace tchecker {
             return false;
         
         for (tchecker::clock_id_t x = refcount; x < offset_dim; ++x) {
-          tchecker::integer_t const Mx = m[x-refcount+1];
-          assert(Mx < tchecker::dbm::INF_VALUE);
-          if (Mx == tchecker::clockbounds::NO_BOUND)
+          tchecker::integer_t const Lx = l[x-refcount+1];
+          assert(Lx < tchecker::dbm::INF_VALUE);
+          
+          if (Lx == tchecker::clockbounds::NO_BOUND)
             continue;
           
           tchecker::clock_id_t const rx = refmap[x];
-          tchecker::dbm::db_t const lt_minus_Mx = tchecker::dbm::db(tchecker::dbm::LT, -Mx);
+          tchecker::dbm::db_t const lt_minus_Lx = tchecker::dbm::db(tchecker::dbm::LT, -Lx);
           
           if ((OFFSET_DBM2(x, y) < OFFSET_DBM1(x, y)) &&
-              (tchecker::dbm::sum(OFFSET_DBM2(x, y), lt_minus_Mx) < OFFSET_DBM1(rx, y)))
+              (tchecker::dbm::sum(OFFSET_DBM2(x, y), lt_minus_Lx) < OFFSET_DBM1(rx, y)))
             return false;
         }
       }
@@ -242,6 +251,14 @@ namespace tchecker {
             return false;
       
       return true;
+    }
+    
+    
+    bool is_am_le(tchecker::dbm::db_t const * offset_dbm1, tchecker::dbm::db_t const * offset_dbm2,
+                  tchecker::clock_id_t offset_dim, tchecker::clock_id_t refcount,
+                  tchecker::clock_id_t const * refmap, tchecker::integer_t const * m)
+    {
+      return tchecker::offset_dbm::is_alu_le(offset_dbm1, offset_dbm2, offset_dim, refcount, refmap, m, m);
     }
     
     
