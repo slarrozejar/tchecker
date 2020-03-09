@@ -23,6 +23,15 @@ namespace tchecker {
   
   // synchronization_t
   
+  bool synchronization_t::synchronizes(tchecker::process_id_t pid) const
+  {
+    for (tchecker::sync_constraint_t const & constr : _constraints)
+      if (constr.pid() == pid)
+        return true;
+    return false;
+  }
+  
+  
   bool synchronization_t::synchronizes(tchecker::process_id_t pid, tchecker::event_id_t event_id) const
   {
     for (tchecker::sync_constraint_t const & constr : _constraints)

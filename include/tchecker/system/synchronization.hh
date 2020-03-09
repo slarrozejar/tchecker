@@ -208,6 +208,13 @@ namespace tchecker {
     }
     
     /*!
+     \brief Checks if a process is synchronized
+     \param pid : process identifier
+     \return true if process pid is synchronized by this synchronization, false otherwise
+     */
+    bool synchronizes(tchecker::process_id_t pid) const;
+    
+    /*!
      \brief Checks if a process event is synchronized
      \param pid : process identifier
      \param event_id : event identifier

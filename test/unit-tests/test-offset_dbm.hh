@@ -292,13 +292,13 @@ TEST_CASE ("is_am_le offset DBMs, inclusion of the universal zone", "[offset_dbm
     tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_1, tchecker::dbm::LE_ZERO
   };
   
-  SECTION( "Universal zone is not cotained in Z1 with clock bounds 1,1" ) {
+  SECTION( "Universal zone is not contained in Z1 with clock bounds 1,1" ) {
     (*M)[1] = 1;
     (*M)[2] = 1;
     REQUIRE( ! tchecker::offset_dbm::is_am_le(universal_Z, Z1, offset_dim, refcount, refmap, M->ptr()));
   }
   
-  SECTION( "Universal zone is not cotained in Z1 with clock bounds -inf,-inf" ) {
+  SECTION( "Universal zone is contained in Z1 with clock bounds -inf,-inf" ) {
     (*M)[1] = tchecker::clockbounds::NO_BOUND;
     (*M)[2] = tchecker::clockbounds::NO_BOUND;
     REQUIRE( tchecker::offset_dbm::is_am_le(universal_Z, Z1, offset_dim, refcount, refmap, M->ptr()));

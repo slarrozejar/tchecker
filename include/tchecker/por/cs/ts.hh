@@ -61,16 +61,15 @@ namespace tchecker {
         template <class MODEL, class ... ARGS>
         ts_t(MODEL & model, std::string const & server, ARGS && ... args)
         : base_ts_t(model, args...),
+        _server_pid(model.system().processes().key(server)),
+#ifdef PARTIAL_SYNC_ALLOWED
+        _location_next_syncs(tchecker::location_next_server_syncs(model.system(), _server_pid)),
+#else
         _location_next_syncs(tchecker::location_next_syncs(model.system())),
+#endif // PARTIAL_SYNC_ALLOWED
         _refcount(model.flattened_offset_clock_variables().refcount()),
         _offset_dim(model.flattened_offset_clock_variables().flattened_size())
         {
-          try {
-            _server_pid = model.system().processes().key(server);
-          }
-          catch (...) {
-            throw std::invalid_argument("Unknown server process");
-          }
 #ifdef PARTIAL_SYNC_ALLOWED
           _group_id = tchecker::client_server_groups(model.system(), _server_pid);
           assert(_refcount == model.system().processes_count());
@@ -248,8 +247,8 @@ namespace tchecker {
           tchecker::por::synchronizable_server(s.vloc(), s.rank(), _server_pid, _location_next_syncs);
         }
         
-        tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
         tchecker::process_id_t _server_pid;                    /*!< Identifier of server process */
+        tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
 #ifdef PARTIAL_SYNC_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;         /*!< Map : process ID -> group ID */
         tchecker::clock_id_t _refcount;                        /*!< Number of reference clocks */
