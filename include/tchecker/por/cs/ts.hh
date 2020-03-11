@@ -72,6 +72,7 @@ namespace tchecker {
         {
 #ifdef PARTIAL_SYNC_ALLOWED
           _group_id = tchecker::client_server_groups(model.system(), _server_pid);
+          compute_groups(model.system().processes_count());
           assert(_refcount == model.system().processes_count());
 #else
           if (! tchecker::client_server(model.system(), _server_pid))
@@ -184,6 +185,20 @@ namespace tchecker {
         }
       private:
         /*!
+         \brief Compute map : group ID -> process IDs from map : process ID -> group ID
+         \post _groups is the dual map of _group_id
+         */
+        void compute_groups(tchecker::process_id_t processes_count)
+        {
+          for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid) {
+            tchecker::process_id_t gid = _group_id[pid];
+            if (gid >= _groups.size())
+              _groups.resize(gid + 1);
+            _groups[gid].insert(pid);
+          }
+        }
+        
+        /*!
          \brief Source set selection
          \param s : a state
          \param v : a vedge
@@ -198,9 +213,9 @@ namespace tchecker {
           if (s.rank() == tchecker::por::cs::communication)
             return true;
           for (tchecker::process_id_t pid : tchecker::vedge_pids(v))
-            if (pid != _server_pid)
-              return (_group_id[pid] == s.rank());
-          return false;
+            if (pid != _server_pid && _group_id[pid] != s.rank())
+              return false;
+          return true;
 #else
           return (s.rank() == tchecker::por::cs::communication) || (tchecker::vedge_pids(v).count(s.rank()) >= 1);
 #endif // PARTIAL_SYNC_ALLOWED
@@ -243,14 +258,21 @@ namespace tchecker {
          */
         bool synchronizable(STATE const & s) const
         {
-          return (s.rank() == tchecker::por::cs::communication) ||
-          tchecker::por::synchronizable_server(s.vloc(), s.rank(), _server_pid, _location_next_syncs);
+          if (s.rank() == tchecker::por::cs::communication)
+            return true;
+#ifdef PARTIAL_SYNC_ALLOWED
+          return tchecker::por::synchronizable_group_server(s.vloc(), _groups[s.rank()], _server_pid,
+                                                            _location_next_syncs);
+#else
+          return tchecker::por::synchronizable_server(s.vloc(), s.rank(), _server_pid, _location_next_syncs);
+#endif
         }
         
         tchecker::process_id_t _server_pid;                    /*!< Identifier of server process */
         tchecker::location_next_syncs_t _location_next_syncs;  /*!< Next synchronisations */
 #ifdef PARTIAL_SYNC_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;         /*!< Map : process ID -> group ID */
+        std::vector<std::set<tchecker::process_id_t>> _groups; /*!< Map : group ID -> process IDs */
         tchecker::clock_id_t _refcount;                        /*!< Number of reference clocks */
         tchecker::clock_id_t _offset_dim;                      /*!< Dimension of offset DBMs */
 #endif // PARTIAL_SYNC_ALLOWED

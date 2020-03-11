@@ -8,6 +8,8 @@
 #ifndef TCHECKER_POR_SYNCHRONIZABLE_HH
 #define TCHECKER_POR_SYNCHRONIZABLE_HH
 
+#include <set>
+
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include "tchecker/basictypes.hh"
@@ -77,6 +79,33 @@ namespace tchecker {
       next_syncs &= lns.next_syncs(vloc[pid]->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
       
       return next_syncs.any();
+    }
+    
+    
+    /*!
+     \brief Check if a tuple of locations can lead to a communication for a given group of processes
+     \param vloc : tuple of locations
+     \param group : set of processes
+     \param server_pid : server process identifier
+     \param lns : location next syncs with server
+     \return true if server process server_pid can do a sync action from vloc that reachable form vloc  for some process in group, false otherwise
+     */
+    template <class VLOC>
+    bool synchronizable_group_server(VLOC const & vloc,
+                                     std::set<tchecker::process_id_t> const & group,
+                                     tchecker::process_id_t server_pid,
+                                     tchecker::location_next_syncs_t const & lns)
+    {
+      boost::dynamic_bitset<> server_syncs = lns.next_syncs(vloc[server_pid]->id(),
+                                                            tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+      for (tchecker::process_id_t pid : group) {
+        boost::dynamic_bitset<> next_syncs = lns.next_syncs(vloc[pid]->id(),
+                                                            tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+        next_syncs &= server_syncs;
+        if (next_syncs.any())
+          return true;
+      }
+      return false;
     }
     
   } // end of namespace por
