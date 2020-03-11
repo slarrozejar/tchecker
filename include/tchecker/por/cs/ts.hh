@@ -213,9 +213,9 @@ namespace tchecker {
           if (s.rank() == tchecker::por::cs::communication)
             return true;
           for (tchecker::process_id_t pid : tchecker::vedge_pids(v))
-            if (pid != _server_pid && _group_id[pid] != s.rank())
-              return false;
-          return true;
+            if (pid != _server_pid && _group_id[pid] == s.rank())
+              return true;
+          return false;
 #else
           return (s.rank() == tchecker::por::cs::communication) || (tchecker::vedge_pids(v).count(s.rank()) >= 1);
 #endif // PARTIAL_SYNC_ALLOWED
