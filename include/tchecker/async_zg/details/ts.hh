@@ -128,6 +128,17 @@ namespace tchecker {
                                 t.src_invariant_container(), t.guard_container(), t.reset_container(),
                                 t.tgt_invariant_container());
         }
+
+        /*!
+        \brief Check if the offset zone in a state is synchronizable
+        \param s : a state
+        \return true if the offset zone in s contains a synchronized
+        valuation, false otherwise
+        */
+        inline bool synchronizable_zone(STATE const & s) const
+        {
+          return _async_zg.synchronizable_zone(s.offset_zone());
+        }
         
         /*!
          \brief Accessor

@@ -155,6 +155,16 @@ namespace tchecker {
         
         return tchecker::STATE_OK;
       }
+
+      /*!
+      \brief Check if a state has a synchronizable zone
+      \param s : a state
+      \return true if the zone in s is synchronizable, false otherwise
+      */
+      inline bool synchronizable_zone(STATE const & s) const
+      {
+        return _ts.synchronizable_zone(s);
+      }
     private:
       /*!
        \brief Source set selection

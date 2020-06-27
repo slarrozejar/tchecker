@@ -158,7 +158,94 @@ namespace tchecker {
         
         return true;
       }
+
+
+
       
+      // synchronizable_t
+
+      synchronizable_t::synchronizable_t(tchecker::clock_id_t offset_dim, 
+                                        tchecker::clock_id_t refcount)
+      : _offset_dbm(nullptr), _offset_dim(offset_dim), _refcount(refcount)
+      {
+        _offset_dbm = new tchecker::dbm::db_t[_offset_dim * _offset_dim];
+      }
+
+
+      synchronizable_t::synchronizable_t(tchecker::offset_dbm::details::synchronizable_t const & s)
+      : _offset_dim(s._offset_dim), _refcount(s._refcount)
+      {
+        _offset_dbm = new tchecker::dbm::db_t[_offset_dim * _offset_dim];
+        std::memcpy(_offset_dbm, s._offset_dbm, 
+                     _offset_dim * _offset_dim * sizeof(tchecker::dbm::db_t));
+      }
+
+        
+      synchronizable_t::synchronizable_t(tchecker::offset_dbm::details::synchronizable_t && s)
+      : _offset_dbm(std::move(s._offset_dbm)),
+      _offset_dim(std::move(s._offset_dim)), 
+      _refcount(std::move(s._refcount))
+      {
+        s._offset_dbm = nullptr;
+        s._offset_dim = 0;
+        s._refcount = 0;
+      }
+
+        
+      synchronizable_t::~synchronizable_t()
+      {
+        delete _offset_dbm;
+      }
+
+        
+      tchecker::offset_dbm::details::synchronizable_t &
+      synchronizable_t::operator= 
+      (tchecker::offset_dbm::details::synchronizable_t const & s)
+      {
+        if (this != &s) {
+          delete _offset_dbm;
+          _offset_dim = s._offset_dim;
+          _refcount = s._refcount;
+          _offset_dbm = new tchecker::dbm::db_t[_offset_dim * _offset_dim];
+          std::memcpy(_offset_dbm, s._offset_dbm,
+                      _offset_dim * _offset_dim * sizeof(tchecker::dbm::db_t));
+        }
+        return *this;
+      }
+
+
+      tchecker::offset_dbm::details::synchronizable_t &
+      synchronizable_t::operator= 
+      (tchecker::offset_dbm::details::synchronizable_t && s)
+      {
+        if (this != &s) {
+          _offset_dim = s._offset_dim;
+          _refcount = s._refcount;
+          _offset_dbm = s._offset_dbm;
+          s._offset_dim = 0;
+          s._refcount = 0;
+          s._offset_dbm = nullptr;
+        }
+        return *this;
+      }
+
+
+      bool synchronizable_t::synchronizable
+      (tchecker::dbm::zone_t const & sync_zone) const
+      {
+        return !tchecker::dbm::is_empty_0(sync_zone.dbm(), sync_zone.dim());
+      }
+
+
+      bool synchronizable_t::synchronizable
+      (tchecker::offset_dbm::zone_t const & offset_zone) const
+      {
+        assert(offset_zone.dim() == _offset_dim);
+        std::memcpy(_offset_dbm, offset_zone.dbm(),
+                    _offset_dim * _offset_dim * sizeof(tchecker::dbm::db_t));
+        return tchecker::offset_dbm::synchronize(_offset_dbm, _offset_dim, _refcount) == tchecker::dbm::NON_EMPTY;
+      }
+
     } // end of namespace details
     
   } // end of namespace offset_dbm

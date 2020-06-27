@@ -223,6 +223,18 @@ namespace tchecker {
           }
           
           /*!
+          \brief Check if an offset zone is synchronizable
+          \param offset_zone : an offset zone
+          \return true if offset_zone contains a sycnhronized valuation,
+          false otherwise
+          */
+          inline bool 
+          synchronizable_zone(offset_zone_t const & offset_zone) const
+          {
+            return this->_async_zone_semantics.synchronizable(offset_zone);
+          }
+
+          /*!
            \brief Accessor
            \return Underlying model
            */

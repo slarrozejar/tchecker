@@ -183,6 +183,9 @@ namespace tchecker {
           
           return tchecker::STATE_OK;
         }
+
+
+        using base_ts_t::synchronizable_zone;
       private:
         /*!
          \brief Compute map : group ID -> process IDs from map : process ID -> group ID

@@ -217,6 +217,17 @@ namespace tchecker {
                                             _offset_guard, _offset_clkreset, _tgt_delay_allowed,
                                             _offset_tgt_invariant, vloc);
         }
+
+        /*!
+        \brief Check if an offset zone is synchronizable
+        \param offset_zone : an offset zone
+        \return true if offset_zone contains a sycnhronized valuation,
+        false otherwise
+        */
+        inline bool synchronizable_zone(offset_zone_t const & offset_zone) const
+        {
+          return _async_zone_semantics.synchronizable(offset_zone);
+        }
         
         /*!
          \brief Accessor

@@ -140,6 +140,71 @@ namespace tchecker {
         std::size_t _refcount;                /*!< Number of reference variables */
         tchecker::clock_id_t * _refmap;       /*!< Map from variables to reference clocks */
       };
+
+
+
+
+      /*!
+      \class synchronizable_t
+      \brief Check if offset zones contain a synchronized valuation
+      */
+      class synchronizable_t {
+      public:
+        /*!
+        \brief Constructor
+        */
+        synchronizable_t(tchecker::clock_id_t offset_dim, 
+                         tchecker::clock_id_t refcount);
+
+        /*!
+        \brief Copy constructor
+        */
+        synchronizable_t(tchecker::offset_dbm::details::synchronizable_t const & s);
+
+        /*!
+        \brief Move constructor
+        */
+        synchronizable_t(tchecker::offset_dbm::details::synchronizable_t && s);
+
+        /*!
+        \brief Destructor
+        */
+        ~synchronizable_t();
+
+        /*!
+        \brief Assignment operator
+        */
+        tchecker::offset_dbm::details::synchronizable_t &
+        operator= (tchecker::offset_dbm::details::synchronizable_t const & s);
+
+        /*!
+        \brief Move-assignment oeprator
+        */
+        tchecker::offset_dbm::details::synchronizable_t &
+        operator= (tchecker::offset_dbm::details::synchronizable_t && s);
+
+        /*!
+        \brief Check if a zone is synchronizable
+        \param sync_zone : a synchronized zone
+        \return true if sync_zone is not empty, false otherwise
+        \note we assume that tchecker::dbm::is_empty_0() can assess whether
+        sync_zone is empty or note
+        */
+        bool synchronizable(tchecker::dbm::zone_t const & sync_zone) const;
+
+        /*!
+        \brief Check if a zone is synchronizable
+        \param offset_zone : an offset zone
+        \pre the dimension of offset_zone is _offset_dim (checked by assertion)
+        \return true if synchronizing offset_zone yields a non-empty zone,
+        false otherwise
+        */
+        bool synchronizable(tchecker::offset_dbm::zone_t const & offset_zone) const;
+      private:
+        mutable tchecker::dbm::db_t * _offset_dbm; /*!< Offset DBM */
+        tchecker::clock_id_t _offset_dim;          /*!< Dimension of _offset_dbm */
+        tchecker::clock_id_t _refcount;            /*!< Number of reference clocks */
+      };
       
     } // end of namespace details
     
@@ -153,7 +218,9 @@ namespace tchecker {
      \tparam EXTRAPOLATION : a zone DBM extrapolation, should implement tchecker::dbm::extrapolation_t
      */
     template <class EXTRAPOLATION>
-    class elapsed_semantics_t : private EXTRAPOLATION {
+    class elapsed_semantics_t 
+    : private EXTRAPOLATION,
+    public tchecker::offset_dbm::details::synchronizable_t {
     public:
       /*!
        \brief Type of offet zones
@@ -173,6 +240,9 @@ namespace tchecker {
       template <class MODEL>
       explicit elapsed_semantics_t(MODEL const & model)
       : EXTRAPOLATION(model),
+      tchecker::offset_dbm::details::synchronizable_t
+      (model.flattened_offset_clock_variables().size(),
+      model.flattened_offset_clock_variables().refcount()),
       _offset_dim(model.flattened_offset_clock_variables().size()),
       _refcount(model.flattened_offset_clock_variables().refcount()),
       _refmap(nullptr),
@@ -180,8 +250,7 @@ namespace tchecker {
       {
         _refmap = new tchecker::clock_id_t[_offset_dim];
         std::memcpy(_refmap, model.flattened_offset_clock_variables().refmap(), _offset_dim * sizeof(*_refmap));
-        _sync_zone_computer = new tchecker::offset_dbm::details::sync_zone_computer_t(_offset_dim, _refcount,
-                                                                                      _refmap);
+        _sync_zone_computer = new tchecker::offset_dbm::details::sync_zone_computer_t(_offset_dim, _refcount, _refmap);
       }
       
       /*!
@@ -190,7 +259,9 @@ namespace tchecker {
        \post this is a copy of s
        */
       elapsed_semantics_t(tchecker::offset_dbm::elapsed_semantics_t<EXTRAPOLATION> const & zs)
-      : EXTRAPOLATION(zs), _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(nullptr)
+      : EXTRAPOLATION(zs), 
+      tchecker::offset_dbm::details::synchronizable_t(zs),
+      _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(nullptr)
       {
         _refmap = new tchecker::clock_id_t[_offset_dim];
         std::memcpy(_refmap, zs._refmap, _offset_dim * sizeof(*_refmap));
@@ -204,7 +275,9 @@ namespace tchecker {
        \post zs has been moved to this
        */
       elapsed_semantics_t(tchecker::offset_dbm::elapsed_semantics_t<EXTRAPOLATION> && zs)
-      : EXTRAPOLATION(std::move(zs)), _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(zs._refmap),
+      : EXTRAPOLATION(std::move(zs)), 
+      tchecker::offset_dbm::details::synchronizable_t(std::move(zs)),
+      _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(zs._refmap),
       _sync_zone_computer(zs._sync_zone_computer)
       {
         zs._refmap = nullptr;
@@ -231,6 +304,7 @@ namespace tchecker {
       {
         if (this != &zs) {
           EXTRAPOLATION::operator=(zs);
+          tchecker::offset_dbm::details::synchronizable_t::operator=(zs);
           _offset_dim = zs._offset_dim;
           _refcount = zs._refcount;
           delete[] _refmap;
@@ -254,6 +328,7 @@ namespace tchecker {
       {
         if (this != &zs) {
           EXTRAPOLATION::operator=(std::move(zs));
+          tchecker::offset_dbm::details::synchronizable_t::operator=(std::move(zs));
           _offset_dim = zs._offset_dim;
           _refcount = zs._refcount;
           delete[] _refmap;
@@ -561,6 +636,8 @@ namespace tchecker {
         
         return tchecker::STATE_OK;
       }
+
+      using tchecker::offset_dbm::details::synchronizable_t::synchronizable;
     private:
       tchecker::clock_id_t _offset_dim;                                          /*!< Dimension of offset zones */
       tchecker::clock_id_t _refcount;                                            /*!< Number of reference clocks */
@@ -577,7 +654,9 @@ namespace tchecker {
      \tparam EXTRAPOLATION : a zone DBM extrapolation, should implement tchecker::dbm::extrapolation_t
      */
     template <class EXTRAPOLATION>
-    class non_elapsed_semantics_t : private EXTRAPOLATION {
+    class non_elapsed_semantics_t 
+    : private EXTRAPOLATION,
+    public tchecker::offset_dbm::details::synchronizable_t {
     public:
       /*!
        \brief Type of offet zones
@@ -597,6 +676,9 @@ namespace tchecker {
       template <class MODEL>
       explicit non_elapsed_semantics_t(MODEL const & model)
       : EXTRAPOLATION(model),
+      tchecker::offset_dbm::details::synchronizable_t
+      (model.flattened_offset_clock_variables().size(),
+      model.flattened_offset_clock_variables().refcount()),
       _offset_dim(model.flattened_offset_clock_variables().size()),
       _refcount(model.flattened_offset_clock_variables().refcount()),
       _refmap(nullptr),
@@ -614,7 +696,9 @@ namespace tchecker {
        \post this is a copy of s
        */
       non_elapsed_semantics_t(tchecker::offset_dbm::non_elapsed_semantics_t<EXTRAPOLATION> const & zs)
-      : EXTRAPOLATION(zs), _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(nullptr),
+      : EXTRAPOLATION(zs), 
+      tchecker::offset_dbm::details::synchronizable_t(zs),
+      _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(nullptr),
       _sync_zone_computer(nullptr)
       {
         _refmap = new tchecker::clock_id_t[_offset_dim];
@@ -629,7 +713,9 @@ namespace tchecker {
        \post zs has been moved to this
        */
       non_elapsed_semantics_t(tchecker::offset_dbm::non_elapsed_semantics_t<EXTRAPOLATION> && zs)
-      : EXTRAPOLATION(std::move(zs)), _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(zs._refmap),
+      : EXTRAPOLATION(std::move(zs)), 
+      tchecker::offset_dbm::details::synchronizable_t(std::move(zs)),
+      _offset_dim(zs._offset_dim), _refcount(zs._refcount), _refmap(zs._refmap),
       _sync_zone_computer(zs._sync_zone_computer)
       {
         zs._refmap = nullptr;
@@ -656,6 +742,7 @@ namespace tchecker {
       {
         if (this != &zs) {
           EXTRAPOLATION::operator=(zs);
+          tchecker::offset_dbm::details::synchronizable_t::operator=(zs);
           _offset_dim = zs._offset_dim;
           _refcount = zs._refcount;
           delete[] _refmap;
@@ -679,6 +766,7 @@ namespace tchecker {
       {
         if (this != &zs) {
           EXTRAPOLATION::operator=(std::move(zs));
+          tchecker::offset_dbm::details::synchronizable_t::operator=(std::move(zs));
           _offset_dim = zs._offset_dim;
           _refcount = zs._refcount;
           delete[] _refmap;
@@ -1001,6 +1089,8 @@ namespace tchecker {
         
         return tchecker::STATE_OK;
       }
+
+      using tchecker::offset_dbm::details::synchronizable_t::synchronizable;
     private:
       tchecker::clock_id_t _offset_dim;                                          /*!< Dimension of offset zones */
       tchecker::clock_id_t _refcount;                                            /*!< Number of reference clocks */

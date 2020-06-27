@@ -225,6 +225,17 @@ namespace tchecker {
           }
           
           /*!
+          \brief Check if a synchronized zone contains a synchronized valuation
+          \param sync_zone : a synchronized zone
+          \return true if sync_zone is not empty, false otherwise
+          \note we assume that sync_zone has been computed by this zone graph 
+          */
+          inline bool synchronizable_zone(sync_zone_t const & sync_zone) const
+          {
+            return this->_async_zone_semantics.synchronizable(sync_zone);
+          }
+
+          /*!
            \brief Accessor
            \return Underlying model
            */

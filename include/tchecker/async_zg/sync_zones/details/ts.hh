@@ -137,6 +137,17 @@ namespace tchecker {
           }
           
           /*!
+          \brief Check if a state is synchronizable
+          \param s : a state
+          \return true if the synchronized zone in s is non empty,
+          false otherwise
+          */
+          inline bool synchronizable_zone(STATE const & s) const
+          {
+            return _async_zg.synchronizable_zone(s.sync_zone());
+          }
+
+          /*!
            \brief Accessor
            \return Underlying asynchronous zone graph
            */

@@ -78,6 +78,12 @@ namespace tchecker {
             
             using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
             
+            static inline bool valid_final_node(ts_t const & ts,
+                                                node_ptr_t const & node)
+            {
+              return true;
+            }
+
             static inline key_t node_to_key(node_ptr_t const & node)
             {
               return tchecker::ta::details::hash_value(*node);
@@ -164,6 +170,12 @@ namespace tchecker {
             
             using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
             
+            static inline bool valid_final_node(ts_t const & ts, 
+                                                node_ptr_t const & node)
+            {
+              return ts.synchronizable_zone(*node);
+            }
+
             static inline key_t node_to_key(node_ptr_t const & node)
             {
               return tchecker::ta::details::hash_value(*node);
@@ -259,6 +271,12 @@ namespace tchecker {
               using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
               
               using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+              static inline bool valid_final_node(ts_t const & ts, 
+                                                  node_ptr_t const & node)
+              {
+                return ts.synchronizable_zone(*node);
+              }
               
               static inline key_t node_to_key(node_ptr_t const & node)
               {
@@ -354,6 +372,12 @@ namespace tchecker {
               using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
               
               using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+              static inline bool valid_final_node(ts_t const & ts,
+                                                  node_ptr_t const & node)
+              {
+                return ts.synchronizable_zone(*node);
+              }
               
               static inline key_t node_to_key(node_ptr_t const & node)
               {
@@ -453,6 +477,12 @@ namespace tchecker {
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+                static inline bool valid_final_node(ts_t const & ts,
+                                                    node_ptr_t const & node)
+                {
+                  return ts.synchronizable_zone(*node);
+                }
                 
                 static inline key_t node_to_key(node_ptr_t const & node)
                 {
@@ -556,6 +586,12 @@ namespace tchecker {
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+                  static inline bool valid_final_node(ts_t const & ts,
+                                                      node_ptr_t const & node)
+                  {
+                    return ts.synchronizable_zone(*node);
+                  }
                   
                   static inline key_t node_to_key(node_ptr_t const & node)
                   {
@@ -665,6 +701,12 @@ namespace tchecker {
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
                   
+                  static inline bool valid_final_node(ts_t const & ts,
+                                                      node_ptr_t const & node)
+                  {
+                    return ts.synchronizable_zone(*node);
+                  }
+
                   static inline key_t node_to_key(node_ptr_t const & node)
                   {
                     return tchecker::ta::details::hash_value(*node);
@@ -776,6 +818,12 @@ namespace tchecker {
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+                static inline bool valid_final_node(ts_t const & ts,
+                                                    node_ptr_t const & node)
+                {
+                  return ts.synchronizable_zone(*node);
+                }
                 
                 static inline key_t node_to_key(node_ptr_t const & node)
                 {
@@ -879,6 +927,12 @@ namespace tchecker {
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+                  static inline bool valid_final_node(ts_t const & ts,
+                                                      node_ptr_t const & node)
+                  {
+                    return ts.synchronizable_zone(*node);
+                  }
                   
                   static inline key_t node_to_key(node_ptr_t const & node)
                   {
@@ -987,6 +1041,12 @@ namespace tchecker {
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
+
+                  static inline bool valid_final_node(ts_t const & ts,
+                                                      node_ptr_t const & node)
+                  {
+                    return ts.synchronizable_zone(*node);
+                  }
                   
                   static inline key_t node_to_key(node_ptr_t const & node)
                   {
@@ -1110,7 +1170,13 @@ namespace tchecker {
             label_index.add(label);
         }
         
+        // accepting node
         tchecker::covreach::accepting_labels_t<node_ptr_t> accepting_labels(label_index, options.accepting_labels());
+
+        std::function<bool(node_ptr_t const &)> accepting_node =
+        [&] (node_ptr_t const & n) -> bool {
+          return accepting_labels(n) && ALGORITHM_MODEL::valid_final_node(ts, n);
+        };
         
         tchecker::gc_t gc;
         
@@ -1129,7 +1195,7 @@ namespace tchecker {
         tchecker::covreach::algorithm_t<ts_t, graph_t, WAITING> algorithm;
         
         try {
-          std::tie(outcome, stats) = algorithm.run(ts, graph, accepting_labels);
+          std::tie(outcome, stats) = algorithm.run(ts, graph, accepting_node);
         }
         catch (...) {
           gc.stop();

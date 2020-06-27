@@ -144,6 +144,17 @@ namespace tchecker {
           }
           
           /*!
+          \brief Check if the offset zone in a state is synchronizable
+          \param s : a state
+          \return true if the offset zone in s contains a synchronized
+          valuation, false otherwise
+          */
+          inline bool synchronizable_zone(STATE const & s) const
+          {
+            return _async_zg.synchronizable_zone(s.offset_zone());
+          }
+
+          /*!
            \brief Accessor
            \return Underlying asynchronous zone graph
            */
