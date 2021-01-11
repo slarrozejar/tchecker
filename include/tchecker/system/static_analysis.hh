@@ -472,7 +472,98 @@ namespace tchecker {
     
     return group_id;
   }
-  
+
+
+
+
+  /*!
+  \class pure_local_map_t
+  \brief Tells if a location is pure local or not. A location is pure local if
+  all its outgoing edges are asynchronous
+  */
+  class pure_local_map_t {
+  public:
+    /*!
+    \brief Constructor
+    \param loc_count : number of locations
+    \param status : pure local status of locations
+    */
+    pure_local_map_t(tchecker::loc_id_t loc_count, bool status = false);
+
+    /*!
+    \brief Copy constructor
+    */
+    pure_local_map_t(tchecker::pure_local_map_t const &) = default;
+
+    /*!
+    \brief Move constructor
+    */
+    pure_local_map_t(tchecker::pure_local_map_t &&) = default;
+
+    /*!
+    \brief Destructor
+    */
+    ~pure_local_map_t() = default;
+
+    /*!
+    \brief Assignment operator
+    */
+    tchecker::pure_local_map_t & operator= (tchecker::pure_local_map_t const &) = default;
+    
+    /*!
+    \brief More-assignment operator
+    */
+    tchecker::pure_local_map_t & operator= (tchecker::pure_local_map_t &&) = default;
+    
+    /*!
+    \brief Accessor
+    \param id : location ID
+    \pre id is a valid location ID (checked by assertion)
+    \return true if id is pure local, false otherwise
+    */
+    bool is_pure_local(tchecker::loc_id_t id) const;
+
+    /*!
+    \brief Set location pure local or non pure local
+    \param id : location ID
+    \param status : pure local status
+    \pre id is a valid location ID (checked by assertion)
+    \post location id is pure local if status == true, otherwise location id is not pure local
+    */
+    void set_pure_local(tchecker::loc_id_t id, bool status = true);
+  private:
+    boost::dynamic_bitset<> _map;  /*!< pure local map : location ID -> bool */
+  };
+
+
+  /*!
+  \brief Compute pure local and non pure local locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \return A map : location ID -> bool that tells if a location in system is pure
+  local or not
+  */
+  template <class LOC, class EDGE>
+  pure_local_map_t pure_local_map(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    pure_local_map_t m(system.locations_count(), true);
+    // Set all locations with a sync edge non pure local
+    for (EDGE const * edge : system.edges())
+    {
+      if (! system.asynchronous(edge->pid(), edge->event_id()))
+        m.set_pure_local(edge->src()->id(), false);
+    }
+    // Set all deadlock locations non pure local
+    for (LOC const * loc : system.locations())
+    {
+      auto edges = loc->outgoing_edges();
+      if (edges.begin() == edges.end())
+        m.set_pure_local(loc->id(), false);
+    }
+    return m;
+  }
+
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH

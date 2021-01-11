@@ -389,6 +389,8 @@ namespace tchecker {
         _source_set = tchecker::covreach::options_t::SOURCE_SET_CS;
       else if (value == "gl")
         _source_set = tchecker::covreach::options_t::SOURCE_SET_GL;
+      else if (value == "pl")
+        _source_set = tchecker::covreach::options_t::SOURCE_SET_PURE_LOCAL;
       else
         log.error("Unknown source set: " + value);
     }
@@ -488,6 +490,7 @@ namespace tchecker {
       os << "--source-set ss  where ss is one of:" << std::endl;
       os << "                 cs   round-robin POR for client/server models" << std::endl;
       os << "                 gl   round-robin POR for global/local models" << std::endl;
+      os << "                 pl   pure-local POR" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;

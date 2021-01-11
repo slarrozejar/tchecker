@@ -89,4 +89,31 @@ namespace tchecker {
     return _syncs_count;
   }
   
+
+  
+  /* pure_local_map_t */
+  
+  pure_local_map_t::pure_local_map_t(tchecker::loc_id_t loc_count, bool status)
+  : _map(loc_count)
+  {
+    if (status)
+      _map.set();
+    else
+      _map.reset();
+  }
+
+
+  bool pure_local_map_t::is_pure_local(tchecker::loc_id_t id) const
+  {
+    assert(id < _map.size());
+    return _map[id];
+  }
+
+
+  void pure_local_map_t::set_pure_local(tchecker::loc_id_t id, bool status)
+  {
+    assert(id < _map.size());
+    _map[id] = status;
+  }
+
 } // end of namespace tchecker
