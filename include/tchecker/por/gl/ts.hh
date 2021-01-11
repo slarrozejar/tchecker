@@ -89,8 +89,6 @@ namespace tchecker {
        \brief Transition system with partial-order reduction for global/local systems
        \tparam TS : type of underlying transition system, should implement tchecker::ts::ts_t
        \tparam STATE : type of states, should inherit from TS::state_t, and from tchecker::por::state_t
-       \tparam SOURCE_SET : source set, should provide membership operator
-       bool operator() (STATE const &, tchecker::vedge_iterator_t const &)
        \note ts_t<TS> implements partial-order reduction on top of TS, using global/local source sets
        */
       template <class TS, class STATE>
