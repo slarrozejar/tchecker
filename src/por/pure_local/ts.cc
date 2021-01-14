@@ -15,8 +15,7 @@ namespace tchecker {
               
       bool cover_leq(tchecker::por::pure_local::state_t const & s1, tchecker::por::pure_local::state_t const & s2)
       {
-        return (s1.rank() == s2.rank()) &&
-                (s1.pl_pid() == s2.pl_pid() ||
+        return (s1.pl_pid() == s2.pl_pid() ||
                 s2.pl_pid() == tchecker::por::pure_local::no_pure_local);
       }
       

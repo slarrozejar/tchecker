@@ -15,8 +15,8 @@ namespace tchecker {
 
     namespace pure_local {
     
-      state_t::state_t(tchecker::process_id_t rank, tchecker::process_id_t pid)
-      : tchecker::por::state_t(rank), _pl_pid(pid)
+      state_t::state_t(tchecker::process_id_t pid)
+      : _pl_pid(pid)
       {}
     
     
@@ -34,8 +34,7 @@ namespace tchecker {
 
       bool tchecker::por::pure_local::state_t::operator== (tchecker::por::pure_local::state_t const & s) const
       {
-        return tchecker::por::state_t::operator==(s) 
-                && (_pl_pid == s._pl_pid);
+        return (_pl_pid == s._pl_pid);
       }
     
 
@@ -53,10 +52,6 @@ namespace tchecker {
     
       int lexical_cmp(tchecker::por::pure_local::state_t const & s1, tchecker::por::pure_local::state_t const & s2)
       {
-        int cmp = tchecker::por::lexical_cmp(s1, s2);
-        if (cmp != 0)
-          return cmp;
-
         tchecker::process_id_t p1 = s1.pl_pid(), p2 = s2.pl_pid();
         if (p1 < p2)
           return -1;

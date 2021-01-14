@@ -30,17 +30,15 @@ namespace tchecker {
     
       /*!
       \class state_t
-      \brief State for POR transition systems with pid of pure local process and
-      rank
+      \brief State for POR transition systems with pid of pure local process
       */
-      class state_t : public tchecker::por::state_t {
+      class state_t {
       public:
         /*!
         \brief Constructor
-        \param rank : rank of the state
         \param pid : pid of pure local process
         */
-        state_t(tchecker::process_id_t rank = 0, tchecker::process_id_t pid = 0);
+        state_t(tchecker::process_id_t pid = 0);
       
         /*!
         \brief Accessor

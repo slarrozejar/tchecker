@@ -1333,7 +1333,7 @@ namespace tchecker {
                   {
                     return std::tuple<model_t &>(model);
                   }
-                  
+
                   using node_outputter_t
                   = tchecker::por::pure_local::state_outputter_t<typename zone_semantics_t::ts_t::state_t,
                   tchecker::async_zg::sync_zones::ta::state_outputter_t>;
@@ -2268,7 +2268,7 @@ namespace tchecker {
           run_source_set_global_local<GRAPH_OUTPUTTER, WAITING>(sysdecl, options, log);
           return;
         }
-        else if (options.source_set() == tchecker::covreach::options_t::SOURCE_SET_PURE_LOCAL) {
+        else if (options.source_set() == tchecker::covreach::options_t::SOURCE_SET_PL) {
           run_source_set_pure_local<GRAPH_OUTPUTTER, WAITING>(sysdecl, options, log);
           return;
         }

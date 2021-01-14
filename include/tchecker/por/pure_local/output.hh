@@ -77,7 +77,7 @@ namespace tchecker {
           inline std::ostream & output (std::ostream & os, tchecker::por::pure_local::make_state_t<STATE> const & s)
         {
           std::ostream & os2 = STATE_OUTPUTTER::output(os, s);
-          return os2 << " /" << s.rank() << "/" << s.pl_pid() << "/";
+          return os2 << " /" << s.pl_pid() << "/";
         }
     };
 

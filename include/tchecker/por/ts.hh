@@ -48,15 +48,12 @@ namespace tchecker {
      \class ts_t
      \brief Transition system with partial-order reduction
      \tparam TS : type of underlying transition system, should implement tchecker::ts::ts_t
-     \tparam STATE : type of states, should inherit from TS::state_t, and from tchecker::por::state_t
+     \tparam STATE : type of states, should inherit from TS::state_t
      \note ts_t<TS> implements partial-order reduction on top of TS
      */
     template <class TS, class STATE>
     class ts_t : public tchecker::por::details::ts_instance_t<TS, STATE> {
-    
-      static_assert(std::is_base_of<tchecker::por::state_t, STATE>::value,
-                    "STATE should derive from tchecker::por::state_t");
-      
+          
       static_assert(std::is_base_of<typename TS::state_t, STATE>::value,
                     "STATE should derive from TS::state_t");
 

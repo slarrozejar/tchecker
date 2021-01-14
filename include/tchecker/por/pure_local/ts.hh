@@ -35,8 +35,6 @@ namespace tchecker {
       /*! pure-local pid value when no pure local process */
       constexpr tchecker::process_id_t const no_pure_local = std::numeric_limits<tchecker::process_id_t>::max();
 
-      
-      
       /*!
        \brief Transition system with POR with priority to first pure-local
        process
@@ -47,6 +45,9 @@ namespace tchecker {
       template <class TS, class STATE>
       class ts_t final : public tchecker::por::ts_t<TS, STATE> {
         using base_ts_t = tchecker::por::ts_t<TS, STATE>;
+
+        static_assert(std::is_base_of<tchecker::por::pure_local::state_t, STATE>::value, "");
+
       public:
         /*!
          \brief Constructor
