@@ -232,7 +232,8 @@ namespace tchecker {
      */
     static inline void destruct(tchecker::intvars_valuation_t * v)
     {
-      assert(v != nullptr);
+      if (v == nullptr)
+        return;
       v->~intvars_valuation_t();
     }
   protected:

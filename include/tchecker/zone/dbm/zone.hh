@@ -168,6 +168,8 @@ namespace tchecker {
        */
       static inline void destruct(tchecker::dbm::zone_t * ptr)
       {
+        if (ptr == nullptr)
+          return;
         ptr->~zone_t();
       }
     protected:

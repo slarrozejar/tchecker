@@ -91,7 +91,8 @@ namespace tchecker {
      */
     static inline void destruct(tchecker::vloc_t<LOC> * vloc)
     {
-      assert(vloc != nullptr);
+      if (vloc == nullptr)
+        return;
       vloc->~vloc_t<LOC>();
     }
   protected:
