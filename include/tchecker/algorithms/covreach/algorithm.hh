@@ -81,7 +81,7 @@ namespace tchecker {
       std::tuple<enum tchecker::covreach::outcome_t, tchecker::covreach::stats_t>
       run(TS & ts, GRAPH & graph, tchecker::covreach::accepting_condition_t<node_ptr_t> accepting)
       {
-        tchecker::covreach::builder_t<TS, ts_allocator_t> builder(ts, graph.ts_allocator());
+        tchecker::covreach::full_states_builder_t<TS, ts_allocator_t> builder(ts, graph.ts_allocator());
         waiting_t waiting;
         node_ptr_t node{nullptr}, next_node{nullptr}, covering_node{nullptr};
         std::vector<node_ptr_t> nodes, covered_nodes;
@@ -139,52 +139,39 @@ namespace tchecker {
       
       /*!
        \brief Expand initial nodes
-       \param builder : a transition system builder
+       \param builder : a nodes builder
        \param graph : a graph
        \param nodes : a vector of nodes
        \post the initial nodes provided by builder have been added to graph and to nodes
        */
-      void expand_initial_nodes(tchecker::covreach::builder_t<TS, ts_allocator_t> & builder, GRAPH & graph,
-                                std::vector<node_ptr_t> & nodes)
+      void expand_initial_nodes
+      (tchecker::covreach::states_builder_t<node_ptr_t> & builder,
+      GRAPH & graph,
+      std::vector<node_ptr_t> & nodes)
       {
-        node_ptr_t node{nullptr};
-        transition_ptr_t transition{nullptr};
-        
-        auto initial_range = builder.initial();
-        for (auto it = initial_range.begin(); ! it.at_end(); ++it) {
-          std::tie(node, transition) = *it;
-          assert(node != node_ptr_t{nullptr});
-          
+        builder.initial(nodes);
+        for (node_ptr_t node : nodes)
           graph.add_node(node, GRAPH::ROOT_NODE);
-          
-          nodes.push_back(node);
-        }
       }
       
       
       /*!
        \brief Expand node
        \param node : a node
-       \param builder : a transition system builder
+       \param builder : a nodes builder
        \param graph : a graph
        \param nodes : a vector of nodes
        \post the successor nodes of n provided by builder have been added to graph and to nodes
        */
-      void expand_node(node_ptr_t & node, tchecker::covreach::builder_t<TS, ts_allocator_t> & builder, GRAPH & graph,
-                       std::vector<node_ptr_t> & nodes)
+      void expand_node(node_ptr_t & node, 
+      tchecker::covreach::states_builder_t<node_ptr_t> & builder,
+      GRAPH & graph,
+      std::vector<node_ptr_t> & nodes)
       {
-        node_ptr_t next_node{nullptr};
-        transition_ptr_t transition{nullptr};
-        
-        auto outgoing_range = builder.outgoing(node);
-        for (auto it = outgoing_range.begin(); ! it.at_end(); ++it) {
-          std::tie(next_node, transition) = *it;
-          assert(next_node != node_ptr_t{nullptr});
-          
+        builder.next(node, nodes);
+        for (node_ptr_t next_node : nodes) {
           graph.add_node(next_node);
           graph.add_edge(node, next_node, tchecker::covreach::ACTUAL_EDGE);
-          
-          nodes.push_back(next_node);
         }
       }
       
