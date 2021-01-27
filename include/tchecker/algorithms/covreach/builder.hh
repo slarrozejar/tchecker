@@ -54,8 +54,9 @@ namespace tchecker {
 
 
     /*!
-     \class builder_t
-     \brief States builder for covering reachability algorithm
+     \class full_states_builder_t
+     \brief States builder for covering reachability algorithm that returns all
+     initial states, and all successor states
      \tparam TS : type of transition system (see tchecker::ts::builder_ok_t)
      \tparam ALLOCATOR : type of allocator (see tchecker::ts::builder_ok_t)
      */

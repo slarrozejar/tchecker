@@ -71,6 +71,7 @@ namespace tchecker {
       {
         using model_t = typename ALGORITHM_MODEL::model_t;
         using ts_t = typename ALGORITHM_MODEL::ts_t;
+        using builder_t = typename ALGORITHM_MODEL::builder_t;
         using graph_t = typename ALGORITHM_MODEL::graph_t;
         using node_ptr_t = typename ALGORITHM_MODEL::node_ptr_t;
         using state_predicate_t = typename ALGORITHM_MODEL::state_predicate_t;
@@ -104,15 +105,17 @@ namespace tchecker {
                       options.nodes_table_size(),
                       ALGORITHM_MODEL::node_to_key,
                       cover_node);
+
+        builder_t builder(ts, graph.ts_allocator());
         
         gc.start();
         
         enum tchecker::covreach::outcome_t outcome;
         tchecker::covreach::stats_t stats;
-        tchecker::covreach::algorithm_t<ts_t, graph_t, WAITING> algorithm;
+        tchecker::covreach::algorithm_t<builder_t, graph_t, WAITING> algorithm;
         
         try {
-          std::tie(outcome, stats) = algorithm.run(ts, graph, accepting_node);
+          std::tie(outcome, stats) = algorithm.run(builder, graph, accepting_node);
         }
         catch (...) {
           gc.stop();

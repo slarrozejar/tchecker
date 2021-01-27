@@ -8,6 +8,7 @@
 #ifndef TCHECKER_ALGORITHMS_COVREACH_POR_NEW1_HH
 #define TCHECKER_ALGORITHMS_COVREACH_POR_NEW1_HH
 
+#include "tchecker/algorithms/covreach/builder.hh"
 #include "tchecker/algorithms/covreach/graph.hh"
 #include "tchecker/async_zg/async_zg_ta.hh"
 #include "tchecker/async_zg/bounded_spread/async_zg_ta.hh"
@@ -62,6 +63,8 @@ namespace tchecker {
                 using transition_allocator_t
                 = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
+                
+                using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
                 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -172,6 +175,8 @@ namespace tchecker {
                   using transition_allocator_t
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
+                  
+                  using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -286,6 +291,8 @@ namespace tchecker {
                   using transition_allocator_t
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
+                  
+                  using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 

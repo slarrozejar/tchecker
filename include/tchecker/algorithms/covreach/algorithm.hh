@@ -46,13 +46,14 @@ namespace tchecker {
     /*!
      \class algorithm_t
      \brief Reachability algorithm with node covering
-     \tparam TS : type of transition system, should derive from tchecker::ts::ts_t
+     \tparam BUILDER : type of states builder over a transition system, should
+     implement tchecker::covreach::state_builder_t
      \tparam GRAPH : type of graph, should derive from tchecker::covreach::graph_t
      \tparam WAITING : type of waiting container, should derive from tchecker::covreach::active_waiting_t
      */
-    template <class TS, class GRAPH, template <class NPTR> class WAITING>
+    template <class BUILDER, class GRAPH, template <class NPTR> class WAITING>
     class algorithm_t {
-      using ts_t = TS;
+      using builder_t = BUILDER;
       using transition_t = typename GRAPH::ts_allocator_t::transition_t;
       using transition_ptr_t = typename GRAPH::ts_allocator_t::transition_ptr_t;
       using graph_t = GRAPH;
@@ -63,25 +64,25 @@ namespace tchecker {
     public:
       /*!
        \brief Reachability algorithm with node covering
-       \param ts : a transition system
+       \param builder : state builder over a transition system
        \param graph : a graph
        \param accepting : an accepting function over nodes
        \pre accepting is monotonous w.r.t. the ordering over nodes in graph: if a node is accepting,
        then any bigger node is accepting as well (partially checked by assertion)
-       \post this algorithm visits ts and builds graph. Graph stores the maximal nodes in ts and edges
+       \post this algorithm visits a transition system using builder, and builds graph. Graph stores the maximal nodes in ts and edges
        between them. There are two kind of edges: actual edges which correspond to a transition in ts,
        and abstract edges. There is an abstract edge n1->n2 when the actual successor of n1 in ts is
-       smaller than n2 (for some n2 in the graph). The order in which the states of ts are visited
-       depends on the policy implemented by WAITING.
-       The algorithms stops when an accepting node has been found, or when the graph has been entirely
-       visited.
-       \return REACHABLE if TS has an accepting run, UNREACHABLE otherwise
-       \note this algorithm may not terminate if graph is not finite
+       smaller than n2 (for some n2 in the graph). The order in which the states
+       are visited depends on the policy implemented by WAITING, and the
+       order in which the states are produced by builder
+       The algorithms stops when an accepting node has been found, or when the
+       transition system has been entirely visited.
+       \return REACHABLE if the transition system has an accepting run, UNREACHABLE otherwise
+       \note this algorithm may not terminate if the transition system is not finite
        */
       std::tuple<enum tchecker::covreach::outcome_t, tchecker::covreach::stats_t>
-      run(TS & ts, GRAPH & graph, tchecker::covreach::accepting_condition_t<node_ptr_t> accepting)
+      run(BUILDER & builder, GRAPH & graph, tchecker::covreach::accepting_condition_t<node_ptr_t> accepting)
       {
-        tchecker::covreach::full_states_builder_t<TS, ts_allocator_t> builder(ts, graph.ts_allocator());
         waiting_t waiting;
         node_ptr_t node{nullptr}, next_node{nullptr}, covering_node{nullptr};
         std::vector<node_ptr_t> nodes, covered_nodes;
@@ -144,10 +145,7 @@ namespace tchecker {
        \param nodes : a vector of nodes
        \post the initial nodes provided by builder have been added to graph and to nodes
        */
-      void expand_initial_nodes
-      (tchecker::covreach::states_builder_t<node_ptr_t> & builder,
-      GRAPH & graph,
-      std::vector<node_ptr_t> & nodes)
+      void expand_initial_nodes(BUILDER & builder, GRAPH & graph, std::vector<node_ptr_t> & nodes)
       {
         builder.initial(nodes);
         for (node_ptr_t node : nodes)
@@ -164,7 +162,7 @@ namespace tchecker {
        \post the successor nodes of n provided by builder have been added to graph and to nodes
        */
       void expand_node(node_ptr_t & node, 
-      tchecker::covreach::states_builder_t<node_ptr_t> & builder,
+      BUILDER & builder,
       GRAPH & graph,
       std::vector<node_ptr_t> & nodes)
       {
