@@ -90,10 +90,11 @@ namespace tchecker {
         tchecker::covreach::stats_t stats;
         
         // initial nodes
-        nodes.clear();
+        assert(nodes.empty());
         expand_initial_nodes(builder, graph, nodes);
         for (node_ptr_t const & n : nodes)
           waiting.insert(n);
+        nodes.clear();
         
         // explore waiting nodes
         while (! waiting.empty()) {
@@ -106,7 +107,7 @@ namespace tchecker {
             return std::make_tuple(tchecker::covreach::REACHABLE, stats);
           
           // expand node
-          nodes.clear();
+          assert(nodes.empty());
           expand_node(node, builder, graph, nodes);
           
           // remove small nodes
@@ -132,6 +133,7 @@ namespace tchecker {
               stats.increment_covered_nonleaf_nodes();
             }
           }
+          nodes.clear();
         }
         
         return std::make_tuple(tchecker::covreach::UNREACHABLE, stats);
