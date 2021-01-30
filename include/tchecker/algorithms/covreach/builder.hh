@@ -61,7 +61,7 @@ namespace tchecker {
      \tparam ALLOCATOR : type of allocator (see tchecker::ts::builder_ok_t)
      */
     template <class TS, class ALLOCATOR>
-    class full_states_builder_t
+    class full_states_builder_t final
     : private tchecker::ts::builder_ok_t<TS, ALLOCATOR>,
     public tchecker::covreach::states_builder_t<typename tchecker::ts::builder_ok_t<TS, ALLOCATOR>::state_ptr_t> {
     public:
