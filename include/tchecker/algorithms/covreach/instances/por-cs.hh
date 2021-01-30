@@ -8,14 +8,14 @@
 #ifndef TCHECKER_ALGORITHMS_COVREACH_POR_CS_HH
 #define TCHECKER_ALGORITHMS_COVREACH_POR_CS_HH
 
-#include "tchecker/algorithms/covreach/builder.hh"
 #include "tchecker/algorithms/covreach/graph.hh"
 #include "tchecker/algorithms/covreach/options.hh"
 #include "tchecker/async_zg/async_zg_ta.hh"
 #include "tchecker/async_zg/bounded_spread/async_zg_ta.hh"
 #include "tchecker/async_zg/sync_zones/async_zg_ta.hh"
-#include "tchecker/por/output.hh"
-#include "tchecker/por/state.hh"
+#include "tchecker/por/cs/builder.hh"
+#include "tchecker/por/cs/output.hh"
+#include "tchecker/por/cs/state.hh"
 #include "tchecker/por/cs/ts.hh"
 
 /*!
@@ -47,22 +47,22 @@ namespace tchecker {
               public:
                 using zone_semantics_t = ZONE_SEMANTICS;
                 using model_t = tchecker::async_zg::ta::model_t;
-                
-                using state_t = tchecker::por::make_state_t<typename zone_semantics_t::ts_t::state_t>;
-                using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t, state_t>;
+                using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t>;
+                using state_t = typename ts_t::state_t;
                 using transition_t = typename ts_t::transition_t;
                 
                 using key_t = std::size_t;
                 
-                using node_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_t;
-                using node_ptr_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_ptr_t;
+                using graph_types_t = typename tchecker::covreach::details::graph_types_t<ts_t>;
+                using node_t = typename graph_types_t::node_t;
+                using node_ptr_t = typename graph_types_t::node_ptr_t;
                 
                 using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<node_t>;
                 using transition_allocator_t
                 = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                 
-                using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
+                using builder_t = tchecker::por::cs::states_builder_t<ts_t, ts_allocator_t>;
 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -105,7 +105,7 @@ namespace tchecker {
                       return true;
                     if (cmp > 0)
                       return false;
-                    return tchecker::por::lexical_cmp(*n1, *n2) < 0;
+                    return tchecker::por::cs::lexical_cmp(*n1, *n2) < 0;
                   }
                 };
                 
@@ -119,15 +119,25 @@ namespace tchecker {
                   return std::tuple<model_t const &>(model);
                 }
                 
-                static std::tuple<model_t &, std::string const &>
+                static std::tuple<model_t &>
                 ts_args(model_t & model, tchecker::covreach::options_t const & options)
                 {
-                  return std::tuple<model_t &, std::string const &>(model, options.server_process());
+                  return std::tuple<model_t &>(model);
                 }
                 
+                static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
+                builder_args(model_t & model,
+                             tchecker::covreach::options_t const & options,
+                             ts_t & ts,
+                             ts_allocator_t & allocator)
+                {
+                  return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
+                }
+
                 using node_outputter_t
-                = tchecker::por::state_outputter_t
-                <typename zone_semantics_t::ts_t::state_t, tchecker::async_zg::ta::state_outputter_t>;
+                = tchecker::por::cs::state_outputter_t
+                <typename zone_semantics_t::ts_t::state_t, 
+                tchecker::async_zg::ta::state_outputter_t>;
                 
                 static std::tuple<tchecker::intvar_index_t const &, tchecker::clock_index_t const &>
                 node_outputter_args(model_t const & model)
@@ -156,22 +166,22 @@ namespace tchecker {
                 public:
                   using zone_semantics_t = ZONE_SEMANTICS;
                   using model_t = tchecker::async_zg::sync_zones::ta::model_t;
-                  
-                  using state_t = tchecker::por::make_state_t<typename zone_semantics_t::ts_t::state_t>;
-                  using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t, state_t>;
+                  using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t>;
+                  using state_t = typename ts_t::state_t;
                   using transition_t = typename ts_t::transition_t;
                   
                   using key_t = std::size_t;
                   
-                  using node_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_t;
-                  using node_ptr_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_ptr_t;
+                  using graph_types_t = typename tchecker::covreach::details::graph_types_t<ts_t>;
+                  using node_t = typename graph_types_t::node_t;
+                  using node_ptr_t = typename graph_types_t::node_ptr_t;
                   
                   using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<node_t>;
                   using transition_allocator_t
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                   
-                  using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::cs::states_builder_t<ts_t, ts_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -214,7 +224,7 @@ namespace tchecker {
                         return true;
                       if (cmp > 0)
                         return false;
-                      return tchecker::por::lexical_cmp(*n1, *n2) < 0;
+                      return tchecker::por::cs::lexical_cmp(*n1, *n2) < 0;
                     }
                   };
                   
@@ -228,14 +238,23 @@ namespace tchecker {
                     return std::tuple<model_t const &>(model);
                   }
                   
-                  static std::tuple<model_t &, std::string const &>
+                  static std::tuple<model_t &>
                   ts_args(model_t & model, tchecker::covreach::options_t const & options)
                   {
-                    return std::tuple<model_t &, std::string const &>(model, options.server_process());
+                    return std::tuple<model_t &>(model);
+                  }
+
+                  static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
+                  builder_args(model_t & model,
+                               tchecker::covreach::options_t const & options,
+                               ts_t & ts,
+                               ts_allocator_t & allocator)
+                  {
+                    return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
                   }
                   
                   using node_outputter_t
-                  = tchecker::por::state_outputter_t
+                  = tchecker::por::cs::state_outputter_t
                   <typename zone_semantics_t::ts_t::state_t,
                   tchecker::async_zg::sync_zones::ta::state_outputter_t>;
                   
@@ -272,22 +291,22 @@ namespace tchecker {
                 public:
                   using zone_semantics_t = ZONE_SEMANTICS;
                   using model_t = tchecker::async_zg::bounded_spread::ta::model_t;
-                  
-                  using state_t = tchecker::por::make_state_t<typename zone_semantics_t::ts_t::state_t>;
-                  using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t, state_t>;
+                  using ts_t = tchecker::por::cs::ts_t<typename zone_semantics_t::ts_t>;
+                  using state_t = typename ts_t::state_t;
                   using transition_t = typename ts_t::transition_t;
                   
                   using key_t = std::size_t;
-                  
-                  using node_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_t;
-                  using node_ptr_t = typename tchecker::covreach::details::graph_types_t<ts_t>::node_ptr_t;
+
+                  using graph_types_t = typename tchecker::covreach::details::graph_types_t<ts_t>;
+                  using node_t = typename graph_types_t::node_t;
+                  using node_ptr_t = typename graph_types_t::node_ptr_t;
                   
                   using node_allocator_t = typename zone_semantics_t::template state_pool_allocator_t<node_t>;
                   using transition_allocator_t
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
                   
-                  using builder_t = tchecker::covreach::full_states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::cs::states_builder_t<ts_t, ts_allocator_t>;
                   
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
                   
@@ -330,7 +349,7 @@ namespace tchecker {
                         return true;
                       if (cmp > 0)
                         return false;
-                      return tchecker::por::lexical_cmp(*n1, *n2) < 0;
+                      return tchecker::por::cs::lexical_cmp(*n1, *n2) < 0;
                     }
                   };
                   
@@ -344,15 +363,24 @@ namespace tchecker {
                     return std::tuple<model_t const &>(model);
                   }
                   
-                  static std::tuple<model_t &, std::string const &, tchecker::integer_t>
+                  static std::tuple<model_t &, tchecker::integer_t>
                   ts_args(model_t & model, tchecker::covreach::options_t const & options)
                   {
-                    return std::tuple<model_t &, std::string const &, tchecker::integer_t>
-                    (model, options.server_process(), options.spread());
+                    return std::tuple<model_t &, tchecker::integer_t>
+                    (model, options.spread());
+                  }
+
+                  static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
+                  builder_args(model_t & model,
+                               tchecker::covreach::options_t const & options,
+                               ts_t & ts,
+                               ts_allocator_t & allocator)
+                  {
+                    return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
                   }
                   
                   using node_outputter_t
-                  = tchecker::por::state_outputter_t
+                  = tchecker::por::cs::state_outputter_t
                   <typename zone_semantics_t::ts_t::state_t,
                   tchecker::async_zg::bounded_spread::ta::state_outputter_t>;
                   

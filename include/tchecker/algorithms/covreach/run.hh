@@ -106,7 +106,7 @@ namespace tchecker {
                       ALGORITHM_MODEL::node_to_key,
                       cover_node);
 
-        builder_t builder(ts, graph.ts_allocator());
+        builder_t builder = std::make_from_tuple<builder_t>(ALGORITHM_MODEL::builder_args(model, options, ts, graph.ts_allocator()));
         
         gc.start();
         

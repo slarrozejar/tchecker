@@ -101,6 +101,15 @@ namespace tchecker {
             {
               return std::tuple<model_t &>(model);
             }
+
+            static std::tuple<ts_t &, ts_allocator_t &>
+            builder_args(model_t & model,
+                         tchecker::covreach::options_t const & options,
+                         ts_t & ts,
+                         ts_allocator_t & allocator)
+            {
+              return std::tuple<ts_t &, ts_allocator_t &>(ts, allocator);
+            }
             
             using node_outputter_t = tchecker::zg::ta::state_outputter_t;
             
