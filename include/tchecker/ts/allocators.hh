@@ -378,7 +378,7 @@ namespace tchecker {
       template <class ... ARGS>
       inline transition_ptr_t construct_transition(ARGS && ... args)
       {
-        return _allocate_transition(std::forward<ARGS>(args)...);
+        return _construct_transition(std::forward<ARGS>(args)...);
       }
       
       /*!
