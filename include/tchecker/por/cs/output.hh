@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-#include "tchecker/por/state.hh"
+#include "tchecker/por/cs/state.hh"
 
 /*!
  \file output.hh
