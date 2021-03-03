@@ -13,5 +13,9 @@ set(POR_SRC
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/gl/output.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/gl/state.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/gl/ts.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por1/builder.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por1/output.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por1/state.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por1/ts.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/synchronizable.hh
 PARENT_SCOPE)
