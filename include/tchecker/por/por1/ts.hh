@@ -5,36 +5,36 @@
  *
  */
 
-#ifndef TCHECKER_POR_CS_TS_HH
-#define TCHECKER_POR_CS_TS_HH
+#ifndef TCHECKER_POR_POR1_TS_HH
+#define TCHECKER_POR_POR1_TS_HH
 
 #include "tchecker/basictypes.hh"
-#include "tchecker/por/cs/state.hh"
+#include "tchecker/por/por1/state.hh"
 #include "tchecker/ts/ts.hh"
 #include "tchecker/utils/iterator.hh"
 
 /*!
  \file ts.hh
- \brief Transition system for client/server partial-order reduction
+ \brief Transition system for por1 partial-order reduction
  */
 
 namespace tchecker {
-  
+
   namespace por {
-    
-    namespace cs {
-      
+
+    namespace por1 {
+
       /*!
       \class ts_t
       \tparam TS : type of transition system
-      \brief Transition system for client/server partial-order reduction,
-      extends TS with states which embed the information required for 
-      client/server partial-order reduction
+      \brief Transition system for por1 partial-order reduction,
+      extends TS with states which embed the information required for
+      por1 partial-order reduction
       */
       template <class TS>
       class ts_t final
       : public tchecker::ts::ts_t<
-      tchecker::por::cs::make_state_t<typename TS::state_t>,
+      tchecker::por::por1::make_state_t<typename TS::state_t>,
       typename TS::transition_t,
       typename TS::initial_iterator_t,
       typename TS::outgoing_edges_iterator_t,
@@ -42,10 +42,10 @@ namespace tchecker {
       typename TS::outgoing_edges_iterator_value_t>
       {
       public:
-        using state_t = tchecker::por::cs::make_state_t<typename TS::state_t>;
+        using state_t = tchecker::por::por1::make_state_t<typename TS::state_t>;
         using transition_t = typename TS::transition_t;
         using initial_iterator_t = typename TS::initial_iterator_t;
-        using outgoing_edges_iterator_t 
+        using outgoing_edges_iterator_t
         = typename TS::outgoing_edges_iterator_t;
         using initial_iterator_value_t = typename TS::initial_iterator_value_t;
         using outgoing_edges_iterator_value_t
@@ -59,33 +59,33 @@ namespace tchecker {
         ts_t(ARGS && ... args)
         : _ts(args...)
         {}
-        
+
         /*!
         \brief Copy constructor
         */
-        ts_t(tchecker::por::cs::ts_t<TS> const &) = default;
-        
+        ts_t(tchecker::por::por1::ts_t<TS> const &) = default;
+
         /*!
         \brief Move constructor
         */
-        ts_t(tchecker::por::cs::ts_t<TS> &&) = default;
-        
+        ts_t(tchecker::por::por1::ts_t<TS> &&) = default;
+
         /*!
         \brief Destructor
         */
         virtual ~ts_t() = default;
-        
+
         /*!
         \brief Assignment operator
         */
-        tchecker::por::cs::ts_t<TS> &
-        operator= (tchecker::por::cs::ts_t<TS> const &) = default;
-        
+        tchecker::por::por1::ts_t<TS> &
+        operator= (tchecker::por::por1::ts_t<TS> const &) = default;
+
         /*!
-        \brief Move-assignment oeprator
+        \brief Move-assignment operator
         */
-        tchecker::por::cs::ts_t<TS> &
-        operator= (tchecker::por::cs::ts_t<TS> &&) = default;
+        tchecker::por::por1::ts_t<TS> &
+        operator= (tchecker::por::por1::ts_t<TS> &&) = default;
 
         /*!
         \brief see tchecker::async_zg::ts_t::initial
@@ -94,7 +94,7 @@ namespace tchecker {
         {
           return _ts.initial();
         }
-      
+
         /*!
         \brief see tchecker::async_zg::ts_t::initialize
         */
@@ -103,7 +103,7 @@ namespace tchecker {
         {
           return _ts.initialize(s, t, v);
         }
-      
+
         /*!
         \brief see tchecker::async_zg::ts_t::outgoing_edges
         */
@@ -112,7 +112,7 @@ namespace tchecker {
         {
           return _ts.outgoing_edges(s);
         }
-      
+
         /*!
         \brief see tchecker::async_zg::ts_t::next
         */
@@ -134,10 +134,10 @@ namespace tchecker {
         TS _ts;  /*!< Underlying transition system */
       };
 
-    } // end of namespace cs
-    
+    } // end of namespace por1
+
   } // end of namespace por
-  
+
 } // end of namespace tchecker
 
-#endif // TCHECKER_POR_CS_TS_HH
+#endif // TCHECKER_POR_POR1_TS_HH

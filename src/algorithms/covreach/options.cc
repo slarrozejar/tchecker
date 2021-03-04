@@ -13,9 +13,9 @@
 #include "tchecker/algorithms/covreach/options.hh"
 
 namespace tchecker {
-  
+
   namespace covreach {
-    
+
     options_t::options_t(tchecker::covreach::options_t && options)
     : _node_covering(options._node_covering),
     _output_format(std::move(options._output_format)),
@@ -31,16 +31,16 @@ namespace tchecker {
     {
       options._os = nullptr;
     }
-    
-    
+
+
     options_t::~options_t()
     {
       _os->flush();
       if (_os != &std::cout)
         delete _os;
     }
-    
-    
+
+
     tchecker::covreach::options_t & options_t::operator= (tchecker::covreach::options_t && options)
     {
       if (this != &options) {
@@ -59,79 +59,79 @@ namespace tchecker {
       }
       return *this;
     }
-    
-    
+
+
     enum tchecker::covreach::options_t::node_covering_t options_t::node_covering() const
     {
       return _node_covering;
     }
-    
-    
+
+
     enum tchecker::covreach::options_t::output_format_t options_t::output_format() const
     {
       return _output_format;
     }
-    
-    
+
+
     tchecker::covreach::options_t::accepting_labels_range_t options_t::accepting_labels() const
     {
       return tchecker::make_range(_accepting_labels);
     }
-    
-    
+
+
     enum tchecker::covreach::options_t::algorithm_model_t options_t::algorithm_model() const
     {
       return _algorithm_model;
     }
-    
-    
+
+
     std::ostream & options_t::output_stream() const
     {
       return *_os;
     }
-    
-    
+
+
     enum tchecker::covreach::options_t::search_order_t options_t::search_order() const
     {
       return _search_order;
     }
-    
-    
+
+
     std::size_t options_t::block_size() const
     {
       return _block_size;
     }
-    
-    
+
+
     std::size_t options_t::nodes_table_size() const
     {
       return _block_size;
     }
-    
-    
+
+
     enum tchecker::covreach::options_t::source_set_t options_t::source_set() const
     {
       return _source_set;
     }
-    
-    
+
+
     bool options_t::stats() const
     {
       return (_stats == 1);
     }
-    
+
     tchecker::integer_t options_t::spread() const
     {
       return _spread;
     }
-    
-    
+
+
     std::string const & options_t::server_process() const
     {
       return _server_process;
     }
-    
-    
+
+
     void options_t::set_option(std::string const & key, std::string const & value, tchecker::log_t & log)
     {
       if (key == "c")
@@ -163,8 +163,8 @@ namespace tchecker {
       else
         log.warning("Unknown command line option " + key);
     }
-    
-    
+
+
     void options_t::set_node_covering(std::string const & value, tchecker::log_t & log)
     {
       if (value == "inclusion")
@@ -180,8 +180,8 @@ namespace tchecker {
       else
         log.error("Unkown node covering: " + value + " for commande line parameter -c");
     }
-    
-    
+
+
     void options_t::set_output_format(std::string const & value, tchecker::log_t & log)
     {
       if (value == "dot")
@@ -191,8 +191,8 @@ namespace tchecker {
       else
         log.error("Unkown output format: " + value + " for commande line parameter -f");
     }
-    
-    
+
+
     void options_t::set_accepting_labels(std::string const & value, tchecker::log_t & log)
     {
       boost::char_separator<char> sep(":");
@@ -201,25 +201,25 @@ namespace tchecker {
       for ( ; it != end; ++it)
         _accepting_labels.push_back(*it);
     }
-    
-    
+
+
     void options_t::set_algorithm_model(std::string const & value, tchecker::log_t & log)
     {
       boost::char_separator<char> sep(":");
       boost::tokenizer<boost::char_separator<char> > tokenizer(value, sep);
       auto begin = tokenizer.begin(), end = tokenizer.end();
-      
+
       std::size_t count = std::distance(begin, end);
-      
+
       if ((count < 2) || (count > 3)) {
         log.error("Unknown model: " + value + " for command line parameter -m");
         return;
       }
-      
+
       std::string graph = *(begin++);
       std::string semantics = *(begin++);
       std::string extrapolation = (count == 2 ? "" : *(begin++));
-      
+
       if (graph == "async_zg")
         set_algorithm_model_async_zg(semantics, extrapolation, log);
       else if (graph == "zg")
@@ -227,8 +227,8 @@ namespace tchecker {
       else
         log.error("Unknown graph: " + graph + " for command line parameter -m");
     }
-    
-    
+
+
     void options_t::set_algorithm_model_async_zg(std::string const & semantics, std::string const & extrapolation,
                                                  tchecker::log_t & log)
     {
@@ -283,8 +283,8 @@ namespace tchecker {
       else
         log.error("Unknown semantics: " + semantics + " for command line parameter -m");
     }
-    
-    
+
+
     void options_t::set_algorithm_model_zg(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log)
     {
       if (semantics == "elapsed") {
@@ -334,8 +334,8 @@ namespace tchecker {
       else
         log.error("Unknown semantics: " + semantics + " for command line parameter -m");
     }
-    
-    
+
+
     void options_t::set_output_file(std::string const & filename, tchecker::log_t & log)
     {
       if (_os != &std::cout)
@@ -346,8 +346,8 @@ namespace tchecker {
         return;
       }
     }
-    
-    
+
+
     void options_t::set_search_order(std::string const & value, tchecker::log_t & log)
     {
       if (value == "bfs")
@@ -357,8 +357,8 @@ namespace tchecker {
       else
         log.error("Unknown search order: " + value + " for command line option -s");
     }
-    
-    
+
+
     void options_t::set_block_size(std::string const & value, tchecker::log_t & log)
     {
       for (auto c : value)
@@ -366,11 +366,11 @@ namespace tchecker {
           log.error("Invalid value: " + value + " for command line option --block-size, expecting an unsigned integer");
           return;
         }
-      
+
       _block_size = std::stoul(value);
     }
-    
-    
+
+
     void options_t::set_nodes_table_size(std::string const & value, tchecker::log_t & log)
     {
       for (auto c : value)
@@ -378,28 +378,30 @@ namespace tchecker {
           log.error("Invalid value: " + value + " for command line option --table-size, expecting an unsigned integer");
           return;
         }
-      
+
       _nodes_table_size = std::stoul(value);
     }
-    
-    
+
+
     void options_t::set_source_set(std::string const & value, tchecker::log_t & log)
     {
       if (value == "cs")
         _source_set = tchecker::covreach::options_t::SOURCE_SET_CS;
       else if (value == "gl")
         _source_set = tchecker::covreach::options_t::SOURCE_SET_GL;
+      else if (value == "por1")
+          _source_set = tchecker::covreach::options_t::SOURCE_SET_POR1;
       else
         log.error("Unknown source set: " + value);
     }
-    
-    
+
+
     void options_t::set_stats(std::string const & value, tchecker::log_t & log)
     {
       _stats = 1;
     }
-    
-    
+
+
     void options_t::set_spread(std::string const & value, tchecker::log_t & log)
     {
       for (auto c : value)
@@ -407,28 +409,28 @@ namespace tchecker {
         log.error("Invalid value: " + value + " for command line option --spread, expecting an unsigned integer");
         return;
       }
-      
+
       unsigned long spread = std::stoul(value);
       if (spread >= tchecker::covreach::options_t::UNBOUNDED_SPREAD)
         log.error("Out-of-bound spread " + value);
-      
+
       _spread = static_cast<tchecker::integer_t>(spread);
     }
-    
-    
+
+
     void options_t::set_server_process(std::string const & value, tchecker::log_t & log)
     {
       _server_process = value;
     }
-    
-    
+
+
     void options_t::check_mandatory_options(tchecker::log_t & log) const
     {
       if (_algorithm_model == UNKNOWN)
         log.error("model must be set, use -m command line option");
     }
-    
-    
+
+
     void options_t::check_source_set_model(tchecker::log_t & log) const
     {
       if ((_source_set != tchecker::covreach::options_t::SOURCE_SET_ALL) &&
@@ -440,8 +442,8 @@ namespace tchecker {
       else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS)
         log.warning("server process ignored if not used in combination with client/server POR");
     }
-    
-    
+
+
     void options_t::check_spread(tchecker::log_t & log) const
     {
       if (_spread < 0)
@@ -452,8 +454,8 @@ namespace tchecker {
           (_algorithm_model != ASYNC_ZG_NON_ELAPSED))
         log.error("spread should only be specified for models async_zg:elapsed and async_zg::non_elapsed");
     }
-    
-    
+
+
     std::ostream & options_t::describe(std::ostream & os)
     {
       os << "-c cover         where cover is one of the following:" << std::endl;
@@ -488,6 +490,7 @@ namespace tchecker {
       os << "--source-set ss  where ss is one of:" << std::endl;
       os << "                 cs    partial-order reduction for client/server models" << std::endl;
       os << "                 gl    partial-order reduction for global/local models" << std::endl;
+      os << "                 por1  partial-order reduction that does nothing" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;
@@ -496,7 +499,7 @@ namespace tchecker {
       os << "                    -m must be specified" << std::endl;
       return os;
     }
-    
+
   } // end of namespace covreach
-  
+
 } // end of namespace tchecker

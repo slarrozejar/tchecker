@@ -24,9 +24,9 @@
  */
 
 namespace tchecker {
-  
+
   namespace covreach {
-    
+
     /*!
      \class options_t
      \brief Options for covering reachability algorithm
@@ -40,7 +40,7 @@ namespace tchecker {
         DOT,
         RAW,
       };
-      
+
       /*!
        \brief Type of model
        */
@@ -85,7 +85,7 @@ namespace tchecker {
         ZG_NON_ELAPSED_EXTRALU_PLUS_G,
         ZG_NON_ELAPSED_EXTRALU_PLUS_L,
       };
-      
+
       /*!
        \brief Type of search order
        */
@@ -93,7 +93,7 @@ namespace tchecker {
         BFS,
         DFS,
       };
-      
+
       /*!
        \brief Type of node covering
        */
@@ -104,7 +104,7 @@ namespace tchecker {
         AM_G,
         AM_L,
       };
-      
+
       /*!
        \brief Source set
        */
@@ -112,14 +112,15 @@ namespace tchecker {
         SOURCE_SET_ALL,     /*!< All outgoing transitions */
         SOURCE_SET_CS,      /*!< Round-robin POR for client/server systems */
         SOURCE_SET_GL,      /*!< Round-robin POR for global/local systems */
+        SOURCE_SET_POR1     /*!< All outgoing transitions */
       };
-      
+
       /*!
        \brief unbounded spread
        */
       static constexpr tchecker::integer_t const UNBOUNDED_SPREAD
       = std::numeric_limits<tchecker::integer_t>::max();
-            
+
       /*!
        \brief Constructor
        \tparam MAP_ITERATOR : iterator on a map std::string -> std::string,
@@ -150,135 +151,135 @@ namespace tchecker {
         check_source_set_model(log);
         check_spread(log);
       }
-      
+
       /*!
        \brief Copy constructor (deleted)
        */
       options_t(tchecker::covreach::options_t const & options) = delete;
-      
+
       /*!
        \brief Move constructor
        */
       options_t(tchecker::covreach::options_t && options);
-      
+
       /*!
        \brief Destructor
        */
       ~options_t();
-      
+
       /*!
        \brief Assignment operator (deleted)
        */
       tchecker::covreach::options_t & operator= (tchecker::covreach::options_t const &) = delete;
-      
+
       /*!
        \brief Move-assignment operator
        */
       tchecker::covreach::options_t & operator= (tchecker::covreach::options_t &&);
-      
+
       /*!
        \brief Accessor
        \return node covering
        */
       enum tchecker::covreach::options_t::node_covering_t node_covering() const;
-      
+
       /*!
        \brief Accessor
        \return output format
        */
       enum tchecker::covreach::options_t::output_format_t output_format() const;
-      
+
       /*!
        \bief Type of range of accepting labels
        */
       using accepting_labels_range_t = tchecker::range_t<std::vector<std::string>::const_iterator>;
-      
+
       /*!
        \brief Accessor
        \return accepting labels
        */
       tchecker::covreach::options_t::accepting_labels_range_t accepting_labels() const;
-      
+
       /*!
        \brief Accessor
        \return algorithm model
        */
       enum tchecker::covreach::options_t::algorithm_model_t algorithm_model() const;
-      
+
       /*!
        \brief Accessor
        \return output stream
        */
       std::ostream & output_stream() const;
-      
+
       /*!
        \brief Accessor
        \return search order
        */
       enum tchecker::covreach::options_t::search_order_t search_order() const;
-      
+
       /*!
        \brief Accessor
        \return allocation block size
        */
       std::size_t block_size() const;
-      
+
       /*!
        \brief Accessor
        \return nodes table size
        */
       std::size_t nodes_table_size() const;
-      
+
       /*!
        \brief Accessor
        \return source set selection
        */
       enum tchecker::covreach::options_t::source_set_t source_set() const;
-      
+
       /*!
        \brief Accessor
        \return true if stats should be output, false otherwise
        */
       bool stats() const;
-      
+
       /*!
        \brief Accessor
        \return bound on spread for asynchronous zone graph
        */
       tchecker::integer_t spread() const;
-      
+
       /*!
        \brief Accessor
        \return server process name (client.server POR)
        */
       std::string const & server_process() const;
-      
+
       /*!
        \brief Check that mandatory options have been set
        \param log : a logging facility
        \post All errors and warnings have been reported to log
        */
       void check_mandatory_options(tchecker::log_t & log) const;
-      
+
       /*!
        \brief Check that source set selection if compatible with model
        \param log : logging facility
        \post All errors and warnings have been reported to log
        */
       void check_source_set_model(tchecker::log_t & log) const;
-      
+
       /*!
        \brief Check spread is compatible with model
        \param log : logging facility
        \post All errors and warnings have been reported to log
        */
       void check_spread(tchecker::log_t & log) const;
-      
+
       /*!
        \brief Short options string (getopt_long format)
        */
       static constexpr char const * const getopt_long_options = "c:f:hl:m:o:s:S";
-      
+
       /*!
        \brief Long options (getopt_long format)
        */
@@ -299,7 +300,7 @@ namespace tchecker {
         {"table-size",   required_argument, 0, 0},
         {0, 0, 0, 0}
       };
-      
+
       /*!
        \brief Options description
        \param os : output stream
@@ -318,7 +319,7 @@ namespace tchecker {
        A warning has been reported to log if key is not an option name.
        */
       void set_option(std::string const & key, std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set node covering
        \param value : option value
@@ -327,7 +328,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_node_covering(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set output format
        \param value : option value
@@ -336,7 +337,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_output_format(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set accepting labels
        \param value : option value
@@ -345,7 +346,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_accepting_labels(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set algorithm model
        \param value : option value
@@ -354,7 +355,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_algorithm_model(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set algorithm model for asynchronous zone graphs
        \param semantics : a semantics
@@ -378,7 +379,7 @@ namespace tchecker {
        admissible
        */
       void set_algorithm_model_zg(std::string const & semantics, std::string const & extrapolation, tchecker::log_t & log);
-      
+
       /*!
        \brief Set output file
        \param filename : a file name
@@ -387,7 +388,7 @@ namespace tchecker {
        An error has been reported to log if filename cannot be opened
        */
       void set_output_file(std::string const & filename, tchecker::log_t & log);
-      
+
       /*!
        \brief Set search order
        \param value : option value
@@ -396,7 +397,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_search_order(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set block size
        \param value : option value
@@ -405,7 +406,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_block_size(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set nodes table size
        \param value : option value
@@ -414,7 +415,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_nodes_table_size(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set source set
        \param value : option value
@@ -423,7 +424,7 @@ namespace tchecker {
        An error has been reported to log if value is not admissible.
        */
       void set_source_set(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set stats flag
        \param value : option value
@@ -431,7 +432,7 @@ namespace tchecker {
        \post stats flag has been set
        */
       void set_stats(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set bound on spread for asynchronous zone graph
        \param value : option value
@@ -439,7 +440,7 @@ namespace tchecker {
        \post bound on spread has been set
        */
       void set_spread(std::string const & value, tchecker::log_t & log);
-      
+
       /*!
        \brief Set server process name (client/server POR)
        \param value : option value
@@ -447,7 +448,7 @@ namespace tchecker {
        \post server process name has been set
        */
       void set_server_process(std::string const & value, tchecker::log_t & log);
-      
+
       enum node_covering_t _node_covering;         /*!< Node covering */
       enum output_format_t _output_format;         /*!< Output format */
       std::vector<std::string> _accepting_labels;  /*!< Accepting labels */
@@ -461,9 +462,9 @@ namespace tchecker {
       tchecker::integer_t _spread;                 /*!< Bound on spread for asynchronous zone graph */
       std::string _server_process;                 /*!< Name of server process (client/server POR) */
     };
-    
+
   } // end of namespace covreach
-  
+
 } // end of namespace tchecker
 
 #endif // TCHECKER_ALGORITHMS_COVREACH_OPTIONS_HH

@@ -5,29 +5,29 @@
  *
  */
 
-#ifndef TCHECKER_POR_CS_OUTPUT_HH
-#define TCHECKER_POR_CS_OUTPUT_HH
+#ifndef TCHECKER_POR_POR1_OUTPUT_HH
+#define TCHECKER_POR_POR1_OUTPUT_HH
 
 #include <iostream>
 
-#include "tchecker/por/cs/state.hh"
+#include "tchecker/por/por1/state.hh"
 
 /*!
  \file output.hh
- \brief Outputters for client-server POR states
+ \brief Outputters for por1 POR states
  */
 
 namespace tchecker {
-  
+
   namespace por {
 
-    namespace cs {
-     
+    namespace por1 {
+
       /*!
       \brief State outputter
       \tparam STATE : type of state
       \tparam STATE_OUTPUTTER : state outputter for states of type STATE
-      \note this outputs states of type tchecker::por::cs::make_state_t<STATE>
+      \note this outputs states of type tchecker::por::por1::make_state_t<STATE>
       */
       template <class STATE, class STATE_OUTPUTTER>
       class state_outputter_t : public STATE_OUTPUTTER {
@@ -39,34 +39,34 @@ namespace tchecker {
         template <class ... ARGS>
         state_outputter_t(ARGS && ... args) : STATE_OUTPUTTER(args...)
         {}
-      
+
         /*!
         \brief Copy contructor
         */
-        state_outputter_t(tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> const &) = default;
-      
+        state_outputter_t(tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> const &) = default;
+
         /*!
         \brief Move contructor
         */
-        state_outputter_t(tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> &&) = default;
-      
+        state_outputter_t(tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> &&) = default;
+
         /*!
         \brief Destructor
         */
         ~state_outputter_t() = default;
-      
+
         /*!
         \brief Assignment operator
         */
-        tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> &
-        operator= (tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> const &) = default;
-      
+        tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> &
+        operator= (tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> const &) = default;
+
         /*!
         \brief Move-assignment operator
         */
-        tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> &
-        operator= (tchecker::por::cs::state_outputter_t<STATE, STATE_OUTPUTTER> &&) = default;
-      
+        tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> &
+        operator= (tchecker::por::por1::state_outputter_t<STATE, STATE_OUTPUTTER> &&) = default;
+
         /*!
         \brief Output state
         \param os : output stream
@@ -74,18 +74,17 @@ namespace tchecker {
         \post s has been output to os
         \return os after output
         */
-        inline std::ostream & output (std::ostream & os, tchecker::por::cs::make_state_t<STATE> const & s)
+        inline std::ostream & output (std::ostream & os, tchecker::por::por1::make_state_t<STATE> const & s)
         {
           std::ostream & os2 = STATE_OUTPUTTER::output(os, s);
-          return os2 << " /" << s.por_active_pid() << "/";
+          return os2 << " /" << s << "/";
         }
       };
 
-    } // end of namespace cs
-    
+    } // end of namespace por1
+
   } // end of namespace por
-  
+
 } // end of namespace tchecker
 
-#endif // TCHECKER_POR_CS_OUTPUT_HH
-
+#endif // TCHECKER_POR_POR1_OUTPUT_HH
