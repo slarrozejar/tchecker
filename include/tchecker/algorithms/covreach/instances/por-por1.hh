@@ -202,8 +202,7 @@ namespace tchecker {
                   class state_predicate_t {
                   public:
                     using node_ptr_t
-                    = typename tchecker::covreach::details::por::por1::async_zg::sync_zones::ta::
-                    algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
+                    = typename tchecker::covreach::details::por::por1::async_zg::sync_zones::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
 
                     bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                     {
@@ -250,7 +249,7 @@ namespace tchecker {
                                ts_t & ts,
                                ts_allocator_t & allocator)
                   {
-                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
+                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, ts, allocator);
                   }
 
                   using node_outputter_t
@@ -376,7 +375,7 @@ namespace tchecker {
                                ts_t & ts,
                                ts_allocator_t & allocator)
                   {
-                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
+                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, ts, allocator);
                   }
 
                   using node_outputter_t

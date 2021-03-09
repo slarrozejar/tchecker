@@ -35,8 +35,6 @@ namespace tchecker {
 
     namespace por1 {
 
-#define PARTIAL_SYNC_ALLOWED  // allow group of processes
-
       /*!
       \class states_builder_t
       \brief States builder for covering reachability algorithm with
@@ -81,19 +79,8 @@ namespace tchecker {
         template <class MODEL>
         states_builder_t(MODEL & model, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
-        _allocator(allocator),
-#ifdef PARTIAL_SYNC_ALLOWED
-        _location_next_syncs(tchecker::location_next_syncs(model.system())),
-#else
-        _location_next_syncs(tchecker::location_next_syncs(model.system())),
-#endif // PARTIAL_SYNC_ALLOWED
-        {
-#ifdef PARTIAL_SYNC_ALLOWED
-
-#else
-
-#endif // PARTIAL_SYNC_ALLOWED
-        }
+        _allocator(allocator)
+        {}
 
         /*!
         \brief Copy constructor
@@ -219,7 +206,6 @@ namespace tchecker {
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
-        tchecker::location_next_syncs_t _location_next_syncs; /*!< Next synchronisations */
       };
 
     } // end of namespace por1
