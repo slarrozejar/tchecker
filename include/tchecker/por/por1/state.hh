@@ -30,6 +30,9 @@ namespace tchecker {
 
     namespace por1 {
 
+      /*!< POR memory for stats with no selected process */
+      extern unsigned NO_SELECTED_PROCESS;
+
       /*!
       \class state_t
       \brief State for por1 POR
@@ -38,8 +41,9 @@ namespace tchecker {
       public:
         /*!
         \brief Constructor
+        \param por_mem : POR memory
         */
-        state_t();
+        state_t(unsigned por_mem = NO_SELECTED_PROCESS);
 
         /*!
         \brief Equality predicate
@@ -54,6 +58,21 @@ namespace tchecker {
         \return true if this and s are different
         */
         bool operator!= (tchecker::por::por1::state_t const & s) const;
+
+        /*!
+        \brief Access to POR memory
+        \return POR memory of this state
+        */
+        unsigned por_memory() const;
+
+        /*!
+        \brief Set POR memory
+        \param por_mem : POR memory
+        \post this state's POR memory has been set to por_mem
+        */
+        void por_memory(unsigned por_mem);
+      private:
+        unsigned _por_mem;   /*!< POR memory */
       };
 
 
@@ -172,6 +191,7 @@ namespace tchecker {
        \param s1 : state
        \param s2 : state
        \return true if s1 can be covered by s2, false othewise
+       \note cover_leq is a simulation relation compatible with por1 source
        */
       bool cover_leq(tchecker::por::por1::state_t const & s1,
                      tchecker::por::por1::state_t const & s2);

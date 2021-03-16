@@ -542,7 +542,7 @@ namespace tchecker {
   \tparam EDGE : type of edges
   \param system : a system of processes
   \return A map : location ID -> bool that tells if a location in system is pure
-  local or not
+  local or not (deadlock locations are NOT pure local)
   */
   template <class LOC, class EDGE>
   pure_local_map_t pure_local_map(tchecker::system_t<LOC, EDGE> const & system)

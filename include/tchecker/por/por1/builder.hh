@@ -79,7 +79,8 @@ namespace tchecker {
         template <class MODEL>
         states_builder_t(MODEL & model, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
-        _allocator(allocator)
+        _allocator(allocator),
+        _pure_local_map(tchecker::pure_local_map(model.system()))
         {}
 
         /*!
@@ -133,8 +134,12 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
+            /*
             if (! synchronizable(state))
               continue;
+            */
+
+            state->por_memory(tchecker::por::por1::NO_SELECTED_PROCESS);
 
             v.push_back(state);
           }
@@ -148,30 +153,10 @@ namespace tchecker {
         */
         virtual void next(state_ptr_t & s, std::vector<state_ptr_t> & v)
         {
-          auto outgoing_vedges = _ts.outgoing_edges(*s);
-          for (auto it = outgoing_vedges.begin(); ! it.at_end(); ++it) {
-            auto const vedge = *it;
-
-            std::set<tchecker::process_id_t> vedge_pids
-            = tchecker::vedge_pids(vedge);
-
-            if (! in_source_set(s, vedge_pids))
-              continue;
-
-            state_ptr_t next_state = _allocator.construct_from_state(s);
-            transition_ptr_t transition = _allocator.construct_transition();
-
-            tchecker::state_status_t status
-            = _ts.next(*next_state, *transition, vedge);
-
-            if (status != tchecker::STATE_OK)
-              continue;
-
-            if (! synchronizable(next_state))
-              continue;
-
-            v.push_back(next_state);
-          }
+          if (s->por_memory() == tchecker::por::por1::NO_SELECTED_PROCESS)
+            next_no_process_selected(s, v);
+          else
+            next_current_process(s, v);
         }
       private:
 
@@ -192,20 +177,93 @@ namespace tchecker {
         }
 
         /*!
-         \brief Source set selection
-         \param state : a state
-         \param vedge_pids : process identifiers in a vedge
-         \return true if a vedge involving processes vedge_pids is in the source
-         set of state, false otherwise
-         */
-        bool in_source_set(state_ptr_t & state,
-        std::set<tchecker::process_id_t> const & vedge_pids)
+        \brief Computes next states for state s with no selected process
+        \param s : a state
+        \param v : states container
+        \post all successor states of s have been pushed back in v
+        */
+        void next_no_selected_process(state_ptr_t & s, 
+                                      std::vector<state_ptr_t> & v)
         {
-          return true;
+          assert(s->por_memory() == tchecker::por::por1::NO_SELECTED_PROCESS);
+          // 1. Calculer l'ensemble des processus pure locaux dans s->vloc()
+
+          // 2. Calculer l'ensemble E' = {(next_state, pid),...} des transitions
+          //    enabled (next state, PID du processus)
+          //    Prendre PID du processus = int max si pas edge local
+          std::vector<std::tuple<state_ptr_t, tchecker::process_id_t>> enabled;
+          auto outgoing_vedges = _ts.outgoing_edges(*s);
+          for (auto it = outgoing_vedges.begin(); ! it.at_end(); ++it) {
+            auto const vedge = *it;
+
+            state_ptr_t next_state = _allocator.construct_from_state(s);
+            transition_ptr_t transition = _allocator.construct_transition();
+
+            tchecker::state_status_t status
+            = _ts.next(*next_state, *transition, vedge);
+
+            if (status != tchecker::STATE_OK)
+              continue;
+
+            /*
+            if (! synchronizable(next_state))
+              continue;
+            */
+
+            // TODO: mettre next_state->por_memory() à la bonne valeur
+
+            v.push_back(next_state); // <- dans enabled
+          }
+
+          // 3. Déterminer le plus petit i td i est pure local et a un edge
+          //    enabled
+          
+          // 4. Mettre dans v
+          //    - les next_states du process i s'il y en a un
+          //    - tous les next_states sinon
+        }
+
+        /*!
+        \brief Computes next states for state s with selected process
+        \param s : a state
+        \param v : states container
+        \post all successor states of s have been pushed back in v
+        */
+        void next_current_process(state_ptr_t & s, std::vector<state_ptr_t> & v)
+        {
+          assert(s->por_memory() != tchecker::por::por1::NO_SELECTED_PROCESS);
+          auto outgoing_vedges = _ts.outgoing_edges(*s);
+          for (auto it = outgoing_vedges.begin(); ! it.at_end(); ++it) {
+            auto const vedge = *it;
+
+            std::set<tchecker::process_id_t> vedge_pids
+            = tchecker::vedge_pids(vedge);
+
+            if (vedge_pids.find(s->por_memory()) == vedge_pids.end())
+              // current process not involved in vedge
+              continue;
+
+            state_ptr_t next_state = _allocator.construct_from_state(s);
+            transition_ptr_t transition = _allocator.construct_transition();
+
+            tchecker::state_status_t status
+            = _ts.next(*next_state, *transition, vedge);
+
+            if (status != tchecker::STATE_OK)
+              continue;
+
+            /*
+            if (! synchronizable(next_state))
+              continue;
+            */
+
+            v.push_back(next_state);
+          }
         }
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
+        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
       };
 
     } // end of namespace por1

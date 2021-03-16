@@ -77,7 +77,7 @@ namespace tchecker {
         inline std::ostream & output (std::ostream & os, tchecker::por::por1::make_state_t<STATE> const & s)
         {
           std::ostream & os2 = STATE_OUTPUTTER::output(os, s);
-          return os2;
+          return os2 << " /" << s.por_memory() << "/";
         }
       };
 
