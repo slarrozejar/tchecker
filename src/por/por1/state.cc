@@ -15,9 +15,9 @@ namespace tchecker {
 
     namespace por1 {
 
-      unsigned NO_SELECTED_PROCESS = std::numeric_limits<unsigned>::max();
+      tchecker::process_id_t NO_SELECTED_PROCESS = std::numeric_limits<tchecker::process_id_t>::max();
 
-      state_t::state_t(unsigned por_mem) : _por_mem(por_mem)
+      state_t::state_t(tchecker::process_id_t por_mem) : _por_mem(por_mem)
       {}
 
       bool tchecker::por::por1::state_t::operator==
@@ -34,13 +34,13 @@ namespace tchecker {
       }
 
 
-      unsigned tchecker::por::por1::state_t::por_memory() const
+      tchecker::process_id_t tchecker::por::por1::state_t::por_memory() const
       {
         return _por_mem;
       }
 
 
-      void tchecker::por::por1::state_t::por_memory(unsigned por_mem)
+      void tchecker::por::por1::state_t::por_memory(tchecker::process_id_t por_mem)
       {
         _por_mem = por_mem;
       }

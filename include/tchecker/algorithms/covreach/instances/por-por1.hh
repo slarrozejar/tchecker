@@ -125,13 +125,13 @@ namespace tchecker {
                   return std::tuple<model_t &>(model);
                 }
 
-                static std::tuple<model_t &, ts_t &, ts_allocator_t &>
+                static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
                 builder_args(model_t & model,
                              tchecker::covreach::options_t const & options,
                              ts_t & ts,
                              ts_allocator_t & allocator)
                 {
-                  return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, ts, allocator);
+                  return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
                 }
 
                 using node_outputter_t
@@ -243,13 +243,13 @@ namespace tchecker {
                     return std::tuple<model_t &>(model);
                   }
 
-                  static std::tuple<model_t &, ts_t &, ts_allocator_t &>
+                  static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
                   builder_args(model_t & model,
                                tchecker::covreach::options_t const & options,
                                ts_t & ts,
                                ts_allocator_t & allocator)
                   {
-                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, ts, allocator);
+                    return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
                   }
 
                   using node_outputter_t
@@ -369,13 +369,13 @@ namespace tchecker {
                     (model, options.spread());
                   }
 
-                  static std::tuple<model_t &, ts_t &, ts_allocator_t &>
+                  static std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>
                   builder_args(model_t & model,
                                tchecker::covreach::options_t const & options,
                                ts_t & ts,
                                ts_allocator_t & allocator)
                   {
-                    return std::tuple<model_t &, ts_t &, ts_allocator_t &>(model, ts, allocator);
+                    return std::tuple<model_t &, std::string const &, ts_t &, ts_allocator_t &>(model, options.server_process(), ts, allocator);
                   }
 
                   using node_outputter_t

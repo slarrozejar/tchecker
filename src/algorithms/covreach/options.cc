@@ -439,8 +439,10 @@ namespace tchecker {
         log.error("source set can only be used with asynchronous zone graph models");
       else if (_source_set == options_t::SOURCE_SET_CS && _server_process == "")
         log.error("server process not set for client/server POR");
-      else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS)
-        log.warning("server process ignored if not used in combination with client/server POR");
+      else if (_source_set == options_t::SOURCE_SET_POR1 && _server_process == "")
+        log.error("server process not set for client/server por1 POR");
+      else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS && _source_set != options_t::SOURCE_SET_POR1)
+        log.warning("server process ignored if not used in combination with client/server or por1 POR");
     }
 
 
@@ -490,7 +492,7 @@ namespace tchecker {
       os << "--source-set ss  where ss is one of:" << std::endl;
       os << "                 cs    partial-order reduction for client/server models" << std::endl;
       os << "                 gl    partial-order reduction for global/local models" << std::endl;
-      os << "                 por1  partial-order reduction that does nothing" << std::endl;
+      os << "                 por1  partial-order reduction that implements por1 client/server POR" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;

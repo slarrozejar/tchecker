@@ -14,7 +14,7 @@ endif()
 
 set(CMAKE_MACOSX_RPATH 1)
 
-tck_check_cxx_flags("-ferror-limit=150" ERROR_LIMIT)
+tck_check_cxx_flags("-ferror-limit=1" ERROR_LIMIT)
 tck_check_cxx_flags("-fstrict-vtable-pointers" STRICT_VTABLE_POINTERS)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g ${ERROR_LIMIT}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -O2 -flto ${STRICT_VTABLE_POINTERS}")

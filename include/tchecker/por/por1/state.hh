@@ -31,7 +31,7 @@ namespace tchecker {
     namespace por1 {
 
       /*!< POR memory for stats with no selected process */
-      extern unsigned NO_SELECTED_PROCESS;
+      extern tchecker::process_id_t NO_SELECTED_PROCESS;
 
       /*!
       \class state_t
@@ -43,7 +43,7 @@ namespace tchecker {
         \brief Constructor
         \param por_mem : POR memory
         */
-        state_t(unsigned por_mem = NO_SELECTED_PROCESS);
+        state_t(tchecker::process_id_t por_mem = NO_SELECTED_PROCESS);
 
         /*!
         \brief Equality predicate
@@ -63,16 +63,16 @@ namespace tchecker {
         \brief Access to POR memory
         \return POR memory of this state
         */
-        unsigned por_memory() const;
+        tchecker::process_id_t por_memory() const;
 
         /*!
         \brief Set POR memory
         \param por_mem : POR memory
         \post this state's POR memory has been set to por_mem
         */
-        void por_memory(unsigned por_mem);
+        void por_memory(tchecker::process_id_t por_mem);
       private:
-        unsigned _por_mem;   /*!< POR memory */
+        tchecker::process_id_t _por_mem;   /*!< POR memory */
       };
 
 
