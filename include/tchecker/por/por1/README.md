@@ -15,25 +15,21 @@ will denote the action taken from state $q$.
 Functions *source* and *memory* are defined as follows:
 
 $$
-    source(q,0,E) = \left\{
-        \begin{array}{ll}
-            out(q_i) \cap E & \text{ if i smallest index s.t } q_i \text{ purely local, } out(q_i) \cap E \neq \emptyset\\
-            E & \text{ otherwise}
-        \end{array}
-    \right.
+\begin{aligned}
+& source(q,0,E) = 
+    \begin{cases}
+        out(q_i) \cap E & \text{ if i smallest index s.t } q_i \text{ purely local, } out(q_i) \cap E \neq \emptyset\\
+        E & \text{ otherwise}\\
+    \end{cases}\\
+\\
+& source(q,m,E) = out(q_m) \cap E  \text{ for } m>0\\
+\\
+\\
+& mem(q,m,b) =
+\begin{cases}
+    0 & \text{ if } b \text{ is an action of the server }\\
+    m & \text{ if } b \in out(q_i) \text{ and } q_i \text{ is purely local }\\
+    i & \text{ if } b \text{ local action of process } i \text{ and none above}\\
+\end{cases}
+\end{aligned}
 $$
-$
-    source(q,m,E) = \begin{array}{ll} 
-     out(q_m) \cap E & \text{ for } m>0 \\
-     \end{array}
-$
-$$
-    mem(q,m,b) = \left\{
-        \begin{array}{ll}
-            0 & \text{ if $b$ is an action of the server }\\
-            m & \text{ if } b \in out(q_m) \text{ and } q_m \text{ is purely local }\\
-            i & \text{ if } b \text{ local action of process $i$ and not the above}
-        \end{array}
-    \right.
-$$
- 
