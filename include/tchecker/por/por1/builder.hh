@@ -36,6 +36,8 @@ namespace tchecker {
 
     namespace por1 {
 
+#define PARTIAL_SYNC_ALLOWED  // allow group of processes
+
       /*!
       \class states_builder_t
       \brief States builder for covering reachability algorithm with
@@ -84,8 +86,13 @@ namespace tchecker {
         _pure_local_map(tchecker::pure_local_map(model.system())),
         _server_pid(model.system().processes().key(server))
         {
+#ifdef PARTIAL_SYNC_ALLOWED
+          _group_id = tchecker::client_server_groups(model.system(), _server_pid);
+          compute_groups(model.system().processes_count());
+#else
           if (! tchecker::client_server(model.system(), _server_pid))
             throw std::invalid_argument("System is not client/server");
+#endif // PARTIAL_SYNC_ALLOWED
         }
 
         /*!
@@ -164,6 +171,19 @@ namespace tchecker {
             next_current_process(s, v);
         }
       private:
+        /*!
+         \brief Compute map : group ID -> process IDs from map : process ID -> group ID
+         \post _groups is the dual map of _group_id
+         */
+        void compute_groups(tchecker::process_id_t processes_count)
+        {
+          for (tchecker::process_id_t pid = 0; pid < processes_count; ++pid) {
+            tchecker::process_id_t gid = _group_id[pid];
+            if (gid >= _groups.size())
+              _groups.resize(gid + 1);
+            _groups[gid].insert(pid);
+          }
+        }
 
         /*!
          \brief Checks if a state can reach a communication
@@ -313,7 +333,14 @@ namespace tchecker {
         {
           if (selected_process == tchecker::por::por1::NO_SELECTED_PROCESS)
             return true;
+#ifdef PARTIAL_SYNC_ALLOWED
+          for (tchecker::process_id_t pid : vedge_pids)
+            if (pid != _server_pid && _group_id[pid] == selected_process)
+              return true;
+          return false;
+#else
           return vedge_pids.find(selected_process) != vedge_pids.end();
+#endif // PARTIAL_SYNC_ALLOWED
         }
 
         /*!
@@ -342,6 +369,10 @@ namespace tchecker {
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
+#ifdef PARTIAL_SYNC_ALLOWED
+        std::vector<tchecker::process_id_t> _group_id;  /*!< Map : process ID -> group ID */
+        std::vector<std::set<tchecker::process_id_t>> _groups; /*!< Map : group ID -> process IDs */
+#endif // PARTIAL_SYNC_ALLOWED
       };
 
     } // end of namespace por1
