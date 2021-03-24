@@ -83,7 +83,11 @@ namespace tchecker {
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
         _allocator(allocator),
+#ifdef PARTIAL_SYNC_ALLOWED
+        _pure_local_map(tchecker::pure_local_map(model.system(), tchecker::client_server_groups(model.system(), _server_pid))), 
+#else
         _pure_local_map(tchecker::pure_local_map(model.system())),
+#endif
         _server_pid(model.system().processes().key(server))
         {
 #ifdef PARTIAL_SYNC_ALLOWED
@@ -217,7 +221,11 @@ namespace tchecker {
           for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
               auto const * location = *it;
               if(_pure_local_map.is_pure_local(location->id()))
+#ifdef PARTIAL_SYNC_ALLOWED
+                pure_local_processes.insert(_group_id[location->pid()]);
+#else
                 pure_local_processes.insert(location->pid());
+#endif
           }
 
           // 2. Calculer l'ensemble E' = {(next_state, pid),...} des transitions
@@ -243,8 +251,15 @@ namespace tchecker {
               continue;
             */
 
+#ifdef PARTIAL_SYNC_ALLOWED
+            std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
+            for (tchecker::process_id_t pid : vedge_pids) {
+              enabled_processes.insert(_group_id[pid]);
+            }
+#else
             std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
             enabled_processes.insert(vedge_pids.begin(), vedge_pids.end());
+#endif //PARTIAL_SYNC_ALLOWED
 
             enabled.push_back(std::make_tuple(next_state, vedge_pids));
           }
@@ -361,8 +376,12 @@ namespace tchecker {
               return tchecker::por::por1::NO_SELECTED_PROCESS;
             if (pure_local_move)
               return current_memory;
+#ifdef PARTIAL_SYNC_ALLOWED
+            return _group_id[*vedge_pids.begin()];
+#else
             assert(vedge_pids.size() == 1); // local edge
             return *vedge_pids.begin();
+#endif
         }
 
         TS & _ts; /*!< Transition system */
