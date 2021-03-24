@@ -564,6 +564,36 @@ namespace tchecker {
     return m;
   }
 
+    /*!
+  \brief Compute pure local and non pure local locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \param group_id : Map : process ID -> group ID
+  \return A map : location ID -> bool that tells if a location in system is pure
+  local or not (deadlock locations are NOT pure local)
+  */
+  template <class LOC, class EDGE>
+  pure_local_map_t pure_local_map(tchecker::system_t<LOC, EDGE> const & system, 
+                                  std::vector<tchecker::process_id_t> group_id)
+  {
+    pure_local_map_t m(system.locations_count(), true);
+    // Set all locations with a sync edge outside its group non pure local
+    for (EDGE const * edge : system.edges())
+    {
+      if (! system.asynchronous_groups(edge->pid(), edge->event_id(), group_id))
+        m.set_pure_local(edge->src()->id(), false);
+    }
+    // Set all deadlock locations non pure local
+    for (LOC const * loc : system.locations())
+    {
+      auto edges = loc->outgoing_edges();
+      if (edges.begin() == edges.end())
+        m.set_pure_local(loc->id(), false);
+    }
+    return m;
+  }
+
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
