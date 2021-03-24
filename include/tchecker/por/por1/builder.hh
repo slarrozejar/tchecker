@@ -88,11 +88,14 @@ namespace tchecker {
 #else
         _pure_local_map(tchecker::pure_local_map(model.system())),
 #endif
-        _server_pid(model.system().processes().key(server))
+        _server_pid(model.system().processes().key(server)),
+        _refcount(model.flattened_offset_clock_variables().refcount()),
+        _offset_dim(model.flattened_offset_clock_variables().flattened_size())
         {
 #ifdef PARTIAL_SYNC_ALLOWED
           _group_id = tchecker::client_server_groups(model.system(), _server_pid);
           compute_groups(model.system().processes_count());
+          assert(_refcount == model.system().processes_count());
 #else
           if (! tchecker::client_server(model.system(), _server_pid))
             throw std::invalid_argument("System is not client/server");
@@ -150,6 +153,12 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
+#ifdef PARTIAL_SYNC_ALLOWED
+            // Synchronize reference clocks from the same group
+            if (synchronize_groups(state) != tchecker::STATE_OK)
+              continue;
+#endif // PARTIAL_SYNC_ALLOWED
+
             /*
             if (! synchronizable(state))
               continue;
@@ -187,6 +196,33 @@ namespace tchecker {
               _groups.resize(gid + 1);
             _groups[gid].insert(pid);
           }
+        }
+
+          /*!
+         \brief Synchronise reference clocks that belong to the same group
+         \param s : a state
+         \post the reference clocks that belong to the same group have been synchronised in the zone of s
+         \return tchecker::STATE_OK if the resulting zone is not empty,  tchecker::STATE_EMPTY_ZONE otherwise
+         */
+        enum tchecker::state_status_t synchronize_groups(state_ptr_t & s) const
+        {
+          tchecker::dbm::db_t * offset_dbm = s->offset_zone_ptr()->dbm();
+          for (tchecker::clock_id_t r = 0; r < _refcount; ++r) {
+            if (r == _group_id[r])
+              continue;
+            
+            auto status = tchecker::offset_dbm::constrain(offset_dbm, 
+            _offset_dim, r, _group_id[r], tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+            
+            status = tchecker::offset_dbm::constrain(offset_dbm, _offset_dim, 
+            _group_id[r], r, tchecker::dbm::LE, 0);
+            if (status == tchecker::dbm::EMPTY)
+              return tchecker::STATE_EMPTY_ZONE;
+          }
+          
+          return tchecker::STATE_OK;
         }
 
         /*!
@@ -391,6 +427,8 @@ namespace tchecker {
 #ifdef PARTIAL_SYNC_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;  /*!< Map : process ID -> group ID */
         std::vector<std::set<tchecker::process_id_t>> _groups; /*!< Map : group ID -> process IDs */
+        tchecker::clock_id_t _refcount;  /*!< Number of reference clocks */
+        tchecker::clock_id_t _offset_dim; /*!< Dimension of offset DBMs */
 #endif // PARTIAL_SYNC_ALLOWED
       };
 
