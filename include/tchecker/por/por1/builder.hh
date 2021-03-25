@@ -253,17 +253,23 @@ namespace tchecker {
           assert(s->por_memory() == tchecker::por::por1::NO_SELECTED_PROCESS);
           
           // 1. Calculer l'ensemble des processus pure locaux dans s->vloc()
+#ifdef PARTIAL_SYNC_ALLOWED
+          std::set<tchecker::process_id_t> pure_local_processes;
+          for (auto it = s->vloc().begin(); it != s->vloc().end(); ++it)
+            pure_local_processes.insert(_group_id[(*it)->pid()]);
+          for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+            auto const * location = *it;
+            if(! _pure_local_map.is_pure_local(location->id()))
+              pure_local_processes.erase(_group_id[location->pid()]);  
+          }
+#else
           std::set<tchecker::process_id_t> pure_local_processes;
           for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
               auto const * location = *it;
               if(_pure_local_map.is_pure_local(location->id()))
-#ifdef PARTIAL_SYNC_ALLOWED
-                pure_local_processes.insert(_group_id[location->pid()]);                
-#else
                 pure_local_processes.insert(location->pid());
-#endif
           }
-
+#endif
           // 2. Calculer l'ensemble E' = {(next_state, pid),...} des transitions
           //    enabled (next state, PID du processus)
           //    Prendre PID du processus = int max si pas edge local

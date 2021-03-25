@@ -419,18 +419,18 @@ namespace tchecker {
      \return true if event_id is asynchronous for the group of process pid (i.e. there is
      no synchronization with pid@event_id outside its group), false otherwise
      */
-    bool asynchronous_groups(tchecker::process_id_t pid, tchecker::event_id_t event_id, std::vector<tchecker::process_id_t> group_id) const
+    bool asynchronous_groups(tchecker::process_id_t pid, tchecker::event_id_t event_id, std::vector<tchecker::process_id_t> const & group_id) const
     {
       for (tchecker::synchronization_t const & sync : _syncs) {
-        bool implied_in_sync = false;
-        bool other_group_implied = false;
+        bool involved_in_sync = false;
+        bool server_involved = false;
         auto constraints = sync.synchronization_constraints();
         for (tchecker::sync_constraint_t const & constr : constraints){
           if ((constr.pid() == pid) && (constr.event_id() == event_id))
-            implied_in_sync = true;
+            involved_in_sync = true;
           if (group_id[constr.pid()] != group_id[pid])
-            other_group_implied = true;
-          if(implied_in_sync && other_group_implied)
+            server_involved = true;
+          if(involved_in_sync && server_involved)
             return false;
         }
       }
