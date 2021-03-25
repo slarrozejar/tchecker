@@ -83,12 +83,12 @@ namespace tchecker {
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
         _allocator(allocator),
+        _server_pid(model.system().processes().key(server)),
 #ifdef PARTIAL_SYNC_ALLOWED
         _pure_local_map(tchecker::pure_local_map(model.system(), tchecker::client_server_groups(model.system(), _server_pid))), 
 #else
         _pure_local_map(tchecker::pure_local_map(model.system())),
 #endif
-        _server_pid(model.system().processes().key(server)),
         _refcount(model.flattened_offset_clock_variables().refcount()),
         _offset_dim(model.flattened_offset_clock_variables().flattened_size())
         {
@@ -258,7 +258,7 @@ namespace tchecker {
               auto const * location = *it;
               if(_pure_local_map.is_pure_local(location->id()))
 #ifdef PARTIAL_SYNC_ALLOWED
-                pure_local_processes.insert(_group_id[location->pid()]);
+                pure_local_processes.insert(_group_id[location->pid()]);                
 #else
                 pure_local_processes.insert(location->pid());
 #endif
@@ -422,8 +422,8 @@ namespace tchecker {
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
-        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
 #ifdef PARTIAL_SYNC_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;  /*!< Map : process ID -> group ID */
         std::vector<std::set<tchecker::process_id_t>> _groups; /*!< Map : group ID -> process IDs */

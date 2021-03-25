@@ -421,20 +421,20 @@ namespace tchecker {
      */
     bool asynchronous_groups(tchecker::process_id_t pid, tchecker::event_id_t event_id, std::vector<tchecker::process_id_t> group_id) const
     {
-      bool implied_in_sync = false;
-      bool other_group_implied = false;
       for (tchecker::synchronization_t const & sync : _syncs) {
+        bool implied_in_sync = false;
+        bool other_group_implied = false;
         auto constraints = sync.synchronization_constraints();
-        for (tchecker::sync_constraint_t const & constr : constraints)
+        for (tchecker::sync_constraint_t const & constr : constraints){
           if ((constr.pid() == pid) && (constr.event_id() == event_id))
             implied_in_sync = true;
-        else 
           if (group_id[constr.pid()] != group_id[pid])
             other_group_implied = true;
+          if(implied_in_sync && other_group_implied)
+            return false;
+        }
       }
-      if (!implied_in_sync)
-        return true;
-      return (implied_in_sync && !other_group_implied);
+      return true;
     }
     
     /*!
