@@ -79,7 +79,9 @@ namespace tchecker {
         template <class MODEL>
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
-        _allocator(allocator)
+        _allocator(allocator),
+        _server_pid(model.system().processes().key(server)),
+        _processes_count(model.system().processes_count()-1)
         {}
 
         /*!
@@ -133,6 +135,9 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
+            state->por_L().set(_processes_count, false);
+            state->por_S().set(_processes_count, false);
+
             v.push_back(state);
           }
         }
@@ -168,6 +173,15 @@ namespace tchecker {
           }
         }
       private:
+        tchecker::process_id_t max(boost::dynamic_bitset<> const & bs)
+        {
+          tchecker::process_id_t max = 0;
+          for (tchecker::process_id_t pid = 0; bs.size(); ++pid)
+            if (bs[pid])
+              max = pid;
+          if (! bs[max])
+            throw "Cannot compute max on empty bitset";
+        }
 
         /*!
          \brief Source set selection
@@ -184,6 +198,8 @@ namespace tchecker {
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
+        tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::process_id_t _processes_count; /*!< Number of client processes */
       };
 
     } // end of namespace por2
