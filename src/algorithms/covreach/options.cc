@@ -391,6 +391,8 @@ namespace tchecker {
         _source_set = tchecker::covreach::options_t::SOURCE_SET_GL;
       else if (value == "por1")
           _source_set = tchecker::covreach::options_t::SOURCE_SET_POR1;
+      else if (value == "por2")
+          _source_set = tchecker::covreach::options_t::SOURCE_SET_POR2;
       else
         log.error("Unknown source set: " + value);
     }
@@ -441,8 +443,11 @@ namespace tchecker {
         log.error("server process not set for client/server POR");
       else if (_source_set == options_t::SOURCE_SET_POR1 && _server_process == "")
         log.error("server process not set for client/server por1 POR");
-      else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS && _source_set != options_t::SOURCE_SET_POR1)
-        log.warning("server process ignored if not used in combination with client/server or por1 POR");
+      else if (_source_set == options_t::SOURCE_SET_POR2 && _server_process == "")
+        log.error("server process not set for client/server por2 POR");
+      else if (_server_process != "" && _source_set != options_t::SOURCE_SET_CS && _source_set != options_t::SOURCE_SET_POR1
+              && _source_set != options_t::SOURCE_SET_POR2)
+        log.warning("server process ignored if not used in combination with client/server, por1 or por2 POR");
     }
 
 
@@ -493,6 +498,7 @@ namespace tchecker {
       os << "                 cs    partial-order reduction for client/server models" << std::endl;
       os << "                 gl    partial-order reduction for global/local models" << std::endl;
       os << "                 por1  partial-order reduction that implements por1 client/server POR" << std::endl;
+      os << "                 por2  partial-order reduction that implements por2 client/server POR" << std::endl;
       os << "--block-size n   size of an allocation block (number of allocated objects)" << std::endl;
       os << "--table-size n   size of the nodes table" << std::endl;
       os << std::endl;
