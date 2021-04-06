@@ -154,11 +154,19 @@ namespace tchecker {
           for (auto it = outgoing_vedges.begin(); ! it.at_end(); ++it) {
             auto const vedge = *it;
 
+            bool synchro_phase = false;
+
             std::set<tchecker::process_id_t> vedge_pids
             = tchecker::vedge_pids(vedge);
 
-            if (! in_source_set(s, vedge_pids))
-              continue;
+            if (s->por_L().empty())
+              if (! in_source_synchro_phase(s, vedge_pids))
+                continue;
+              else
+                synchro_phase = true;
+            else
+              if (! in_source_local_phase(s, vedge_pids))
+                continue;
 
             state_ptr_t next_state = _allocator.construct_from_state(s);
             transition_ptr_t transition = _allocator.construct_transition();
@@ -168,7 +176,13 @@ namespace tchecker {
 
             if (status != tchecker::STATE_OK)
               continue;
-
+            
+            // update memory sets por_L and por_S
+            if(synchro_phase)
+              update_mem_synchro(s, next_state, *vedge_pids.begin(), (vedge_pids.size() == 2));
+            else
+              update_mem_local(s, next_state, *vedge_pids.begin(), (vedge_pids.size() == 2));
+            
             v.push_back(next_state);
           }
         }
@@ -184,16 +198,79 @@ namespace tchecker {
         }
 
         /*!
-         \brief Source set selection
-         \param state : a state
+         \brief Checks if a vedge is enabled w.r.t. selected process
+         \param s : a state
          \param vedge_pids : process identifiers in a vedge
-         \return true if a vedge involving processes vedge_pids is in the source
-         set of state, false otherwise
+         \return true if a vedge involving processes vedge_pids is a communication 
+         with the server or  local action of a process in s->por_S()
          */
-        bool in_source_set(state_ptr_t & state,
+        bool in_source_synchro_phase(state_ptr_t & s,
         std::set<tchecker::process_id_t> const & vedge_pids)
         {
-          return true;
+          if (vedge_pids.size() == 2) // communication
+            return true;
+          // Check if local action of a process in s->por_S()
+          return s->por_S()[*vedge_pids.begin()];
+        }
+
+         /*!
+         \brief Checks if a vedge is enabled w.r.t. selected process
+         \param s : a state
+         \param vedge_pids : process identifiers in a vedge
+         \return true if a vedge involving processes vedge_pids is a communication 
+         involving a process in s->por_L() or a local action of a process in s->por_S()
+         whose pid is greater than the max_pid of s->por_L()
+         */
+        bool in_source_local_phase(state_ptr_t & s,
+        std::set<tchecker::process_id_t> const & vedge_pids)
+        {
+          if (vedge_pids.size()) // communication
+            return s->por_L()[*vedge_pids.begin()]; // first pid is a client 
+          // Check if local action of a process in s->por_S greater than max in s->_por_L()
+          process_id_t max_pid = max(s->por_L());
+          return s->por_S()[max_pid];
+        }
+
+        /*!
+         \brief Updates the memory of next_state according to synchro phase
+         \param s : a state
+         \param next_state : a successor of s
+         \param active_pid : pid of process active on transition from s to next_state
+         \param synchro : true if action from s to next_state is a synchronization
+         */
+        void update_mem_synchro(state_ptr_t & s, state_ptr_t & next_state, 
+                                process_id_t active_pid, bool synchro)
+        {
+          if(synchro){
+            next_state->por_S() = s->por_S();
+            next_state->por_S()[active_pid] = true;
+          }
+          else{
+            next_state->por_L().reset();
+            next_state->por_L()[active_pid] = true;
+            next_state->por_S() = s->por_S();
+          }
+        }
+
+                /*!
+         \brief Updates the memory of next_state according to local phase
+         \param s : a state
+         \param next_state : a successor of s
+         \param active_pid : pid of process active on transition from s to next_state
+         \param synchro : true if action from s to next_state is a synchronization
+         */
+        void update_mem_local(state_ptr_t & s, state_ptr_t & next_state, 
+                                process_id_t active_pid, bool synchro)
+        {
+          if(synchro){
+            next_state->por_S().reset();
+            next_state->por_S()[active_pid] = true;
+          }
+          else{
+            next_state->por_L() = s->por_L();
+            next_state->por_L()[active_pid] = true;
+            next_state->por_S() = s->por_S();
+          }
         }
 
         TS & _ts; /*!< Transition system */
