@@ -178,10 +178,12 @@ namespace tchecker {
               continue;
             
             // update memory sets por_L and por_S
+            process_id_t active_pid = compute_active_pid(vedge_pids);
+            bool synchro = (vedge_pids.size() == 2);
             if(synchro_phase)
-              update_mem_synchro(s, next_state, *vedge_pids.begin(), (vedge_pids.size() == 2));
+              update_mem_synchro(s, next_state, active_pid, synchro);
             else
-              update_mem_local(s, next_state, *vedge_pids.begin(), (vedge_pids.size() == 2));
+              update_mem_local(s, next_state, active_pid, synchro);
             
             v.push_back(next_state);
           }
@@ -210,7 +212,8 @@ namespace tchecker {
           if (vedge_pids.size() == 2) // communication
             return true;
           // Check if local action of a process in s->por_S()
-          return s->por_S()[*vedge_pids.begin()];
+          process_id_t active_pid = compute_active_pid(vedge_pids);
+          return s->por_S()[active_pid];
         }
 
          /*!
@@ -224,8 +227,11 @@ namespace tchecker {
         bool in_source_local_phase(state_ptr_t & s,
         std::set<tchecker::process_id_t> const & vedge_pids)
         {
-          if (vedge_pids.size()) // communication
-            return s->por_L()[*vedge_pids.begin()]; // first pid is a client 
+          if (vedge_pids.size() == 2) // communication
+          {
+            process_id_t active_pid = compute_active_pid(vedge_pids);
+            return s->por_L()[active_pid]; // first pid is a client 
+          }
           // Check if local action of a process in s->por_S greater than max in s->_por_L()
           process_id_t max_pid = max(s->por_L());
           return s->por_S()[max_pid];
@@ -271,6 +277,22 @@ namespace tchecker {
             next_state->por_L()[active_pid] = true;
             next_state->por_S() = s->por_S();
           }
+        }
+
+                /*!
+        \brief Compute next active process identifier from a vedge
+        \param vedge_pids : set of process identifiers in a vedge
+        \return the identifier of the active process after taking a vedge
+        involving processes vedge_pids
+        */
+        tchecker::process_id_t compute_active_pid
+        (std::set<tchecker::process_id_t> const & vedge_pids) const
+        {
+          if (vedge_pids.size() < 2) // not a communication
+            return * vedge_pids.begin();
+          for (tchecker::process_id_t pid : vedge_pids)
+            if (pid != _server_pid) 
+              return pid;       
         }
 
         TS & _ts; /*!< Transition system */
