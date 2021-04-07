@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <iostream>
 
 #include "tchecker/algorithms/covreach/builder.hh"
 #include "tchecker/basictypes.hh"
@@ -135,8 +136,9 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
-            state->por_L().set(_processes_count, false);
-            state->por_S().set(_processes_count, false);
+            state->por_L().resize(_processes_count);
+            state->por_S().resize(_processes_count);
+            state->por_S().set();
 
             v.push_back(state);
           }
@@ -159,7 +161,7 @@ namespace tchecker {
             std::set<tchecker::process_id_t> vedge_pids
             = tchecker::vedge_pids(vedge);
 
-            if (s->por_L().empty())
+            if (s->por_L().none())
               if (! in_source_synchro_phase(s, vedge_pids))
                 continue;
               else
@@ -192,7 +194,7 @@ namespace tchecker {
         tchecker::process_id_t max(boost::dynamic_bitset<> const & bs)
         {
           tchecker::process_id_t max = 0;
-          for (tchecker::process_id_t pid = 0; bs.size(); ++pid)
+          for (tchecker::process_id_t pid = 0; pid < bs.size(); ++pid)
             if (bs[pid])
               max = pid;
           if (! bs[max])
@@ -227,6 +229,7 @@ namespace tchecker {
         bool in_source_local_phase(state_ptr_t & s,
         std::set<tchecker::process_id_t> const & vedge_pids)
         {
+          
           if (vedge_pids.size() == 2) // communication
           {
             process_id_t active_pid = compute_active_pid(vedge_pids);
@@ -279,7 +282,7 @@ namespace tchecker {
           }
         }
 
-                /*!
+        /*!
         \brief Compute next active process identifier from a vedge
         \param vedge_pids : set of process identifiers in a vedge
         \return the identifier of the active process after taking a vedge
@@ -291,8 +294,7 @@ namespace tchecker {
           if (vedge_pids.size() < 2) // not a communication
             return * vedge_pids.begin();
           for (tchecker::process_id_t pid : vedge_pids)
-            if (pid != _server_pid) 
-              return pid;       
+            return pid;   
         }
 
         TS & _ts; /*!< Transition system */
