@@ -194,11 +194,12 @@ namespace tchecker {
         tchecker::process_id_t max(boost::dynamic_bitset<> const & bs)
         {
           tchecker::process_id_t max = 0;
-          for (tchecker::process_id_t pid = 0; pid < bs.size(); ++pid)
+          for (tchecker::process_id_t pid = 0; pid <bs.size(); ++pid)
             if (bs[pid])
               max = pid;
           if (! bs[max])
             throw "Cannot compute max on empty bitset";
+          return max;
         }
 
         /*!
@@ -214,7 +215,7 @@ namespace tchecker {
           if (vedge_pids.size() == 2) // communication
             return true;
           // Check if local action of a process in s->por_S()
-          process_id_t active_pid = compute_active_pid(vedge_pids);
+          process_id_t active_pid = *vedge_pids.begin();
           return s->por_S()[active_pid];
         }
 
@@ -237,7 +238,8 @@ namespace tchecker {
           }
           // Check if local action of a process in s->por_S greater than max in s->_por_L()
           process_id_t max_pid = max(s->por_L());
-          return s->por_S()[max_pid];
+          process_id_t active_pid = compute_active_pid(vedge_pids);
+          return (active_pid >= max_pid) && s->por_S()[active_pid];
         }
 
         /*!
@@ -272,6 +274,7 @@ namespace tchecker {
                                 process_id_t active_pid, bool synchro)
         {
           if(synchro){
+            next_state->por_L().reset();
             next_state->por_S().reset();
             next_state->por_S()[active_pid] = true;
           }
@@ -291,10 +294,13 @@ namespace tchecker {
         tchecker::process_id_t compute_active_pid
         (std::set<tchecker::process_id_t> const & vedge_pids) const
         {
+          process_id_t active_pid = * vedge_pids.begin();
           if (vedge_pids.size() < 2) // not a communication
-            return * vedge_pids.begin();
+            return active_pid;
           for (tchecker::process_id_t pid : vedge_pids)
-            return pid;   
+            if(pid != _server_pid)
+               active_pid = pid;   
+          return active_pid;
         }
 
         TS & _ts; /*!< Transition system */
