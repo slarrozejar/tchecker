@@ -176,7 +176,13 @@ namespace tchecker {
         return h;
       }
 
-
+      /*!
+      \brief Compute the highest index of a bitset set to true
+      \param bs : a dynamic_bitset
+      \return the maximum index set to true in the bitset bs, throws an 
+      error if empty set
+      */
+      tchecker::process_id_t max(boost::dynamic_bitset<> const & bs);
       /*!
       \brief Lexical ordering
       \param s1 : state

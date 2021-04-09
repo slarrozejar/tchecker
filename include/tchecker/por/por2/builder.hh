@@ -191,17 +191,6 @@ namespace tchecker {
           }
         }
       private:
-        tchecker::process_id_t max(boost::dynamic_bitset<> const & bs)
-        {
-          tchecker::process_id_t max = 0;
-          for (tchecker::process_id_t pid = 0; pid <bs.size(); ++pid)
-            if (bs[pid])
-              max = pid;
-          if (! bs[max])
-            throw "Cannot compute max on empty bitset";
-          return max;
-        }
-
         /*!
          \brief Checks if a vedge is enabled w.r.t. selected process
          \param s : a state
