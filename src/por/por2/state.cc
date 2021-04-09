@@ -16,6 +16,8 @@ namespace tchecker {
 
     namespace por2 {
 
+// #define COVER  // cover_leq 
+
       state_t::state_t(tchecker::process_id_t processes_count) : _por_L(processes_count), _por_S(processes_count) {}
 
       bool tchecker::por::por2::state_t::operator==
@@ -87,6 +89,7 @@ namespace tchecker {
       bool cover_leq(tchecker::por::por2::state_t const & s1,
                      tchecker::por::por2::state_t const & s2)
       {
+#ifdef COVER
         if (s1.por_L().none() && s2.por_L().none()) // both states in synchro phase
           return s1.por_S().is_subset_of(s2.por_S());
         else if (!s1.por_L().none() && !s2.por_L().none()) // both states in local phase
@@ -103,6 +106,7 @@ namespace tchecker {
           boost::dynamic_bitset<> const & local_pid2 = boost::operator-(s2.por_S(), reduced_L2);
           return local_pid1.is_subset_of(local_pid2) && s1.por_L().is_subset_of(s2.por_L());
         }
+#endif
         return (s1 == s2);
       }
 
