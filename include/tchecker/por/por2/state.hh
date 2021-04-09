@@ -183,6 +183,7 @@ namespace tchecker {
       error if empty set
       */
       tchecker::process_id_t max(boost::dynamic_bitset<> const & bs);
+
       /*!
       \brief Lexical ordering
       \param s1 : state

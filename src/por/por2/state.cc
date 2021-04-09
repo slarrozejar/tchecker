@@ -8,7 +8,6 @@
 #include <limits>
 
 #include "tchecker/por/por2/state.hh"
-#include <boost/dynamic_bitset.hpp>
 
 namespace tchecker {
 
@@ -16,7 +15,7 @@ namespace tchecker {
 
     namespace por2 {
 
-// #define COVER  // cover_leq 
+#define COVER  // cover_leq 
 
       state_t::state_t(tchecker::process_id_t processes_count) : _por_L(processes_count), _por_S(processes_count) {}
 
@@ -85,7 +84,6 @@ namespace tchecker {
           return max;
         }
 
-
       bool cover_leq(tchecker::por::por2::state_t const & s1,
                      tchecker::por::por2::state_t const & s2)
       {
@@ -94,17 +92,39 @@ namespace tchecker {
           return s1.por_S().is_subset_of(s2.por_S());
         else if (!s1.por_L().none() && !s2.por_L().none()) // both states in local phase
         {
+          // Compute local pids selected for s1
           tchecker::process_id_t max_L1 = max(s1.por_L());
-          tchecker::process_id_t max_L2 = max(s2.por_L());
           boost::dynamic_bitset<> tmp1 = s1.por_L();
           tmp1[max_L1] = false;
           boost::dynamic_bitset<> const & reduced_L1 = tmp1;
-          boost::dynamic_bitset<> tmp2 = s2.por_L();
-          tmp1[max_L2] = false;
-          boost::dynamic_bitset<> const & reduced_L2 = tmp2;
           boost::dynamic_bitset<> const & local_pid1 = boost::operator-(s1.por_S(), reduced_L1);
+
+          // Compute local pids selected for s2
+          tchecker::process_id_t max_L2 = max(s2.por_L());
+          boost::dynamic_bitset<> tmp2 = s2.por_L();
+          tmp2[max_L2] = false;
+          boost::dynamic_bitset<> const & reduced_L2 = tmp2;
           boost::dynamic_bitset<> const & local_pid2 = boost::operator-(s2.por_S(), reduced_L2);
+
           return local_pid1.is_subset_of(local_pid2) && s1.por_L().is_subset_of(s2.por_L());
+        }
+        else if (!s1.por_L().none() && s2.por_L().none()) // local phase / synchro phase
+        {
+          tchecker::process_id_t max_L1 = max(s1.por_L());
+          boost::dynamic_bitset<> tmp1 = s1.por_L();
+          tmp1[max_L1] = false;
+          boost::dynamic_bitset<> const & reduced_L1 = tmp1;
+          boost::dynamic_bitset<> const & local_pid1 = boost::operator-(s1.por_S(), reduced_L1); 
+          return local_pid1.is_subset_of(s2.por_S());
+        }
+        else if (s1.por_L().none() && !s2.por_L().none()) // local phase / synchro phase
+        {
+          tchecker::process_id_t max_L2 = max(s2.por_L());
+          boost::dynamic_bitset<> tmp2 = s2.por_L();
+          tmp2[max_L2] = false;
+          boost::dynamic_bitset<> const & reduced_L2 = tmp2;
+          boost::dynamic_bitset<> const & local_pid2 = boost::operator-(s2.por_S(), reduced_L2);          
+          return s1.por_S().is_subset_of(local_pid2) && (s2.por_L().count() == s2.por_L().size());
         }
 #endif
         return (s1 == s2);
