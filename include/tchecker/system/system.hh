@@ -412,6 +412,20 @@ namespace tchecker {
     }
 
     /*!
+    \brief Test wether an edge is labeled by a synchronization
+    \tparam LOC : type of locations
+    \tparam EDGE : type of edges
+    \param  edge : an edge
+    \return true if edge is labeled by a communication, false otherwise
+    */
+    bool is_synchronization(EDGE  const * edge){
+      tchecker::event_id_t event_id = edge.event_id();
+      tchecker::process_id_t pid = edge.pid();
+      return asynchronous(pid, event_id);
+    }
+  
+
+    /*!
      \brief Accessor
      \param pid : process identifier
      \param event_id : event identifier

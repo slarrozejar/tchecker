@@ -62,7 +62,7 @@ namespace tchecker {
                 = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t>;
+                using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t, model_t>;
 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -181,7 +181,7 @@ namespace tchecker {
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                  using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t, model_t>;
 
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -305,7 +305,7 @@ namespace tchecker {
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                  using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::por2::states_builder_t<ts_t, ts_allocator_t, model_t>;
 
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 

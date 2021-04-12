@@ -17,6 +17,7 @@
 #include "tchecker/basictypes.hh"
 #include "tchecker/system/synchronization.hh"
 #include "tchecker/system/system.hh"
+#include "tchecker/system/edge.hh"
 
 /*!
  \file static_analysis.hh
@@ -24,7 +25,6 @@
  */
 
 namespace tchecker {
-
   /*!
    \class process_events_map_t
    \brief Type of map : process ID -> event IDs
@@ -108,10 +108,7 @@ namespace tchecker {
   {
     return tchecker::weakly_synchronized_events(system.synchronizations(), system.processes_count());
   }
-  
-  
-  
-  
+
   /*!
    \class location_next_syncs_t
    \brief Indicates, for each location, the next synchronisations that can be activated either in the location itself (see NEXT_SYNC_LOCATION)
