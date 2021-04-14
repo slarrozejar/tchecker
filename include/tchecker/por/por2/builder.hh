@@ -44,7 +44,7 @@ namespace tchecker {
       \tparam ALLOCATOR : type of allocator (see tchecker::ts::builder_ok_t)
       \note states should derive from tchecker::por::por2::state_t
       */
-      template <class TS, class ALLOCATOR, class MODEL>
+      template <class TS, class ALLOCATOR>
       class states_builder_t final
       : public tchecker::covreach::states_builder_t<typename ALLOCATOR::state_ptr_t> {
       public:
@@ -77,9 +77,9 @@ namespace tchecker {
         \param allocator : an allocator
         \note see tchecker::ts::builder_ok_t
         */
+        template <class MODEL>
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
-        _model(model),
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
         _processes_count(model.system().processes_count()-1)
@@ -89,13 +89,13 @@ namespace tchecker {
         \brief Copy constructor
         */
         states_builder_t
-        (tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> const &) = default;
+        (tchecker::por::por2::states_builder_t<TS, ALLOCATOR> const &) = default;
 
         /*!
         \brief Move constructor
         */
         states_builder_t
-        (tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> &&) = default;
+        (tchecker::por::por2::states_builder_t<TS, ALLOCATOR> &&) = default;
 
         /*!
         \brief Destructor
@@ -105,15 +105,15 @@ namespace tchecker {
         /*!
         \brief Assignment operator
         */
-        tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> &
-        operator= (tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> const &)
+        tchecker::por::por2::states_builder_t<TS, ALLOCATOR> &
+        operator= (tchecker::por::por2::states_builder_t<TS, ALLOCATOR> const &)
         = default;
 
         /*!
         \brief Move assignment operator
         */
-        tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> &
-        operator= (tchecker::por::por2::states_builder_t<TS, ALLOCATOR, MODEL> &&)
+        tchecker::por::por2::states_builder_t<TS, ALLOCATOR> &
+        operator= (tchecker::por::por2::states_builder_t<TS, ALLOCATOR> &&)
         = default;
 
         /*!
@@ -293,7 +293,6 @@ namespace tchecker {
         }
 
         TS & _ts; /*!< Transition system */
-        MODEL & _model; /*< Model */
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
         tchecker::process_id_t _processes_count; /*!< Number of client processes */

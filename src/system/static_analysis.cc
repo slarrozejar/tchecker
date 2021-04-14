@@ -116,4 +116,30 @@ namespace tchecker {
     _map[id] = status;
   }
 
+  /* event_map_t */
+  
+  event_map_t::event_map_t(tchecker::loc_id_t loc_count, bool status)
+  : _map(loc_count)
+  {
+    if (status)
+      _map.set();
+    else
+      _map.reset();
+  }
+
+
+  bool event_map_t::has_event(tchecker::loc_id_t id) const
+  {
+    assert(id < _map.size());
+    return _map[id];
+  }
+
+
+  void event_map_t::set_event(tchecker::loc_id_t id, bool status)
+  {
+    assert(id < _map.size());
+    _map[id] = status;
+  }
+
+
 } // end of namespace tchecker

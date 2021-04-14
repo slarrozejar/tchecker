@@ -591,6 +591,107 @@ namespace tchecker {
     return m;
   }
 
+   /*!
+  \class synchronization_map_t
+  \brief Tells if a location has an event satisfying some property.
+  */
+  class event_map_t {
+  public:
+    /*!
+    \brief Constructor
+    \param loc_count : number of locations
+    \param status : pure local status of locations
+    */
+    event_map_t(tchecker::loc_id_t loc_count, bool status = false);
+
+    /*!
+    \brief Copy constructor
+    */
+    event_map_t(tchecker::event_map_t const &) = default;
+
+    /*!
+    \brief Move constructor
+    */
+    event_map_t(tchecker::event_map_t &&) = default;
+
+    /*!
+    \brief Destructor
+    */
+    ~event_map_t() = default;
+
+    /*!
+    \brief Assignment operator
+    */
+    tchecker::event_map_t & operator= (tchecker::event_map_t const &) = default;
+    
+    /*!
+    \brief More-assignment operator
+    */
+    tchecker::event_map_t & operator= (tchecker::event_map_t &&) = default;
+    
+    /*!
+    \brief Accessor
+    \param id : location ID
+    \pre id is a valid location ID (checked by assertion)
+    \return true if id has an event satisfying some property, false otherwise
+    */
+    bool has_event(tchecker::loc_id_t id) const;
+
+    /*!
+    \brief Set location has synchronization or not
+    \param id : location ID
+    \param status : pure local status
+    \pre id is a valid location ID (checked by assertion)
+    \post location id has an event satisfying some property if status == true, otherwise location
+    id does not have an event satisfying some property
+    */
+    void set_event(tchecker::loc_id_t id, bool status = true);
+  private:
+    boost::dynamic_bitset<> _map;  /*!< pure local map : location ID -> bool */
+  };
+
+  /*!
+  \brief Compute pure local and non pure local locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \return A map : location ID -> bool that tells if a location in system has an 
+  outgoing synchronization or not 
+  */
+  template <class LOC, class EDGE>
+  event_map_t synchronization_map(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    event_map_t m(system.locations_count(), false);
+    // Set all locations with a sync edge 
+    for (EDGE const * edge : system.edges())
+    {
+      if (!system.asynchronous(edge->pid(), edge->event_id()))
+        m.set_event(edge->src()->id(), true);
+    }
+    return m;
+  }
+
+    /*!
+  \brief Compute pure local and non pure local locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \return A map : location ID -> bool that tells if a location in system has a 
+  outgoing local action or not 
+  */
+  template <class LOC, class EDGE>
+  event_map_t local_map(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    event_map_t m(system.locations_count(), false);
+    // Set all locations with a local edge 
+    for (EDGE const * edge : system.edges())
+    {
+      if (system.asynchronous(edge->pid(), edge->event_id()))
+        m.set_event(edge->src()->id(), true);
+    }
+    return m;
+  }
+
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
