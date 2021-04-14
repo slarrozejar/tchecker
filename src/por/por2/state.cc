@@ -15,8 +15,6 @@ namespace tchecker {
 
     namespace por2 {
 
-#define COVER  // cover_leq 
-
       state_t::state_t(tchecker::process_id_t processes_count) : _por_L(processes_count), _por_S(processes_count) {}
 
       bool tchecker::por::por2::state_t::operator==
@@ -83,49 +81,6 @@ namespace tchecker {
             throw "Cannot compute max on empty bitset";
           return max;
         }
-
-      static boost::dynamic_bitset<> local_LS(boost::dynamic_bitset<> const & L,
-                                              boost::dynamic_bitset<> const & S)
-      {
-        assert(L.is_subset_of(S));
-        tchecker::process_id_t max_L = max(L);
-        bool is_max_in_S = S[max_L];
-        boost::dynamic_bitset<> local_pid = S - L;
-        if (is_max_in_S)
-          local_pid[max_L] = 1;
-        return local_pid;
-      }
-
-      bool cover_leq(tchecker::por::por2::state_t const & s1,
-                     tchecker::por::por2::state_t const & s2)
-      {
-#ifdef COVER
-        if (s1.por_L().none() && s2.por_L().none()) // both states in synchro phase
-          return s1.por_S().is_subset_of(s2.por_S());
-        else if (!s1.por_L().none() && !s2.por_L().none()) // both states in local phase
-        {
-          // Compute local pids selected for s1
-          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S());
-
-          // Compute local pids selected for s2
-          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());
-
-          return local_pid1.is_subset_of(local_pid2) && s1.por_L().is_subset_of(s2.por_L());
-        }
-        else if (!s1.por_L().none() && s2.por_L().none()) // local phase / synchro phase
-        {
-          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S());
-          return local_pid1.is_subset_of(s2.por_S());
-        }
-        else if (s1.por_L().none() && !s2.por_L().none()) // local phase / synchro phase
-        {
-          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());         
-          return s1.por_S().is_subset_of(local_pid2) && (s2.por_L().count() == s2.por_L().size());
-        }
-#endif
-        return (s1 == s2);
-      }
-
   } // end of namespace por2
 
   } // end of namespace por

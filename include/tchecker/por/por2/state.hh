@@ -16,9 +16,9 @@
 #else
 # include <boost/container_hash/hash.hpp>
 #endif
-
 #include "tchecker/basictypes.hh"
 #include "tchecker/utils/allocation_size.hh"
+#include "tchecker/system/static_analysis.hh"
 
 /*!
  \file state.hh
@@ -206,13 +206,94 @@ namespace tchecker {
 
 
       /*!
+       \brief Check local actions enabled
+       \param s : state
+       \param local : maps every location to a bool stating if the location has a local action
+       \return a bitset that maps every process with a local action enabled in state s
+       */
+      template <class STATE>
+      boost::dynamic_bitset<> local_enabled(tchecker::por::por2::make_state_t<STATE> const & s, tchecker::event_map_t const & local)
+      {
+        boost::dynamic_bitset<> local_enabled(s.vloc().size()-1);
+        for (auto const * loc : s.vloc()){
+          tchecker::loc_id_t id = loc->id();
+          if(local.has_event(id)){
+            process_id_t pid = loc->pid();
+            local_enabled[pid] = true;
+          }
+        }
+        return local_enabled;
+      }
+
+       /*!
+       \brief Check local actions enabled
+       \param s : state
+       \param sync : maps every location to a bool stating if the location has a sync
+       \return a bitset that maps every process with a sync enabled in state s
+       */
+      template <class STATE>
+      boost::dynamic_bitset<> sync_enabled(tchecker::por::por2::make_state_t<STATE> const & s, tchecker::event_map_t const & sync)
+      {
+        boost::dynamic_bitset<> sync_enabled(s.vloc().size()-1);
+        for (auto const * loc : s.vloc()){
+          tchecker::loc_id_t id = loc->id();
+          if(sync.has_event(id)){
+            process_id_t pid = loc->pid();
+            sync_enabled[pid] = true;
+          }
+        }
+        return sync_enabled;
+      }
+
+      static boost::dynamic_bitset<> local_LS(boost::dynamic_bitset<> const & L,
+                                              boost::dynamic_bitset<> const & S)
+      {
+        assert(L.is_subset_of(S));
+        tchecker::process_id_t max_L = max(L);
+        bool is_max_in_S = S[max_L];
+        boost::dynamic_bitset<> local_pid = S - L;
+        if (is_max_in_S)
+          local_pid[max_L] = 1;
+        return local_pid;
+      }
+
+      /*!
        \brief Covering check
        \param s1 : state
        \param s2 : state
        \return true if s1 can be covered by s2, false othewise
        */
-      bool cover_leq(tchecker::por::por2::state_t const & s1,
-                     tchecker::por::por2::state_t const & s2);
+      template <class STATE>
+      bool cover_leq(tchecker::por::por2::make_state_t<STATE> const & s1,
+                      tchecker::por::por2::make_state_t<STATE> const & s2,
+                      tchecker::event_map_t const & local, tchecker::event_map_t const & sync)
+      {
+        boost::dynamic_bitset<> local_enabled_S1 = local_enabled(s1, local);
+        boost::dynamic_bitset<> sync_enabled_L1 = sync_enabled(s1, sync);
+        if (s1.por_L().none() && s2.por_L().none()) // both states in synchro phase
+          return (s1.por_S() & local_enabled_S1).is_subset_of(s2.por_S());
+        else if (!s1.por_L().none() && !s2.por_L().none()) // both states in local phase
+        {
+          // Compute local pids selected for s1
+          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
+
+          // Compute local pids selected for s2
+          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());
+
+          return local_pid1.is_subset_of(local_pid2) && (s1.por_L() & sync_enabled_L1).is_subset_of(s2.por_L());
+        }
+        else if (!s1.por_L().none() && s2.por_L().none()) // local phase / synchro phase
+        {
+          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
+          return local_pid1.is_subset_of(s2.por_S());
+        }
+        else if (s1.por_L().none() && !s2.por_L().none()) // local phase / synchro phase
+        {
+          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());         
+          return (s1.por_S() & local_enabled_S1).is_subset_of(local_pid2) && ((s2.por_L() & sync_enabled_L1).is_subset_of(s2.por_L()));
+        }
+        return (s1 == s2);
+      }
 
     } // end of namespace por2
 
