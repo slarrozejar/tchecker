@@ -245,17 +245,8 @@ namespace tchecker {
         return sync_enabled;
       }
 
-      static boost::dynamic_bitset<> local_LS(boost::dynamic_bitset<> const & L,
-                                              boost::dynamic_bitset<> const & S)
-      {
-        assert(L.is_subset_of(S));
-        tchecker::process_id_t max_L = max(L);
-        bool is_max_in_S = S[max_L];
-        boost::dynamic_bitset<> local_pid = S - L;
-        if (is_max_in_S)
-          local_pid[max_L] = 1;
-        return local_pid;
-      }
+      boost::dynamic_bitset<> local_LS(boost::dynamic_bitset<> const & L,
+                                       boost::dynamic_bitset<> const & S);
 
       /*!
        \brief Covering check
@@ -270,28 +261,39 @@ namespace tchecker {
       {
         boost::dynamic_bitset<> local_enabled_S1 = local_enabled(s1, local);
         boost::dynamic_bitset<> sync_enabled_L1 = sync_enabled(s1, sync);
-        if (s1.por_L().none() && s2.por_L().none()) // both states in synchro phase
+
+        // both states in synchro phase
+        if (s1.por_L().none() && s2.por_L().none()) 
           return (s1.por_S() & local_enabled_S1).is_subset_of(s2.por_S());
-        else if (!s1.por_L().none() && !s2.por_L().none()) // both states in local phase
+
+        // both states in local phase
+        if (!s1.por_L().none() && !s2.por_L().none()) 
         {
           // Compute local pids selected for s1
-          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
+          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
 
           // Compute local pids selected for s2
-          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());
+          boost::dynamic_bitset<> local_pid2 = tchecker::por::por2::local_LS(s2.por_L(), s2.por_S());
 
-          return local_pid1.is_subset_of(local_pid2) && (s1.por_L() & sync_enabled_L1).is_subset_of(s2.por_L());
+          return local_pid1.is_subset_of(local_pid2) 
+              && (s1.por_L() & sync_enabled_L1).is_subset_of(s2.por_L());
         }
-        else if (!s1.por_L().none() && s2.por_L().none()) // local phase / synchro phase
+        
+        // local phase / synchro phase
+        if (!s1.por_L().none() && s2.por_L().none()) 
         {
-          boost::dynamic_bitset<> local_pid1 = local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
+          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()) & local_enabled_S1;
           return local_pid1.is_subset_of(s2.por_S());
         }
-        else if (s1.por_L().none() && !s2.por_L().none()) // local phase / synchro phase
+        
+         // local phase / synchro phase
+        if (s1.por_L().none() && !s2.por_L().none())
         {
-          boost::dynamic_bitset<> local_pid2 = local_LS(s2.por_L(), s2.por_S());         
-          return (s1.por_S() & local_enabled_S1).is_subset_of(local_pid2) && ((s2.por_L() & sync_enabled_L1).is_subset_of(s2.por_L()));
+          boost::dynamic_bitset<> local_pid2 = tchecker::por::por2::local_LS(s2.por_L(), s2.por_S());         
+          return (s1.por_S() & local_enabled_S1).is_subset_of(local_pid2) 
+              && ((s2.por_L() & sync_enabled_L1).is_subset_of(s2.por_L()));
         }
+
         return (s1 == s2);
       }
 

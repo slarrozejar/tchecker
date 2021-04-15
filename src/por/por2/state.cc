@@ -72,15 +72,28 @@ namespace tchecker {
       }
 
       tchecker::process_id_t max(boost::dynamic_bitset<> const & bs)
-        {
-          tchecker::process_id_t max = 0;
-          for (tchecker::process_id_t pid = 0; pid <bs.size(); ++pid)
-            if (bs[pid])
-              max = pid;
-          if (! bs[max])
+      {
+        tchecker::process_id_t max = 0;
+        for (tchecker::process_id_t pid = 0; pid <bs.size(); ++pid)
+          if (bs[pid])
+            max = pid;
+        if (! bs[max])
             throw "Cannot compute max on empty bitset";
-          return max;
-        }
+        return max;
+      }
+
+      boost::dynamic_bitset<> local_LS(boost::dynamic_bitset<> const & L,
+                                       boost::dynamic_bitset<> const & S)
+      {
+        assert(L.is_subset_of(S));
+        tchecker::process_id_t max_L = max(L);
+        bool is_max_in_S = S[max_L];
+        boost::dynamic_bitset<> local_pid = S - L;
+        if (is_max_in_S)
+          local_pid[max_L] = 1;
+        return local_pid;
+      }
+
   } // end of namespace por2
 
   } // end of namespace por
