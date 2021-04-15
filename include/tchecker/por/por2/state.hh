@@ -214,11 +214,12 @@ namespace tchecker {
       template <class STATE>
       boost::dynamic_bitset<> local_enabled(tchecker::por::por2::make_state_t<STATE> const & s, tchecker::event_map_t const & local)
       {
-        boost::dynamic_bitset<> local_enabled(s.vloc().size()-1);
+        process_id_t client_processes = s.vloc().size()-1;
+        boost::dynamic_bitset<> local_enabled(client_processes);
         for (auto const * loc : s.vloc()){
           tchecker::loc_id_t id = loc->id();
-          if(local.has_event(id)){
-            process_id_t pid = loc->pid();
+          process_id_t pid = loc->pid();
+          if(local.has_event(id) && pid < client_processes){
             local_enabled[pid] = true;
           }
         }
@@ -234,11 +235,12 @@ namespace tchecker {
       template <class STATE>
       boost::dynamic_bitset<> sync_enabled(tchecker::por::por2::make_state_t<STATE> const & s, tchecker::event_map_t const & sync)
       {
-        boost::dynamic_bitset<> sync_enabled(s.vloc().size()-1);
+        process_id_t client_processes = s.vloc().size()-1;
+        boost::dynamic_bitset<> sync_enabled(client_processes);
         for (auto const * loc : s.vloc()){
           tchecker::loc_id_t id = loc->id();
-          if(sync.has_event(id)){
-            process_id_t pid = loc->pid();
+          process_id_t pid = loc->pid();
+          if(sync.has_event(id) && pid < client_processes){
             sync_enabled[pid] = true;
           }
         }
