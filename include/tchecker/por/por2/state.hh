@@ -285,13 +285,28 @@ namespace tchecker {
         if (!s1.por_L().none() && s2.por_L().none()) 
         {
           boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()) & local_enabled_s1;
-          return local_pid1.is_subset_of(s2.por_S());
+          bool one_local = false;
+          if (s1.por_L().count() == 1){
+            one_local = local_pid1.is_subset_of(s1.por_L());
+          }
+          // else 
+          //   one_local = local_enabled_s1.none();
+          return local_pid1.is_subset_of(s2.por_S()) && one_local;
         }
         
         // synchro phase / local phase
-        boost::dynamic_bitset<> local_pid2 = tchecker::por::por2::local_LS(s2.por_L(), s2.por_S());         
+        boost::dynamic_bitset<> local_pid2 = tchecker::por::por2::local_LS(s2.por_L(), s2.por_S());   
+        bool one_synchro = false;
+        if (s1.por_S().none())      
+          one_synchro = true;
+        else if (s1.por_S().count() == 1){
+          one_synchro = sync_enabled_s1.is_subset_of(s1.por_S());
+        }
+        // else 
+        //   one_synchro = sync_enabled_s1.none();           
         return (s1.por_S() & local_enabled_s1).is_subset_of(local_pid2) 
-            && (sync_enabled_s1.is_subset_of(s2.por_L()));
+            && (sync_enabled_s1.is_subset_of(s2.por_L()))
+            && one_synchro;
       }
     } // end of namespace por2
 
