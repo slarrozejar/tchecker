@@ -266,31 +266,31 @@ namespace tchecker {
 
         // both states in synchro phase
         if (s1.por_L().none() && s2.por_L().none()) 
-          return (s1.por_S() & local_enabled_s1).is_subset_of(s2.por_S());
+          return (s1.por_S()).is_subset_of(s2.por_S());
+          // return (s1.por_S() & local_enabled_s1).is_subset_of(s2.por_S());
 
         // both states in local phase
         if (!s1.por_L().none() && !s2.por_L().none()) 
         {
           // Compute local pids selected for s1
-          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()) & local_enabled_s1;
+          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()); // & local_enabled_s1;
 
           // Compute local pids selected for s2
           boost::dynamic_bitset<> local_pid2 = tchecker::por::por2::local_LS(s2.por_L(), s2.por_S());
 
           return local_pid1.is_subset_of(local_pid2) 
-              && (s1.por_L() & sync_enabled_s1).is_subset_of(s2.por_L());
+                 && (s1.por_L()).is_subset_of(s2.por_L());
+              // && (s1.por_L() & sync_enabled_s1).is_subset_of(s2.por_L());
         }
         
         // local phase / synchro phase
         if (!s1.por_L().none() && s2.por_L().none()) 
         {
-          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()) & local_enabled_s1;
+          boost::dynamic_bitset<> local_pid1 = tchecker::por::por2::local_LS(s1.por_L(), s1.por_S()); //& local_enabled_s1;
           bool one_local = false;
           if (s1.por_L().count() == 1){
-            one_local = local_pid1.is_subset_of(s1.por_L());
+            one_local = (local_pid1 & local_enabled_s1).is_subset_of(s1.por_L());
           }
-          // else 
-          //   one_local = local_enabled_s1.none();
           return local_pid1.is_subset_of(s2.por_S()) && one_local;
         }
         
@@ -302,8 +302,8 @@ namespace tchecker {
         else if (s1.por_S().count() == 1){
           one_synchro = sync_enabled_s1.is_subset_of(s1.por_S());
         }
-        // else 
-        //   one_synchro = sync_enabled_s1.none();           
+        else 
+          one_synchro = sync_enabled_s1.none();           
         return (s1.por_S() & local_enabled_s1).is_subset_of(local_pid2) 
             && (sync_enabled_s1.is_subset_of(s2.por_L()))
             && one_synchro;
