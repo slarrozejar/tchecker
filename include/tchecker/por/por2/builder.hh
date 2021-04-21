@@ -82,6 +82,7 @@ namespace tchecker {
         : _ts(ts),
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
+        _pure_local_map(tchecker::pure_local_map(model.system())),
         _processes_count(model.system().processes_count()-1)
         {}
 
@@ -183,10 +184,21 @@ namespace tchecker {
             process_id_t active_pid = compute_active_pid(vedge_pids);
             bool synchro = (vedge_pids.size() == 2);
             if(synchro_phase)
-              update_mem_synchro(s, next_state, active_pid, synchro);
+				update_mem_synchro(s, next_state, active_pid, synchro);
             else
-              update_mem_local(s, next_state, active_pid, synchro);
-            
+				update_mem_local(s, next_state, active_pid, synchro);
+
+
+			// Check whether next_state leads to a deadlock
+			if (next_state->por_L().none()){
+              if (cut_synchro(next_state))
+                continue;
+			}
+            else{
+              if (cut_local(next_state))
+                continue;
+			}
+
             v.push_back(next_state);
           }
         }
@@ -252,7 +264,7 @@ namespace tchecker {
           }
         }
 
-                /*!
+         /*!
          \brief Updates the memory of next_state according to local phase
          \param s : a state
          \param next_state : a successor of s
@@ -272,6 +284,44 @@ namespace tchecker {
             next_state->por_L()[active_pid] = true;
             next_state->por_S() = s->por_S();
           }
+        }
+
+		/*!
+         \brief Check if a sync state leads to a deadlock
+         \param s : a state
+		 \return true if there exists a process_id_t pid in s such that 
+         pid is not in s->por(S) and pid pure local
+		 */
+        bool cut_synchro(state_ptr_t & s)
+        {
+			for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+				auto const * location = *it;
+				if(_pure_local_map.is_pure_local(location->id())  && location->pid() != _server_pid)
+					if (!s->por_S()[location->pid()])
+						return true;
+			}
+			return false;	
+        }
+
+		/*!
+         \brief Check if a local state leads to a deadlock
+         \param s : a state
+		 \return true if there exists a process_id_t pid in s such that 
+         pid is not in s->por(S) and pid pure local or such that pid < max(s->por_L()),
+		 pid is in s->por(S) and pid pure local  
+		 */
+        bool cut_local(state_ptr_t & s)
+        {
+			for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+				auto const * location = *it;
+				if (_pure_local_map.is_pure_local(location->id()) && location->pid() != _server_pid){
+					if (!s->por_S()[location->pid()])
+						return true;
+					else if (location->pid() < max(s->por_L()))
+						return true;
+				}
+			}
+			return false;	
         }
 
         /*!
@@ -295,6 +345,7 @@ namespace tchecker {
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
         tchecker::process_id_t _processes_count; /*!< Number of client processes */
       };
 
