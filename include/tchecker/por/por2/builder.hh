@@ -84,7 +84,10 @@ namespace tchecker {
         _server_pid(model.system().processes().key(server)),
         _pure_local_map(tchecker::pure_local_map(model.system())),
         _processes_count(model.system().processes_count()-1)
-        {}
+        {        
+			if (! tchecker::client_server(model.system(), _server_pid))
+				throw std::invalid_argument("System is not client/server");
+        }
 
         /*!
         \brief Copy constructor
@@ -188,7 +191,6 @@ namespace tchecker {
             else
 				update_mem_local(s, next_state, active_pid, synchro);
 
-
 			// Check whether next_state leads to a deadlock
 			if (next_state->por_L().none()){
               if (cut_synchro(next_state))
@@ -203,6 +205,22 @@ namespace tchecker {
           }
         }
       private:
+	  	/*!
+		\brief Checks if a state can reach a communication
+		\param s : state
+		\return true if a communication is reachable, false otherwise
+		\note state with rank == tchecker::por::cs::communication can 
+		trivially reach a communication. Other states, where only
+		process s->por_active_pid() is allowed to do local actions, can reach a
+		communication action if there is a communication that is feasible by
+		the server process and reachable (through local actions) 
+		for process s.por_active_pid()
+		*/
+        bool synchronizable(state_ptr_t & s) const
+        {
+		return true;
+        }
+
         /*!
          \brief Checks if a vedge is enabled w.r.t. selected process
          \param s : a state
