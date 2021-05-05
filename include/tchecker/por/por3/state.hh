@@ -18,6 +18,7 @@
 
 #include "tchecker/basictypes.hh"
 #include "tchecker/utils/allocation_size.hh"
+#include "tchecker/system/static_analysis.hh"
 
 /*!
  \file state.hh
@@ -185,15 +186,44 @@ namespace tchecker {
          static_cast<tchecker::por::por3::state_t const &>(s2));
       }
 
+      /*!
+      \brief Check local actions enabled
+      \param s : state
+      \param local : maps every location to a bool stating if the location has a local action
+      \return a bitset that maps every process with a local action enabled in state s
+      */
+      template <class STATE>
+      boost::dynamic_bitset<> local_enabled(tchecker::por::por3::make_state_t<STATE> const & s, tchecker::event_map_t const & local)
+      {
+        process_id_t client_processes = s.vloc().size()-1;
+        boost::dynamic_bitset<> local_enabled(client_processes);
+        for (auto const * loc : s.vloc()){
+          tchecker::loc_id_t id = loc->id();
+          process_id_t pid = loc->pid();
+          if(local.has_event(id) && pid < client_processes){
+            local_enabled[pid] = true;
+          }
+        }
+        return local_enabled;
+      }
+
 
       /*!
-       \brief Covering check
-       \param s1 : state
-       \param s2 : state
-       \return true if s1 can be covered by s2, false othewise
-       */
-      bool cover_leq(tchecker::por::por3::state_t const & s1,
-                     tchecker::por::por3::state_t const & s2);
+      \brief Covering check
+      \param s1 : state
+      \param s2 : state
+      \return true if s1 can be covered by s2, false othewise
+      */
+      template <class STATE>
+      bool cover_leq(tchecker::por::por3::make_state_t<STATE> const & s1,
+                      tchecker::por::por3::make_state_t<STATE> const & s2,
+                      tchecker::event_map_t const & local)
+      {
+        if(s1.por_memory() == s2.por_memory())
+          return true;
+        boost::dynamic_bitset<> local_enabled_s1 = local_enabled(s1, local);
+        return local_enabled_s1.none();
+      }
 
     } // end of namespace por3
 

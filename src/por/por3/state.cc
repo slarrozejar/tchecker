@@ -60,14 +60,6 @@ namespace tchecker {
         return 1;
       }
 
-
-      bool cover_leq(tchecker::por::por3::state_t const & s1,
-                     tchecker::por::por3::state_t const & s2)
-      {
-        // s2 simulates s1 if they have the same memory
-        return (s1.por_memory() == s2.por_memory());
-      }
-
   } // end of namespace por3
 
   } // end of namespace por

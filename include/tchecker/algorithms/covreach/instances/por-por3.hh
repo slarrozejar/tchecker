@@ -86,14 +86,20 @@ namespace tchecker {
                   = typename tchecker::covreach::details::por::por3::async_zg::ta::
                   algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
 
+                  state_predicate_t(tchecker::event_map_t const & local)
+                  : _local_enabled(local)
+                  {}
+
                   bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                   {
                     return ((static_cast<tchecker::ta::state_t const &>(*n1)
                              == static_cast<tchecker::ta::state_t const &>(*n2))
                             &&
-                            tchecker::por::por3::cover_leq(*n1, *n2)
+                            tchecker::por::por3::cover_leq(*n1, *n2, _local_enabled)
                             );
                   }
+                private:
+                  tchecker::event_map_t _local_enabled;
                 };
 
                 class node_lt_t {
@@ -109,9 +115,9 @@ namespace tchecker {
                   }
                 };
 
-                static std::tuple<> state_predicate_args(model_t const & model)
+                static std::tuple<tchecker::event_map_t> state_predicate_args(model_t const & model)
                 {
-                  return std::tuple<>();
+                  return std::tuple<tchecker::event_map_t>(tchecker::local_map(model.system()));
                 }
 
                 static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
@@ -198,21 +204,26 @@ namespace tchecker {
                     // but distinct ranks
                   }
 
+                class state_predicate_t {
+                public:
+                  using node_ptr_t
+                  = typename tchecker::covreach::details::por::por3::async_zg::sync_zones::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
 
-                  class state_predicate_t {
-                  public:
-                    using node_ptr_t
-                    = typename tchecker::covreach::details::por::por3::async_zg::sync_zones::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
+                  state_predicate_t(tchecker::event_map_t const & local)
+                  : _local_enabled(local)
+                  {}
 
-                    bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
-                    {
-                      return ((static_cast<tchecker::ta::state_t const &>(*n1)
-                               == static_cast<tchecker::ta::state_t const &>(*n2))
-                              &&
-                              tchecker::por::por3::cover_leq(*n1, *n2)
-                              );
-                    }
-                  };
+                  bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
+                  {
+                    return ((static_cast<tchecker::ta::state_t const &>(*n1)
+                             == static_cast<tchecker::ta::state_t const &>(*n2))
+                            &&
+                            tchecker::por::por3::cover_leq(*n1, *n2, _local_enabled)
+                            );
+                  }
+                private:
+                  tchecker::event_map_t _local_enabled;
+                };
 
                   class node_lt_t {
                   public:
@@ -227,9 +238,9 @@ namespace tchecker {
                     }
                   };
 
-                  static std::tuple<> state_predicate_args(model_t const & model)
+                  static std::tuple<tchecker::event_map_t> state_predicate_args(model_t const & model)
                   {
-                    return std::tuple<>();
+                    return std::tuple<tchecker::event_map_t>(tchecker::local_map(model.system()));
                   }
 
                   static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
@@ -327,16 +338,22 @@ namespace tchecker {
                   public:
                     using node_ptr_t
                     = typename tchecker::covreach::details::por::por3::async_zg::bounded_spread::ta::
-                    algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
+                      algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
+
+                    state_predicate_t(tchecker::event_map_t const & local)
+                    : _local_enabled(local)
+                    {}
 
                     bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                     {
                       return ((static_cast<tchecker::ta::state_t const &>(*n1)
-                               == static_cast<tchecker::ta::state_t const &>(*n2))
+                              == static_cast<tchecker::ta::state_t const &>(*n2))
                               &&
-                              tchecker::por::por3::cover_leq(*n1, *n2)
+                              tchecker::por::por3::cover_leq(*n1, *n2, _local_enabled)
                               );
                     }
+                  private:
+                    tchecker::event_map_t _local_enabled;
                   };
 
                   class node_lt_t {
@@ -352,9 +369,9 @@ namespace tchecker {
                     }
                   };
 
-                  static std::tuple<> state_predicate_args(model_t const & model)
+                  static std::tuple<tchecker::event_map_t> state_predicate_args(model_t const & model)
                   {
-                    return std::tuple<>();
+                    return std::tuple<tchecker::event_map_t>(tchecker::local_map(model.system()));
                   }
 
                   static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
