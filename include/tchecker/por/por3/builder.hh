@@ -181,6 +181,10 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
+            // update por_memory
+            process_id_t active_pid = compute_active_pid(vedge_pids);
+            next_state->por_memory(active_pid);
+
             v.push_back(next_state);
           }
         }
@@ -206,13 +210,22 @@ namespace tchecker {
          \brief Source set selection
          \param state : a state
          \param vedge_pids : process identifiers in a vedge
-         \return true if a vedge involving processes vedge_pids is in the source
-         set of state, false otherwise
+         \return true if a vedge involving processes vedge_pids is a local action 
+         of process corresponding to the memory m or if it is a communication and 
+         the location corresponding to process m is not pure local, false otherwise
          */
         bool in_source_set(state_ptr_t & state,
         std::set<tchecker::process_id_t> const & vedge_pids)
         {
-          return true;
+          // Check if local action of por_memory process
+          if (vedge_pids.size() == 1)
+          {
+            return *vedge_pids.begin() == state->por_memory();
+          }
+          // Check if location corresponding to por_memory() is pure local
+          if(! _pure_local_map.is_pure_local(state->vloc()[state->por_memory()]->id()))
+            return true;
+          return false;
         }
 
         /*!
