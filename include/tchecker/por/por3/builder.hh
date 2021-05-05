@@ -80,7 +80,8 @@ namespace tchecker {
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
         _allocator(allocator),
-        _server_pid(model.system().processes().key(server))
+        _server_pid(model.system().processes().key(server)),
+        _pure_local_map(tchecker::pure_local_map(model.system()))
         {
           if (! tchecker::client_server(model.system(), _server_pid))
 				    throw std::invalid_argument("System is not client/server");
@@ -139,6 +140,12 @@ namespace tchecker {
 
             if (! synchronizable(state))
               continue;
+
+            std::set<tchecker::process_id_t> vedge_pids
+            = tchecker::vedge_pids(vedge);
+
+            process_id_t active_pid = compute_active_pid(vedge_pids);
+            state->por_memory(active_pid);
 
             v.push_back(state);
           }
@@ -208,9 +215,28 @@ namespace tchecker {
           return true;
         }
 
+        /*!
+        \brief Compute next active process identifier from a vedge
+        \param vedge_pids : set of process identifiers in a vedge
+        \return the identifier of the active process after taking a vedge
+        involving processes vedge_pids
+        */
+        tchecker::process_id_t compute_active_pid
+        (std::set<tchecker::process_id_t> const & vedge_pids) const
+        {
+          process_id_t active_pid = * vedge_pids.begin();
+          if (vedge_pids.size() < 2) // not a communication
+            return active_pid;
+          for (tchecker::process_id_t pid : vedge_pids)
+            if(pid != _server_pid)
+               active_pid = pid;   
+          return active_pid;
+        }
+
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
       };
 
     } // end of namespace por3
