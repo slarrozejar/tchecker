@@ -15,6 +15,8 @@ namespace tchecker {
 
     namespace por4 {
 
+      tchecker::process_id_t NO_PURE_LOCAL = std::numeric_limits<tchecker::process_id_t>::max();
+
       state_t::state_t()
       {}
 

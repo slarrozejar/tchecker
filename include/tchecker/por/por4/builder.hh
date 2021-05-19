@@ -14,7 +14,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#include <boost/dynamic_bitset>
+#include <boost/dynamic_bitset.hpp>
 #include <vector>
 
 #include "tchecker/algorithms/covreach/builder.hh"
@@ -22,6 +22,7 @@
 #include "tchecker/dbm/offset_dbm.hh"
 #include "tchecker/flat_system/vedge.hh"
 #include "tchecker/por/por4/state.hh"
+#include "tchecker/por/por4/output.hh"
 #include "tchecker/por/synchronizable.hh"
 #include "tchecker/system/static_analysis.hh"
 #include "tchecker/ts/builder.hh"
@@ -36,8 +37,6 @@ namespace tchecker {
   namespace por {
 
     namespace por4 {
-
-      tchecker::process_id_t NO_SELECTED_PROCESS = std::numeric_limits<tchecker::process_id_t>::max();
 
       /*!
       \class states_builder_t
@@ -81,13 +80,13 @@ namespace tchecker {
         \note see tchecker::ts::builder_ok_t
         */
         template <class MODEL>
-        states_builder_t(MODEL & model, TS & ts, ALLOCATOR & allocator)
+        states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
         _allocator(allocator),
-        _pure_local_map(tchecker::pure_local_map(model.system()))
+        _server_pid(model.system().processes().key(server))
         {
           if (! tchecker::client_server(model.system(), _server_pid))
-				    throw std::invalid_argument("System is not client/server")
+				    throw std::invalid_argument("System is not client/server");
         }
 
         /*!
@@ -156,25 +155,27 @@ namespace tchecker {
         */
         virtual void next(state_ptr_t & s, std::vector<state_ptr_t> & v)
         {
-          // 2. Calculer l'ensemble E' = {(next_state, pid),...} des transitions
-          //    enabled (next state, PID du processus) and update bitvector of 
-          // pure local processes and int vector of outgoing edges for each process
-          std::vector<std::tuple<state_ptr_t, std::set<tchecker::process_id_t>>> enabled;
-          std::set<tchecker::process_id_t> enabled_processes;
+          
+            // pure local processes and int vector of outgoing edges for each process
+            std::vector<std::tuple<state_ptr_t, std::set<tchecker::process_id_t>>> enabled;
+            std::set<tchecker::process_id_t> enabled_processes;
 
-          // Initialize all clients to be pure local
-          process_id_t client_processes = s->vloc().size()-1;
-          boost::dynamic_bitset<> pure_local(client_processes).set();
+            // Initialize all clients to be pure local
+            process_id_t client_processes = s->vloc().size()-1;
+            boost::dynamic_bitset<> pure_local(client_processes);
+            pure_local.reset();
 
-          // Vector counting the number of outgoing transition for each process
-          std::vector<int> outgoing_degree(client_processes,0);         
+            // Vector counting the number of outgoing transition for each process
+            std::vector<int> outgoing_degree(client_processes,0);
+          // Calculer l'ensemble E' = {(next_state, pid),...} des transitions
+          //    enabled (next state, PID du processus) and update bitvector of     
 
           auto outgoing_vedges = _ts.outgoing_edges(*s);
           for (auto it = outgoing_vedges.begin(); ! it.at_end(); ++it) {
             auto const vedge = *it;
 
             std::set<tchecker::process_id_t> vedge_pids
-            = tchecker::vedge_pids(vedge);
+            = tchecker::vedge_pids(vedge); 
 
             state_ptr_t next_state = _allocator.construct_from_state(s);
             transition_ptr_t transition = _allocator.construct_transition();
@@ -188,12 +189,11 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
-            std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
             tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
 
             // Check wether synchronization and update pure local processes accordingly
-            if (vedge_pids.size() == 2)
-              pure_local[active_pid] = 0;
+            if (vedge_pids.size() == 1)
+              pure_local[active_pid] = 1;
 
             // Update outgoing_degree
             outgoing_degree[active_pid] += 1;
@@ -201,12 +201,13 @@ namespace tchecker {
             // Store next state and process that led to it
             enabled_processes.insert(active_pid);
             enabled.push_back(std::make_tuple(next_state, vedge_pids));
-
-
-            // Déterminer le processus pur local qui a le moins de transitions sortantes 
-            // ou NO_SELECTED_PROCESS si il n'y a pas de processus pur local 
-            min_pid = tchecker::por::por4::NO_SELECTED_PROCESS;
+          }
+                      // Déterminer le processus pur local qui a le moins de transitions sortantes 
+            // ou NO_PURE_LOCAL si il n'y a pas de processus pur local 
+            process_id_t min_pid = NO_PURE_LOCAL;
+            // Compute if there is a pure local with 
             if (!pure_local.none()) {
+              min_pid = pure_local.find_first();
               for(process_id_t it = pure_local.find_first(); it < client_processes;
                   it = pure_local.find_next(it)) {
                 if (outgoing_degree[it] < outgoing_degree[min_pid])
@@ -221,7 +222,6 @@ namespace tchecker {
               if (in_source(vedge_pids, min_pid))
                 v.push_back(next_state);
             }
-          }
         }
       private:
 
@@ -269,7 +269,7 @@ namespace tchecker {
         bool in_source(std::set<tchecker::process_id_t> const & vedge_pids,
                        tchecker::process_id_t selected_process)
         {
-          if (selected_process == tchecker::por::por4::NO_SELECTED_PROCESS)
+          if (selected_process == tchecker::por::por4::NO_PURE_LOCAL)
             return true;
           return vedge_pids.find(selected_process) != vedge_pids.end();
         }
@@ -277,7 +277,6 @@ namespace tchecker {
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
-        _server_pid(model.system().processes().key(server));
       };
 
     } // end of namespace por4

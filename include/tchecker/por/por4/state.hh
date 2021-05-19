@@ -30,6 +30,8 @@ namespace tchecker {
 
     namespace por4 {
 
+      extern tchecker::process_id_t NO_PURE_LOCAL;
+
       /*!
       \class state_t
       \brief State for por4 POR
