@@ -92,6 +92,8 @@ namespace tchecker {
                              == static_cast<tchecker::ta::state_t const &>(*n2))
                             &&
                             tchecker::por::por4::cover_leq(*n1, *n2)
+                            && 
+                            n1->offset_zone() == n2->offset_zone()
                             );
                   }
                 };

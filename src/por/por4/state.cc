@@ -49,7 +49,7 @@ namespace tchecker {
                      tchecker::por::por4::state_t const & s2)
       {
         // s2 allows all transitions from s1
-        return s1 == s2;
+        return true;
       }
 
   } // end of namespace por4
