@@ -9,6 +9,7 @@ set(POR_SRC
   ${CMAKE_CURRENT_SOURCE_DIR}/por2/state.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/por3/state.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/por4/state.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/por5/state.cc
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/cs/builder.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/cs/output.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/cs/state.hh
@@ -34,4 +35,8 @@ set(POR_SRC
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/por4/state.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/por4/ts.hh
   ${TCHECKER_INCLUDE_DIR}/tchecker/por/synchronizable.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por5/builder.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por5/output.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por5/state.hh
+  ${TCHECKER_INCLUDE_DIR}/tchecker/por/por5/ts.hh
 PARENT_SCOPE)

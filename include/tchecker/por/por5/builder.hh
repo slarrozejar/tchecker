@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef TCHECKER_POR_POR1_BUILDER_HH
-#define TCHECKER_POR_POR1_BUILDER_HH
+#ifndef TCHECKER_POR_POR5_BUILDER_HH
+#define TCHECKER_POR_POR5_BUILDER_HH
 
 #include <cassert>
 #include <limits>
@@ -19,21 +19,21 @@
 #include "tchecker/basictypes.hh"
 #include "tchecker/dbm/offset_dbm.hh"
 #include "tchecker/flat_system/vedge.hh"
-#include "tchecker/por/por1/state.hh"
+#include "tchecker/por/por5/state.hh"
 #include "tchecker/por/synchronizable.hh"
 #include "tchecker/system/static_analysis.hh"
 #include "tchecker/ts/builder.hh"
 
 /*!
  \file builder.hh
- \brief Builder implementing por1 POR for covreach algorithm
+ \brief Builder implementing por5 POR for covreach algorithm
  */
 
 namespace tchecker {
 
   namespace por {
 
-    namespace por1 {
+    namespace por5 {
 
       /*!
       \class states_builder_t
@@ -41,7 +41,7 @@ namespace tchecker {
       client-server partial order reduction
       \tparam TS : type of transition system (see tchecker::ts::builder_ok_t)
       \tparam ALLOCATOR : type of allocator (see tchecker::ts::builder_ok_t)
-      \note states should derive from tchecker::por::por1::state_t
+      \note states should derive from tchecker::por::por5::state_t
       */
       template <class TS, class ALLOCATOR>
       class states_builder_t final
@@ -86,13 +86,13 @@ namespace tchecker {
         \brief Copy constructor
         */
         states_builder_t
-        (tchecker::por::por1::states_builder_t<TS, ALLOCATOR> const &) = default;
+        (tchecker::por::por5::states_builder_t<TS, ALLOCATOR> const &) = default;
 
         /*!
         \brief Move constructor
         */
         states_builder_t
-        (tchecker::por::por1::states_builder_t<TS, ALLOCATOR> &&) = default;
+        (tchecker::por::por5::states_builder_t<TS, ALLOCATOR> &&) = default;
 
         /*!
         \brief Destructor
@@ -102,15 +102,15 @@ namespace tchecker {
         /*!
         \brief Assignment operator
         */
-        tchecker::por::por1::states_builder_t<TS, ALLOCATOR> &
-        operator= (tchecker::por::por1::states_builder_t<TS, ALLOCATOR> const &)
+        tchecker::por::por5::states_builder_t<TS, ALLOCATOR> &
+        operator= (tchecker::por::por5::states_builder_t<TS, ALLOCATOR> const &)
         = default;
 
         /*!
         \brief Move assignment operator
         */
-        tchecker::por::por1::states_builder_t<TS, ALLOCATOR> &
-        operator= (tchecker::por::por1::states_builder_t<TS, ALLOCATOR> &&)
+        tchecker::por::por5::states_builder_t<TS, ALLOCATOR> &
+        operator= (tchecker::por::por5::states_builder_t<TS, ALLOCATOR> &&)
         = default;
 
         /*!
@@ -179,7 +179,7 @@ namespace tchecker {
          \brief Checks if a state can reach a communication
          \param s : state
          \return true if a communication is reachable, false otherwise
-         \note state with rank == tchecker::por::por1::communication can
+         \note state with rank == tchecker::por::por5::communication can
          trivially reach a communication. Other states, where only
          process s->por_active_pid() is allowed to do local actions, can reach a
          communication action if there is a communication that is feasible by
@@ -208,10 +208,10 @@ namespace tchecker {
         ALLOCATOR & _allocator; /*!< Allocator */
       };
 
-    } // end of namespace por1
+    } // end of namespace por5
 
   } // end of namespace por
 
 } // end of namespace tchecker
 
-#endif // TCHECKER_POR_POR1_BUILDER_HH
+#endif // TCHECKER_POR_POR5_BUILDER_HH
