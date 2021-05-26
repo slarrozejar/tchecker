@@ -179,7 +179,7 @@ namespace tchecker {
             // Duplicate next state if there is a mixed state
             for(auto it = next_state->vloc().begin(); it != next_state->vloc().end(); ++it) {
               auto const * location = *it;
-              if (_mixed_map.is_mixed(location->id()){
+              if (_mixed_map.is_mixed(location->id())){
                 state_ptr_t next_state_bis = _allocator.construct_from_state(s);
                 next_state_bis->por_memory(location->pid());
                 v.push_back(next_state_bis);
@@ -224,7 +224,7 @@ namespace tchecker {
           // Check if local action of a pur sync process
           for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
             auto const * location = *it;
-            if (_pure_local_map.is_pure_local(location->id())
+            if (_pure_local_map.is_pure_local(location->id()))
               return vedge_pids.size() == 1 && vedge_pids.begin() == location->pid();
           }
           // Check synchronization 
