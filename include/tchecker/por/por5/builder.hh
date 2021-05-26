@@ -79,8 +79,14 @@ namespace tchecker {
         template <class MODEL>
         states_builder_t(MODEL & model, std::string const & server, TS & ts, ALLOCATOR & allocator)
         : _ts(ts),
-        _allocator(allocator)
-        {}
+        _allocator(allocator),
+        _server_pid(model.system().processes().key(server)),
+        _pure_local_map(tchecker::pure_local_map(model.system())),
+        _mixed_map(tchecker::mixed_map(model.system()))
+        {
+          if (! tchecker::client_server(model.system(), _server_pid))
+				    throw std::invalid_argument("System is not client/server");
+        }
 
         /*!
         \brief Copy constructor
@@ -170,11 +176,20 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
+            // Duplicate next state if there is a mixed state
+            for(auto it = next_state->vloc().begin(); it != next_state->vloc().end(); ++it) {
+              auto const * location = *it;
+              if (_mixed_map.is_mixed(location->id()){
+                state_ptr_t next_state_bis = _allocator.construct_from_state(s);
+                next_state_bis->por_memory(location->pid());
+                v.push_back(next_state_bis);
+              }
+            }
             v.push_back(next_state);
           }
         }
-      private:
 
+      private:
         /*!
          \brief Checks if a state can reach a communication
          \param s : state
@@ -195,17 +210,50 @@ namespace tchecker {
          \brief Source set selection
          \param state : a state
          \param vedge_pids : process identifiers in a vedge
-         \return true if a vedge involving processes vedge_pids is in the source
-         set of state, false otherwise
+         \return true if _por_mem of the state is m>0 and the vedge corresponds 
+         to a local action of process m, or if the vedge corresponds to a local 
+         action of a pure local process in state or if vedge is a sync in state. 
+         false otherwise
          */
         bool in_source_set(state_ptr_t & state,
         std::set<tchecker::process_id_t> const & vedge_pids)
         {
-          return true;
+          // Check if local action of memory process
+          if(state->por_memory() != NO_SELECTED_PROCESS)
+            return vedge_pids.size() == 1 && vedge_pids.begin() == state->por_memory();
+          // Check if local action of a pur sync process
+          for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (_pure_local_map.is_pure_local(location->id())
+              return vedge_pids.size() == 1 && vedge_pids.begin() == location->pid();
+          }
+          // Check synchronization 
+          return vedge_pids.size() == 2;
+        }
+
+        /*!
+        \brief Compute next active process identifier from a vedge
+        \param vedge_pids : set of process identifiers in a vedge
+        \return the identifier of the active process after taking a vedge
+        involving processes vedge_pids
+        */
+        tchecker::process_id_t compute_active_pid
+        (std::set<tchecker::process_id_t> const & vedge_pids) const
+        {
+          process_id_t active_pid = * vedge_pids.begin();
+          if (vedge_pids.size() < 2) // not a communication
+            return active_pid;
+          for (tchecker::process_id_t pid : vedge_pids)
+            if(pid != _server_pid)
+               active_pid = pid;   
+          return active_pid;
         }
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
+        tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
+        tchecker::mixed_map_t _mixed_map; /*!< Pure local map */
       };
 
     } // end of namespace por5

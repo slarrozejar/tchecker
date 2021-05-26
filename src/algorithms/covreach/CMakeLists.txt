@@ -17,6 +17,8 @@ ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-gl.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-por1.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-por2.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-por3.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-por4.hh
+${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/por-por5.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/instances/zg_ta.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/options.hh
 ${TCHECKER_INCLUDE_DIR}/tchecker/algorithms/covreach/output.hh
