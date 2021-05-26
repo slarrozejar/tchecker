@@ -561,7 +561,7 @@ namespace tchecker {
     return m;
   }
 
-    /*!
+  /*!
   \brief Compute pure local and non pure local locations in a system
   \tparam LOC : type of locations
   \tparam EDGE : type of edges
@@ -587,6 +587,183 @@ namespace tchecker {
       auto edges = loc->outgoing_edges();
       if (edges.begin() == edges.end())
         m.set_pure_local(loc->id(), false);
+    }
+    return m;
+  }
+
+  /*!
+  \class pure_sync_map_t
+  \brief Tells if a location is pure sync or not. A location is pure sync if
+  all its outgoing edges are synchronous
+  */
+  class pure_sync_map_t {
+  public:
+    /*!
+    \brief Constructor
+    \param loc_count : number of locations
+    \param status : pure sync status of locations
+    */
+    pure_sync_map_t(tchecker::loc_id_t loc_count, bool status = false);
+
+    /*!
+    \brief Copy constructor
+    */
+    pure_sync_map_t(tchecker::pure_sync_map_t const &) = default;
+
+    /*!
+    \brief Move constructor
+    */
+    pure_sync_map_t(tchecker::pure_sync_map_t &&) = default;
+
+    /*!
+    \brief Destructor
+    */
+    ~pure_sync_map_t() = default;
+
+    /*!
+    \brief Assignment operator
+    */
+    tchecker::pure_sync_map_t & operator= (tchecker::pure_sync_map_t const &) = default;
+    
+    /*!
+    \brief More-assignment operator
+    */
+    tchecker::pure_sync_map_t & operator= (tchecker::pure_sync_map_t &&) = default;
+    
+    /*!
+    \brief Accessor
+    \param id : location ID
+    \pre id is a valid location ID (checked by assertion)
+    \return true if id is pure sync, false otherwise
+    */
+    bool is_pure_sync(tchecker::loc_id_t id) const;
+
+    /*!
+    \brief Set location pure sync or non pure sync
+    \param id : location ID
+    \param status : pure sync status
+    \pre id is a valid location ID (checked by assertion)
+    \post location id is pure sync if status == true, otherwise location id is not pure sync
+    */
+    void set_pure_sync(tchecker::loc_id_t id, bool status = true);
+  private:
+    boost::dynamic_bitset<> _map;  /*!< pure sync map : location ID -> bool */
+  };
+
+
+  /*!
+  \brief Compute pure sync and non pure sync locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \return A map : location ID -> bool that tells if a location in system is pure
+  sync or not (deadlock locations are NOT pure sync)
+  */
+  template <class LOC, class EDGE>
+  pure_sync_map_t pure_sync_map(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    pure_sync_map_t m(system.locations_count(), true);
+    // Set all locations with a sync edge non pure sync
+    for (EDGE const * edge : system.edges())
+    {
+      if (system.asynchronous(edge->pid(), edge->event_id()))
+        m.set_pure_sync(edge->src()->id(), false);
+    }
+    // Set all deadlock locations non pure sync
+    for (LOC const * loc : system.locations())
+    {
+      auto edges = loc->outgoing_edges();
+      if (edges.begin() == edges.end())
+        m.set_pure_sync(loc->id(), false);
+    }
+    return m;
+  }
+
+  /*!
+  \class mixed_map_t
+  \brief Tells if a location is pure sync or not. A location is pure sync if
+  all its outgoing edges are synchronous
+  */
+  class mixed_map_t {
+  public:
+    /*!
+    \brief Constructor
+    \param loc_count : number of locations
+    \param status : pure sync status of locations
+    */
+    mixed_map_t(tchecker::loc_id_t loc_count, bool status = false);
+
+    /*!
+    \brief Copy constructor
+    */
+    mixed_map_t(tchecker::mixed_map_t const &) = default;
+
+    /*!
+    \brief Move constructor
+    */
+    mixed_map_t(tchecker::mixed_map_t &&) = default;
+
+    /*!
+    \brief Destructor
+    */
+    ~mixed_map_t() = default;
+
+    /*!
+    \brief Assignment operator
+    */
+    tchecker::mixed_map_t & operator= (tchecker::mixed_map_t const &) = default;
+    
+    /*!
+    \brief More-assignment operator
+    */
+    tchecker::mixed_map_t & operator= (tchecker::mixed_map_t &&) = default;
+    
+    /*!
+    \brief Accessor
+    \param id : location ID
+    \pre id is a valid location ID (checked by assertion)
+    \return true if id is mixed, false otherwise
+    */
+    bool is_mixed(tchecker::loc_id_t id) const;
+
+    /*!
+    \brief Set location mixed or non mixed
+    \param id : location ID
+    \param status : mixed status
+    \pre id is a valid location ID (checked by assertion)
+    \post location id is mixed if status == true, otherwise location id is not mixed
+    */
+    void set_mixed(tchecker::loc_id_t id, bool status = true);
+  private:
+    boost::dynamic_bitset<> _map;  /*!< pure sync map : location ID -> bool */
+  };
+
+  /*!
+  \brief Compute mixed and non mixed locations in a system
+  \tparam LOC : type of locations
+  \tparam EDGE : type of edges
+  \param system : a system of processes
+  \return A map : location ID -> bool that tells if a location in system is mixed
+  or not (deadlock locations are NOT mixed)
+  */
+  template <class LOC, class EDGE>
+  mixed_map_t mixed_map(tchecker::system_t<LOC, EDGE> const & system)
+  {
+    mixed_map_t m(system.locations_count(), false);
+    // Set all locations with both outgoing sync and local actions mixed
+    for (LOC const * loc : system.locations())
+    {
+      bool has_local = false;
+      bool has_sync = false;
+      for (EDGE const * edge : loc->outgoing_edges())
+      {
+        if (system.asynchronous(edge->pid(), edge->event_id()))
+          has_sync = true;
+        else 
+          has_local = true;
+      }
+      if (has_sync && has_local)
+        m.set_mixed(loc->id(), true);
     }
     return m;
   }
@@ -691,7 +868,6 @@ namespace tchecker {
     }
     return m;
   }
-
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH

@@ -116,6 +116,56 @@ namespace tchecker {
     _map[id] = status;
   }
 
+  /* pure_sync_map_t */
+  
+  pure_sync_map_t::pure_sync_map_t(tchecker::loc_id_t loc_count, bool status)
+  : _map(loc_count)
+  {
+    if (status)
+      _map.set();
+    else
+      _map.reset();
+  }
+
+
+  bool pure_sync_map_t::is_pure_sync(tchecker::loc_id_t id) const
+  {
+    assert(id < _map.size());
+    return _map[id];
+  }
+
+
+  void pure_sync_map_t::set_pure_sync(tchecker::loc_id_t id, bool status)
+  {
+    assert(id < _map.size());
+    _map[id] = status;
+  }
+
+  /* mixed_map_t */
+  
+  mixed_map_t::mixed_map_t(tchecker::loc_id_t loc_count, bool status)
+  : _map(loc_count)
+  {
+    if (status)
+      _map.set();
+    else
+      _map.reset();
+  }
+
+
+  bool mixed_map_t::is_mixed(tchecker::loc_id_t id) const
+  {
+    assert(id < _map.size());
+    return _map[id];
+  }
+
+
+  void mixed_map_t::set_mixed(tchecker::loc_id_t id, bool status)
+  {
+    assert(id < _map.size());
+    _map[id] = status;
+  }
+
   /* event_map_t */
   
   event_map_t::event_map_t(tchecker::loc_id_t loc_count, bool status)
