@@ -176,11 +176,20 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
+            //Update mem to no_selected_process
+            next_state->por_memory(NO_SELECTED_PROCESS);
+
             // Duplicate next state if there is a mixed state
             for(auto it = next_state->vloc().begin(); it != next_state->vloc().end(); ++it) {
               auto const * location = *it;
               if (_mixed_map.is_mixed(location->id())){
                 state_ptr_t next_state_bis = _allocator.construct_from_state(s);
+                tchecker::state_status_t status
+                = _ts.next(*next_state_bis, *transition, vedge);
+
+                if (status != tchecker::STATE_OK)
+                  continue;
+
                 next_state_bis->por_memory(location->pid());
                 v.push_back(next_state_bis);
               }
@@ -220,12 +229,12 @@ namespace tchecker {
         {
           // Check if local action of memory process
           if(state->por_memory() != NO_SELECTED_PROCESS)
-            return vedge_pids.size() == 1 && vedge_pids.begin() == state->por_memory();
+            return vedge_pids.size() == 1 && *vedge_pids.begin() == state->por_memory();
           // Check if local action of a pur sync process
           for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
             auto const * location = *it;
             if (_pure_local_map.is_pure_local(location->id()))
-              return vedge_pids.size() == 1 && vedge_pids.begin() == location->pid();
+              return vedge_pids.size() == 1 && *vedge_pids.begin() == location->pid();
           }
           // Check synchronization 
           return vedge_pids.size() == 2;

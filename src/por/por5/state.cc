@@ -66,7 +66,7 @@ namespace tchecker {
                      tchecker::por::por5::state_t const & s2)
       {
         // s2 allows all transitions from s1
-        return true;
+        return (s1.por_memory() == s2.por_memory());
       }
 
   } // end of namespace por5
