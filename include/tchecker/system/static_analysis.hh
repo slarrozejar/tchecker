@@ -758,9 +758,9 @@ namespace tchecker {
       for (EDGE const * edge : loc->outgoing_edges())
       {
         if (system.asynchronous(edge->pid(), edge->event_id()))
-          has_sync = true;
-        else 
           has_local = true;
+        else 
+          has_sync = true;
       }
       if (has_sync && has_local)
         m.set_mixed(loc->id(), true);

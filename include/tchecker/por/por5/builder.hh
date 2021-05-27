@@ -163,6 +163,8 @@ namespace tchecker {
 
             if (! in_source_set(s, vedge_pids))
               continue;
+            
+            tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
 
             state_ptr_t next_state = _allocator.construct_from_state(s);
             transition_ptr_t transition = _allocator.construct_transition();
@@ -179,20 +181,12 @@ namespace tchecker {
             //Update mem to no_selected_process
             next_state->por_memory(NO_SELECTED_PROCESS);
 
-            // Duplicate next state if there is a mixed state
-            for(auto it = next_state->vloc().begin(); it != next_state->vloc().end(); ++it) {
-              auto const * location = *it;
-              if (_mixed_map.is_mixed(location->id())){
-                state_ptr_t next_state_bis = _allocator.construct_from_state(s);
-                tchecker::state_status_t status
-                = _ts.next(*next_state_bis, *transition, vedge);
-
-                if (status != tchecker::STATE_OK)
-                  continue;
-
-                next_state_bis->por_memory(location->pid());
-                v.push_back(next_state_bis);
-              }
+            // Duplicate next state if location reached by vedge is mixed 
+            if (_mixed_map.is_mixed(next_state->vloc()[active_pid]->id())){
+              state_ptr_t next_state_bis = _allocator.construct_from_state(s);
+              _ts.next(*next_state_bis, *transition, vedge);
+              next_state_bis->por_memory(active_pid);
+              v.push_back(next_state_bis);
             }
             v.push_back(next_state);
           }
