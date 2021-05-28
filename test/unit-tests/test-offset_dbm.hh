@@ -346,7 +346,7 @@ TEST_CASE ("is_am_le offset DBMs, non trivial zones, non trivial clock bounds", 
     tchecker::dbm::db_t Z1[offset_dim * offset_dim] =
     { tchecker::dbm::LE_ZERO, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1,
       tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1, tchecker::dbm::LE_ZERO,
-      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_m1,
+      tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, tchecker::dbm::LE_ZERO, le_1,
       tchecker::dbm::LT_INFINITY, tchecker::dbm::LT_INFINITY, le_m1, tchecker::dbm::LE_ZERO
     };
     
