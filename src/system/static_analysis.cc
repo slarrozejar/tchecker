@@ -57,6 +57,7 @@ namespace tchecker {
                                                tchecker::sync_id_t syncs_count)
   : _next_syncs_map{
     {locations_count, boost::dynamic_bitset<>(syncs_count, 0)},
+    {locations_count, boost::dynamic_bitset<>(syncs_count, 0)},
     {locations_count, boost::dynamic_bitset<>(syncs_count, 0)}},
   _syncs_count(syncs_count)
   {}

@@ -112,14 +112,16 @@ namespace tchecker {
   /*!
    \class location_next_syncs_t
    \brief Indicates, for each location, the next synchronisations that can be activated either in the location itself (see NEXT_SYNC_LOCATION)
-   or through a (potentially empty) sequence of asynchronous transitions from the location (see NEXT_SYNC_REACHABLE)
+   or through a (potentially empty) sequence of asynchronous transitions from
+   the location (see NEXT_SYNC_REACHABLE)
+   or through any path (see ALL_SYNC_REACHABLE)
    */
   class location_next_syncs_t {
   public:
     /*!
      \brief Constructor
      \param locations_count : number of locations
-     \param syncs_count : number of synchornisation vectors
+     \param syncs_count : number of synchronisation vectors
      */
     location_next_syncs_t(tchecker::loc_id_t locations_count, tchecker::sync_id_t syncs_count);
     
@@ -154,6 +156,7 @@ namespace tchecker {
     enum next_type_t {
       NEXT_SYNC_LOCATION,  /*!< In the location */
       NEXT_SYNC_REACHABLE, /*!< Reachable from location (through asynchronous transitions) */
+      ALL_SYNC_REACHABLE,  /*!< Reachable from localtion */
       NEXT_SYNC_END
     };
     
@@ -236,6 +239,27 @@ namespace tchecker {
         }
     }
     while ( ! fixed_point );
+
+    // Copy to all reachable syncs
+    for (tchecker::loc_id_t loc_id = 0; loc_id < locations_count; ++loc_id)
+      map.next_syncs(loc_id, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE)
+      = map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+      
+    // Propagate reachable syncs along edges
+    do {
+      fixed_point = true;
+      for (auto const * edge : system.edges()) {
+        boost::dynamic_bitset<> const & tgt_syncs
+        = map.next_syncs(edge->tgt()->id(), tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+        boost::dynamic_bitset<> & src_syncs
+        = map.next_syncs(edge->src()->id(), tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+        if (! tgt_syncs.is_subset_of(src_syncs)) {
+          fixed_point = false;
+          src_syncs |= tgt_syncs;
+        }
+      }
+    }
+    while ( ! fixed_point );
         
     return map;
   }
@@ -297,7 +321,28 @@ namespace tchecker {
         }
     }
     while ( ! fixed_point );
-        
+
+    // Copy to all reachable global syncs
+    for (tchecker::loc_id_t loc_id = 0; loc_id < locations_count; ++loc_id)
+      map.next_syncs(loc_id, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE)
+      = map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    // Propagate all reachable syncs over edges
+    do {
+      fixed_point = true;
+      for (auto const * edge : system.edges()) {
+        boost::dynamic_bitset<> const & tgt_syncs
+        = map.next_syncs(edge->tgt()->id(), tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+        boost::dynamic_bitset<> & src_syncs
+        = map.next_syncs(edge->src()->id(), tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+        if (! tgt_syncs.is_subset_of(src_syncs)) {
+          fixed_point = false;
+          src_syncs |= tgt_syncs;
+        }
+      }
+    }
+    while ( ! fixed_point );
+
     return map;
   }
   

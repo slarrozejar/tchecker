@@ -78,6 +78,18 @@ TEST_CASE( "next syncs on asynchronous system", "[next_syncs]") {
   boost::dynamic_bitset<> const & C1_next_syncs_reachable
   = lns.next_syncs(C1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
   REQUIRE(C1_next_syncs_reachable.none());
+
+  boost::dynamic_bitset<> const & A1_all_syncs_reachable
+  = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(A1_all_syncs_reachable.none());
+
+  boost::dynamic_bitset<> const & B1_all_syncs_reachable
+  = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(B1_all_syncs_reachable.none());
+  
+  boost::dynamic_bitset<> const & C1_all_syncs_reachable
+  = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(C1_all_syncs_reachable.none());
 }
 
 
@@ -190,6 +202,26 @@ TEST_CASE( "next syncs on ABCD example", "[next_syncs]" ) {
     
     REQUIRE(C1_next_syncs[c_sync] == false);
     REQUIRE(C1_next_syncs[d_sync] == true);
+  }
+
+  SECTION( "A, B, C have reachable syncs {c,d}" ) {
+    tchecker::loc_id_t const A1 = system.location("P1", "A")->id();
+    tchecker::loc_id_t const B1 = system.location("P1", "B")->id();
+    tchecker::loc_id_t const C1 = system.location("P1", "C")->id();
+    
+    boost::dynamic_bitset<> const & A1_all_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    boost::dynamic_bitset<> const & B1_all_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    boost::dynamic_bitset<> const & C1_all_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(A1_all_syncs[c_sync] == true);
+    REQUIRE(A1_all_syncs[d_sync] == true);
+    REQUIRE(B1_all_syncs[c_sync] == true);
+    REQUIRE(B1_all_syncs[d_sync] == true);
+    REQUIRE(C1_all_syncs[c_sync] == true);
+    REQUIRE(C1_all_syncs[d_sync] == true);
   }
   
   delete sysdecl;
@@ -407,7 +439,84 @@ TEST_CASE( "next syncs on ABCDE example", "[next_syncs]" ) {
     REQUIRE(C2_next_syncs[d_sync] == true);
     REQUIRE(C2_next_syncs[e_sync] == false);
   }
+
+  SECTION( "P1.A has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const A1 = system.location("P1", "A")->id();
+    
+    boost::dynamic_bitset<> const & A1_next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(A1_next_syncs[c_sync] == true);
+    REQUIRE(A1_next_syncs[d_sync] == true);
+    REQUIRE(A1_next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.B has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const B1 = system.location("P1", "B")->id();
+    
+    boost::dynamic_bitset<> const & B1_next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(B1_next_syncs[c_sync] == true);
+    REQUIRE(B1_next_syncs[d_sync] == true);
+    REQUIRE(B1_next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.C has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const C1 = system.location("P1", "C")->id();
+    
+    boost::dynamic_bitset<> const & C1_next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(C1_next_syncs[c_sync] == true);
+    REQUIRE(C1_next_syncs[d_sync] == true);
+    REQUIRE(C1_next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.D has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const D1 = system.location("P1", "D")->id();
+    
+    boost::dynamic_bitset<> const & D1_next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(D1_next_syncs[c_sync] == true);
+    REQUIRE(D1_next_syncs[d_sync] == true);
+    REQUIRE(D1_next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P2.A has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const A2 = system.location("P2", "A")->id();
+    
+    boost::dynamic_bitset<> const & A2_next_syncs
+    = lns.next_syncs(A2, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(A2_next_syncs[c_sync] == true);
+    REQUIRE(A2_next_syncs[d_sync] == true);
+    REQUIRE(A2_next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P2.B has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const B2 = system.location("P2", "B")->id();
+    
+    boost::dynamic_bitset<> const & B2_next_syncs
+    = lns.next_syncs(B2, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(B2_next_syncs[c_sync] == true);
+    REQUIRE(B2_next_syncs[d_sync] == true);
+    REQUIRE(B2_next_syncs[e_sync] == true);
+  }
   
+  SECTION( "P2.C has reachable syncs {c,d,e}" ) {
+    tchecker::loc_id_t const C2 = system.location("P2", "C")->id();
+    
+    boost::dynamic_bitset<> const & C2_next_syncs
+    = lns.next_syncs(C2, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(C2_next_syncs[c_sync] == true);
+    REQUIRE(C2_next_syncs[d_sync] == true);
+    REQUIRE(C2_next_syncs[e_sync] == true);
+  }
+
   delete sysdecl;
 }
 
@@ -596,6 +705,241 @@ TEST_CASE( "next syncs on example with propagation", "[next_syncs]" ) {
     REQUIRE(F1_next_syncs[f_sync] == true);
     REQUIRE(F1_next_syncs[g_sync] == true);
   }
+
+  SECTION( "P1.A has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t A1 = system.location("P1", "A")->id();
+    
+    boost::dynamic_bitset<> const & A1_next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(A1_next_syncs[d_sync] == true);
+    REQUIRE(A1_next_syncs[f_sync] == true);
+    REQUIRE(A1_next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.B has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t B1 = system.location("P1", "B")->id();
+    
+    boost::dynamic_bitset<> const & B1_next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(B1_next_syncs[d_sync] == true);
+    REQUIRE(B1_next_syncs[f_sync] == true);
+    REQUIRE(B1_next_syncs[g_sync] == true);
+  }
+  
+  SECTION( "P1.C has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t C1 = system.location("P1", "C")->id();
+    
+    boost::dynamic_bitset<> const & C1_next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(C1_next_syncs[d_sync] == true);
+    REQUIRE(C1_next_syncs[f_sync] == true);
+    REQUIRE(C1_next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.D has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t D1 = system.location("P1", "D")->id();
+    
+    boost::dynamic_bitset<> const & D1_next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(D1_next_syncs[d_sync] == true);
+    REQUIRE(D1_next_syncs[f_sync] == true);
+    REQUIRE(D1_next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.E has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t E1 = system.location("P1", "E")->id();
+    
+    boost::dynamic_bitset<> const & E1_next_syncs
+    = lns.next_syncs(E1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(E1_next_syncs[d_sync] == true);
+    REQUIRE(E1_next_syncs[f_sync] == true);
+    REQUIRE(E1_next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.F has reachable sync {d,f,g}" ) {
+    tchecker::loc_id_t F1 = system.location("P1", "F")->id();
+    
+    boost::dynamic_bitset<> const & F1_next_syncs
+    = lns.next_syncs(F1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(F1_next_syncs[d_sync] == true);
+    REQUIRE(F1_next_syncs[f_sync] == true);
+    REQUIRE(F1_next_syncs[g_sync] == true);
+  }
+
+  delete sysdecl;
+}
+
+
+
+TEST_CASE( "next syncs on system with non trivial reachable actions", "[next_syncs]" ) {
+  std::string file =
+  "system:abcd \n\
+  event:a \n\
+  event:b \n\
+  event:c \n\
+  event:d \n\
+  event:e \n\
+  \n\
+  process:P1 \n\
+  location:P1:A{initial:} \n\
+  location:P1:B \n\
+  location:P1:C \n\
+  location:P1:D \n\
+  edge:P1:A:B:a \n\
+  edge:P1:A:C:b \n\
+  edge:P1:B:D:d \n\
+  edge:P1:C:A:c \n\
+  edge:P1:D:D:e \n\
+  \n\
+  process:P2 \n\
+  \n\
+  sync:P1@c:P2@c \n\
+  sync:P1@d:P2@d \n\
+  sync:P1@e:P2@e \n\
+  \n";
+  
+  tchecker::log_t log(&std::cerr);
+  tchecker::parsing::system_declaration_t const * sysdecl = tchecker::test::parse(file, log);
+  
+  REQUIRE(sysdecl != nullptr);
+  
+  tchecker::ta::model_t model(*sysdecl, log);
+  tchecker::ta::system_t const & system = model.system();
+  tchecker::location_next_syncs_t const lns = tchecker::location_next_syncs(system);
+  
+  tchecker::sync_id_t c_sync, d_sync, e_sync;
+  
+  tchecker::process_id_t const P1 = system.processes().key("P1");
+  tchecker::event_id_t const c = system.events().key("c");
+  tchecker::event_id_t const d = system.events().key("d");
+  tchecker::event_id_t const e = system.events().key("e");
+  
+  for (tchecker::synchronization_t const & sync : system.synchronizations())
+    if (sync.synchronizes(P1, c))
+      c_sync = sync.id();
+    else if (sync.synchronizes(P1, d))
+      d_sync = sync.id();
+    else if (sync.synchronizes(P1, e))
+      e_sync = sync.id();
+
+  tchecker::loc_id_t const A1 = system.location("P1", "A")->id();
+  tchecker::loc_id_t const B1 = system.location("P1", "B")->id();
+  tchecker::loc_id_t const C1 = system.location("P1", "C")->id();
+  tchecker::loc_id_t const D1 = system.location("P1", "D")->id();
+
+  SECTION( "P1.A has location next sync {}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.B has location next sync {d}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.C has location next sync {c}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.D has location next sync {e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.A has next reachable sync {c,d}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.B has next reachable sync {d}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.C has next reachable sync {c}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == false);
+  }
+
+  SECTION( "P1.D has next reachable sync {e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.A has reachable sync {c,d,e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.B has reachable sync {d,e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.C has reachable sync {c,d,e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
+
+  SECTION( "P1.D has reachable sync {e}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    
+    REQUIRE(next_syncs[c_sync] == false);
+    REQUIRE(next_syncs[d_sync] == false);
+    REQUIRE(next_syncs[e_sync] == true);
+  }
   
   delete sysdecl;
 }
@@ -666,6 +1010,18 @@ TEST_CASE( "next global syncs on asynchronous system", "[next_syncs]") {
   boost::dynamic_bitset<> const & C1_next_syncs_reachable
   = lns.next_syncs(C1, tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
   REQUIRE(C1_next_syncs_reachable.none());
+
+  boost::dynamic_bitset<> const & A1_all_syncs_reachable
+  = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(A1_all_syncs_reachable.none());
+
+  boost::dynamic_bitset<> const & B1_all_syncs_reachable
+  = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(B1_all_syncs_reachable.none());
+  
+  boost::dynamic_bitset<> const & C1_all_syncs_reachable
+  = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+  REQUIRE(C1_all_syncs_reachable.none());
 }
 
 
@@ -835,6 +1191,56 @@ TEST_CASE( "next global syncs on system with partial and global synchronizations
     REQUIRE(next_syncs[d_sync] == false);
     REQUIRE(next_syncs[e_sync] == false);
     REQUIRE(next_syncs[f_sync] == false);
+    REQUIRE(next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.A has reachable global sync {c,d,f,g}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(A1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+    REQUIRE(next_syncs[f_sync] == true);
+    REQUIRE(next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.B has reachable global sync {c,d,f,g}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(B1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+    REQUIRE(next_syncs[f_sync] == true);
+    REQUIRE(next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.C has reachable global sync {c,d,f,g}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(C1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+    REQUIRE(next_syncs[f_sync] == true);
+    REQUIRE(next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.D has reachable global sync {c,d,f,g}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(D1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+    REQUIRE(next_syncs[f_sync] == true);
+    REQUIRE(next_syncs[g_sync] == true);
+  }
+
+  SECTION( "P1.E has reachable global sync {c,d,f,g}" ) {
+    boost::dynamic_bitset<> const & next_syncs
+    = lns.next_syncs(E1, tchecker::location_next_syncs_t::ALL_SYNC_REACHABLE);
+    REQUIRE(next_syncs[c_sync] == true);
+    REQUIRE(next_syncs[d_sync] == true);
+    REQUIRE(next_syncs[e_sync] == false);
+    REQUIRE(next_syncs[f_sync] == true);
     REQUIRE(next_syncs[g_sync] == true);
   }
 }
