@@ -224,6 +224,28 @@ namespace tchecker {
           return tchecker::STATE_OK;
         }
 
+         /*!
+         \brief Checks if a state can reach a communication
+         \param s : state
+         \return true if s->por_mem() corresponds to a process id and the next 
+         synchronization of this process is not feasible, false otherwise
+         */
+        bool cut(state_ptr_t & s) const
+        {
+          // mem is no selected process
+          if(s->por_memory() == NO_SELECTED_PROCESS)
+            return false;
+          boost::dynamic_bitset<> const & next_server_sync = _location_next_syncs.next_syncs(s->vloc()[_server_pid]->id(),
+                                                  location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);        
+          boost::dynamic_bitset<> next_active_sync = _location_next_syncs.next_syncs(s->vloc()[s->por_memory()]->id(),
+                                                  location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);      
+          // active pid doesn't have a sync
+          if(next_active_sync.none())
+            return false;   
+          next_active_sync &=  next_server_sync;
+          return next_active_sync.none();                                  
+        }
+
         /*!
          \brief Checks if a state can reach a communication
          \param s : state
@@ -239,7 +261,7 @@ namespace tchecker {
         {
           // all server synchronizations reachable
           boost::dynamic_bitset<> const & server_sync = _location_next_syncs.next_syncs(s->vloc()[_server_pid]->id(),
-                                                  location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);
+                                                  location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);              
           for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
             auto const * location = *it;
             if (location->pid() != _server_pid) { 
@@ -344,6 +366,10 @@ namespace tchecker {
               (update_memory(s->por_memory(),
                              pure_local_move,
                              vedge_pids));
+                        // Check if s is a deadlock due to memory 
+              if (cut(next_state)) {
+                continue;
+              }
               v.push_back(next_state);
             }
           }
@@ -385,6 +411,9 @@ namespace tchecker {
             next_state->por_memory(update_memory(s->por_memory(),
                                    pure_local_move, 
                                    vedge_pids)); 
+            if (cut(next_state)) {
+                continue;
+              }
             v.push_back(next_state);
           }
         }
