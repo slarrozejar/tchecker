@@ -81,6 +81,7 @@ namespace tchecker {
         : _ts(ts),
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
+        _location_next_syncs(tchecker::location_next_syncs(model.system())),
         _pure_local_map(tchecker::pure_local_map(model.system()))
         {
           if (! tchecker::client_server(model.system(), _server_pid))
@@ -194,7 +195,7 @@ namespace tchecker {
          \brief Checks if a state can reach a communication
          \param s : state
          \return true if a communication is reachable, false otherwise
-         \note state with rank == tchecker::por::por3::communication can
+         \note state with rank == tchecker::por::por1::communication can
          trivially reach a communication. Other states, where only
          process s->por_active_pid() is allowed to do local actions, can reach a
          communication action if there is a communication that is feasible by
@@ -203,6 +204,22 @@ namespace tchecker {
          */
         bool synchronizable(state_ptr_t & s) const
         {
+          // all server synchronizations reachable
+          boost::dynamic_bitset<> const & server_sync = _location_next_syncs.next_syncs(s->vloc()[_server_pid]->id(),
+                                                  location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);
+          for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (location->pid() != _server_pid) { 
+              boost::dynamic_bitset<> synchronizable_process = 
+                _location_next_syncs.next_syncs(location->id(),
+                location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
+            if (synchronizable_process.none())
+              continue;
+            synchronizable_process &= server_sync;
+            if (synchronizable_process.none())
+                return false;
+            }
+          }
           return true;
         }
 
@@ -249,6 +266,7 @@ namespace tchecker {
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
         tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::location_next_syncs_t _location_next_syncs; /*!< Next synchronisations */
         tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
       };
 

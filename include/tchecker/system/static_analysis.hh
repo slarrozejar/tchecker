@@ -156,7 +156,7 @@ namespace tchecker {
     enum next_type_t {
       NEXT_SYNC_LOCATION,  /*!< In the location */
       NEXT_SYNC_REACHABLE, /*!< Reachable from location (through asynchronous transitions) */
-      ALL_SYNC_REACHABLE,  /*!< Reachable from localtion */
+      ALL_SYNC_REACHABLE,  /*!< Reachable from location */
       NEXT_SYNC_END
     };
     

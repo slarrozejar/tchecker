@@ -84,6 +84,7 @@ namespace tchecker {
         : _ts(ts),
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
+        _location_next_syncs(tchecker::location_next_syncs(model.system())),
 #ifdef PARTIAL_SYNC_ALLOWED
         _pure_local_map(tchecker::pure_local_map(model.system(), tchecker::client_server_groups(model.system(), _server_pid))), 
 #else
@@ -159,10 +160,8 @@ namespace tchecker {
               continue;
 #endif // PARTIAL_SYNC_ALLOWED
 
-            /*
             if (! synchronizable(state))
               continue;
-            */
 
             state->por_memory(tchecker::por::por1::NO_SELECTED_PROCESS);
 
@@ -238,6 +237,22 @@ namespace tchecker {
          */
         bool synchronizable(state_ptr_t & s) const
         {
+          // all server synchronizations reachable
+          boost::dynamic_bitset<> const & server_sync = _location_next_syncs.next_syncs(s->vloc()[_server_pid]->id(),
+                                                  location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);
+          for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (location->pid() != _server_pid) { 
+              boost::dynamic_bitset<> synchronizable_process = 
+                _location_next_syncs.next_syncs(location->id(),
+                location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
+            if (synchronizable_process.none())
+              continue;
+            synchronizable_process &= server_sync;
+            if (synchronizable_process.none())
+                return false;
+            }
+          }
           return true;
         }
 
@@ -288,10 +303,8 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
-            /*
             if (! synchronizable(next_state))
               continue;
-            */
 
 #ifdef PARTIAL_SYNC_ALLOWED
             std::set<tchecker::process_id_t> vedge_pids = tchecker::vedge_pids(vedge);
@@ -365,10 +378,8 @@ namespace tchecker {
             if (status != tchecker::STATE_OK)
               continue;
 
-            /*
             if (! synchronizable(next_state))
               continue;
-            */
 
             bool pure_local_move = _pure_local_map.is_pure_local(s->vloc()[s->por_memory()]->id());
             next_state->por_memory(update_memory(s->por_memory(),
@@ -428,7 +439,8 @@ namespace tchecker {
 
         TS & _ts; /*!< Transition system */
         ALLOCATOR & _allocator; /*!< Allocator */
-        tchecker::process_id_t _server_pid; /*!< PID of server process */
+        tchecker::process_id_t _server_pid; /*!< PID of server process */        
+        tchecker::location_next_syncs_t _location_next_syncs; /*!< Next synchronisations */
         tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
 #ifdef PARTIAL_SYNC_ALLOWED
         std::vector<tchecker::process_id_t> _group_id;  /*!< Map : process ID -> group ID */
