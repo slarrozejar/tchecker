@@ -62,16 +62,6 @@ namespace tchecker {
         return 1;
       }
 
-
-      bool cover_leq(tchecker::por::por1::state_t const & s1,
-                     tchecker::por::por1::state_t const & s2)
-      {
-        // s2 simulates s1 and simulation is compatible with por1 source
-        // TODO: improve with s2.por_memory() == 0 when s1.por_memory() is the
-        // smallest pure local process or no pure local
-        return (s1.por_memory() == s2.por_memory());
-      }
-
   } // end of namespace por1
 
   } // end of namespace por

@@ -18,6 +18,7 @@
 
 #include "tchecker/basictypes.hh"
 #include "tchecker/utils/allocation_size.hh"
+#include "tchecker/system/static_analysis.hh"
 
 /*!
  \file state.hh
@@ -187,14 +188,42 @@ namespace tchecker {
 
 
       /*!
-       \brief Covering check
-       \param s1 : state
-       \param s2 : state
-       \return true if s1 can be covered by s2, false othewise
-       \note cover_leq is a simulation relation compatible with por1 source
-       */
-      bool cover_leq(tchecker::por::por1::state_t const & s1,
-                     tchecker::por::por1::state_t const & s2);
+      \brief Covering check
+      \param s1 : state
+      \param s2 : state
+      \return true if s1 can be covered by s2, false othewise
+      */
+      template <class STATE>
+      bool cover_leq(tchecker::por::por1::make_state_t<STATE> const & s1,
+                      tchecker::por::por1::make_state_t<STATE> const & s2,
+                      tchecker::pure_local_map_t const & pure_local)
+      {
+        // same memory
+        if (s1.por_memory() == s2.por_memory())
+          return true;
+        // state with selected process covered by a state with no selected process
+        if (s1.por_memory() != NO_SELECTED_PROCESS && s2.por_memory() == NO_SELECTED_PROCESS) {
+          for (auto const * loc : s2.vloc()){
+            tchecker::loc_id_t id = loc->id();
+            tchecker::process_id_t pid = loc->pid();
+            tchecker::process_id_t m = s1.por_memory();
+            if (pure_local.is_pure_local(id) && pid != m)
+              return false;
+          }
+        }
+        // state with no selected process covered by state with selected process
+        if (s1.por_memory() == NO_SELECTED_PROCESS && s2.por_memory() != NO_SELECTED_PROCESS) {
+          for (auto const * loc : s1.vloc()){
+            tchecker::loc_id_t id = loc->id();
+            tchecker::process_id_t pid = loc->pid();
+            tchecker::process_id_t m = s2.por_memory();
+            auto outgoing_edges = loc->outgoing_edges();
+            if (pid != m && (pure_local.is_pure_local(id) || !outgoing_edges.empty()))
+              return false;
+          }
+        }
+        return true;
+      }
 
     } // end of namespace por1
 
