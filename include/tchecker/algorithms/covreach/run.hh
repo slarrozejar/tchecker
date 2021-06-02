@@ -1752,6 +1752,10 @@ namespace tchecker {
           run_source_set_por5<GRAPH_OUTPUTTER, WAITING>(sysdecl, options, log);
           return;
         }
+        else if (options.source_set() == tchecker::covreach::options_t::SOURCE_SET_MAG) {
+          run_source_set_mag<GRAPH_OUTPUTTER, WAITING>(sysdecl, options, log);
+          return;
+        }
         else if (options.source_set() != tchecker::covreach::options_t::SOURCE_SET_ALL)
           throw std::runtime_error("Cannot instantiate selected source set technique");
         switch (options.algorithm_model()) {
