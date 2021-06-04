@@ -5,23 +5,23 @@
  *
  */
 
-#ifndef TCHECKER_ALGORITHMS_COVREACH_POR_POR1_HH
-#define TCHECKER_ALGORITHMS_COVREACH_POR_POR1_HH
+#ifndef TCHECKER_ALGORITHMS_COVREACH_POR_MAG_HH
+#define TCHECKER_ALGORITHMS_COVREACH_POR_MAG_HH
 
 #include "tchecker/algorithms/covreach/graph.hh"
 #include "tchecker/algorithms/covreach/options.hh"
 #include "tchecker/async_zg/async_zg_ta.hh"
 #include "tchecker/async_zg/bounded_spread/async_zg_ta.hh"
 #include "tchecker/async_zg/sync_zones/async_zg_ta.hh"
-#include "tchecker/por/por1/builder.hh"
-#include "tchecker/por/por1/output.hh"
-#include "tchecker/por/por1/state.hh"
-#include "tchecker/por/por1/ts.hh"
+#include "tchecker/por/mag/builder.hh"
+#include "tchecker/por/mag/output.hh"
+#include "tchecker/por/mag/state.hh"
+#include "tchecker/por/mag/ts.hh"
 
 /*!
- \file por-por1.hh
+ \file por-mag.hh
  \brief Instantiation of covreach algorithm for asynchronous zone graph with
- por1 partial-order reduction
+ mag partial-order reduction
  */
 
 namespace tchecker {
@@ -32,7 +32,7 @@ namespace tchecker {
 
       namespace por {
 
-        namespace por1 {
+        namespace mag {
 
           namespace async_zg {
 
@@ -40,14 +40,14 @@ namespace tchecker {
 
               /*!
                \class algorithm_model_t
-               \brief Model for covering reachability asynchronous zone graphs of por1 timed automata with POR
+               \brief Model for covering reachability asynchronous zone graphs of mag timed automata with POR
                */
               template <class ZONE_SEMANTICS>
               class algorithm_model_t {
               public:
                 using zone_semantics_t = ZONE_SEMANTICS;
                 using model_t = tchecker::async_zg::ta::model_t;
-                using ts_t = tchecker::por::por1::ts_t<typename zone_semantics_t::ts_t>;
+                using ts_t = tchecker::por::mag::ts_t<typename zone_semantics_t::ts_t>;
                 using state_t = typename ts_t::state_t;
                 using transition_t = typename ts_t::transition_t;
 
@@ -62,7 +62,7 @@ namespace tchecker {
                 = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                 using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                using builder_t = tchecker::por::por1::states_builder_t<ts_t, ts_allocator_t>;
+                using builder_t = tchecker::por::mag::states_builder_t<ts_t, ts_allocator_t>;
 
                 using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -83,23 +83,17 @@ namespace tchecker {
                 class state_predicate_t {
                 public:
                   using node_ptr_t
-                  = typename tchecker::covreach::details::por::por1::async_zg::ta::
+                  = typename tchecker::covreach::details::por::mag::async_zg::ta::
                   algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
-
-                  state_predicate_t(tchecker::pure_local_map_t const & pure_local)
-                  : _pure_local(pure_local)
-                  {}
 
                   bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                   {
                     return ((static_cast<tchecker::ta::state_t const &>(*n1)
                              == static_cast<tchecker::ta::state_t const &>(*n2))
                             &&
-                            tchecker::por::por1::cover_leq(*n1, *n2, _pure_local)
+                            tchecker::por::mag::cover_leq(*n1, *n2)
                             );
                   }
-                  private:
-                  tchecker::pure_local_map_t _pure_local;
                 };
 
                 class node_lt_t {
@@ -111,13 +105,13 @@ namespace tchecker {
                       return true;
                     if (cmp > 0)
                       return false;
-                    return tchecker::por::por1::lexical_cmp(*n1, *n2) < 0;
+                    return tchecker::por::mag::lexical_cmp(*n1, *n2) < 0;
                   }
                 };
 
-                static std::tuple<tchecker::pure_local_map_t> state_predicate_args(model_t const & model)
+                static std::tuple<> state_predicate_args(model_t const & model)
                 {
-                  return std::tuple<tchecker::pure_local_map_t>(tchecker::pure_local_map(model.system()));
+                  return std::tuple<>();
                 }
 
                 static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
@@ -141,7 +135,7 @@ namespace tchecker {
                 }
 
                 using node_outputter_t
-                = tchecker::por::por1::state_outputter_t
+                = tchecker::por::mag::state_outputter_t
                 <typename zone_semantics_t::ts_t::state_t,
                 tchecker::async_zg::ta::state_outputter_t>;
 
@@ -165,14 +159,14 @@ namespace tchecker {
 
                 /*!
                  \class algorithm_model_t
-                 \brief Model for covering reachability over por1 timed automata with POR
+                 \brief Model for covering reachability over mag timed automata with POR
                  */
                 template <class ZONE_SEMANTICS>
                 class algorithm_model_t {
                 public:
                   using zone_semantics_t = ZONE_SEMANTICS;
                   using model_t = tchecker::async_zg::sync_zones::ta::model_t;
-                  using ts_t = tchecker::por::por1::ts_t<typename zone_semantics_t::ts_t>;
+                  using ts_t = tchecker::por::mag::ts_t<typename zone_semantics_t::ts_t>;
                   using state_t = typename ts_t::state_t;
                   using transition_t = typename ts_t::transition_t;
 
@@ -187,7 +181,7 @@ namespace tchecker {
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                  using builder_t = tchecker::por::por1::states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::mag::states_builder_t<ts_t, ts_allocator_t>;
 
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -208,22 +202,16 @@ namespace tchecker {
                   class state_predicate_t {
                   public:
                     using node_ptr_t
-                    = typename tchecker::covreach::details::por::por1::async_zg::sync_zones::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
-
-                    state_predicate_t(tchecker::pure_local_map_t const & pure_local)
-                    : _pure_local(pure_local)
-                    {}
+                    = typename tchecker::covreach::details::por::mag::async_zg::sync_zones::ta::algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
 
                     bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                     {
                       return ((static_cast<tchecker::ta::state_t const &>(*n1)
                                == static_cast<tchecker::ta::state_t const &>(*n2))
                               &&
-                              tchecker::por::por1::cover_leq(*n1, *n2, _pure_local)
+                              tchecker::por::mag::cover_leq(*n1, *n2)
                               );
                     }
-                    private:
-                      tchecker::pure_local_map_t _pure_local;
                   };
 
                   class node_lt_t {
@@ -235,13 +223,13 @@ namespace tchecker {
                         return true;
                       if (cmp > 0)
                         return false;
-                      return tchecker::por::por1::lexical_cmp(*n1, *n2) < 0;
+                      return tchecker::por::mag::lexical_cmp(*n1, *n2) < 0;
                     }
                   };
 
-                  static std::tuple<tchecker::pure_local_map_t> state_predicate_args(model_t const & model)
+                  static std::tuple<> state_predicate_args(model_t const & model)
                   {
-                    return std::tuple<tchecker::pure_local_map_t>(tchecker::pure_local_map(model.system()));
+                    return std::tuple<>();
                   }
 
                   static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
@@ -265,7 +253,7 @@ namespace tchecker {
                   }
 
                   using node_outputter_t
-                  = tchecker::por::por1::state_outputter_t
+                  = tchecker::por::mag::state_outputter_t
                   <typename zone_semantics_t::ts_t::state_t,
                   tchecker::async_zg::sync_zones::ta::state_outputter_t>;
 
@@ -295,14 +283,14 @@ namespace tchecker {
                 /*!
                  \class algorithm_model_t
                  \brief Model for covering reachability over bounded spread asynchronous zone graphs
-                 of por1 timed automata with POR
+                 of mag timed automata with POR
                  */
                 template <class ZONE_SEMANTICS>
                 class algorithm_model_t {
                 public:
                   using zone_semantics_t = ZONE_SEMANTICS;
                   using model_t = tchecker::async_zg::bounded_spread::ta::model_t;
-                  using ts_t = tchecker::por::por1::ts_t<typename zone_semantics_t::ts_t>;
+                  using ts_t = tchecker::por::mag::ts_t<typename zone_semantics_t::ts_t>;
                   using state_t = typename ts_t::state_t;
                   using transition_t = typename ts_t::transition_t;
 
@@ -317,7 +305,7 @@ namespace tchecker {
                   = typename zone_semantics_t::template transition_singleton_allocator_t<transition_t>;
                   using ts_allocator_t = tchecker::ts::allocator_t<node_allocator_t, transition_allocator_t>;
 
-                  using builder_t = tchecker::por::por1::states_builder_t<ts_t, ts_allocator_t>;
+                  using builder_t = tchecker::por::mag::states_builder_t<ts_t, ts_allocator_t>;
 
                   using graph_t = tchecker::covreach::graph_t<key_t, ts_t, ts_allocator_t>;
 
@@ -338,23 +326,17 @@ namespace tchecker {
                   class state_predicate_t {
                   public:
                     using node_ptr_t
-                    = typename tchecker::covreach::details::por::por1::async_zg::bounded_spread::ta::
+                    = typename tchecker::covreach::details::por::mag::async_zg::bounded_spread::ta::
                     algorithm_model_t<ZONE_SEMANTICS>::node_ptr_t;
-
-                    state_predicate_t(tchecker::pure_local_map_t const & pure_local)
-                    : _pure_local(pure_local)
-                    {}
 
                     bool operator() (node_ptr_t const & n1, node_ptr_t const & n2)
                     {
                       return ((static_cast<tchecker::ta::state_t const &>(*n1)
                                == static_cast<tchecker::ta::state_t const &>(*n2))
                               &&
-                              tchecker::por::por1::cover_leq(*n1, *n2, _pure_local)
+                              tchecker::por::mag::cover_leq(*n1, *n2)
                               );
                     }
-                    private:
-                      tchecker::pure_local_map_t _pure_local;
                   };
 
                   class node_lt_t {
@@ -366,13 +348,13 @@ namespace tchecker {
                         return true;
                       if (cmp > 0)
                         return false;
-                      return tchecker::por::por1::lexical_cmp(*n1, *n2) < 0;
+                      return tchecker::por::mag::lexical_cmp(*n1, *n2) < 0;
                     }
                   };
 
-                  static std::tuple<tchecker::pure_local_map_t> state_predicate_args(model_t const & model)
+                  static std::tuple<> state_predicate_args(model_t const & model)
                   {
-                    return std::tuple<tchecker::pure_local_map_t>(tchecker::pure_local_map(model.system()));
+                    return std::tuple<>();
                   }
 
                   static std::tuple<model_t const &> zone_predicate_args(model_t const & model)
@@ -397,7 +379,7 @@ namespace tchecker {
                   }
 
                   using node_outputter_t
-                  = tchecker::por::por1::state_outputter_t
+                  = tchecker::por::mag::state_outputter_t
                   <typename zone_semantics_t::ts_t::state_t,
                   tchecker::async_zg::bounded_spread::ta::state_outputter_t>;
 
@@ -417,7 +399,7 @@ namespace tchecker {
 
           } // end of namespace async_zg
 
-        } // end of namespace por1
+        } // end of namespace mag
 
       } // edd of namespace por
 
@@ -427,4 +409,4 @@ namespace tchecker {
 
 } // end of namespace tchecker
 
-#endif // TCHECKER_ALGORITHMS_COVREACH_POR_POR1_HH
+#endif // TCHECKER_ALGORITHMS_COVREACH_POR_MAG_HH
