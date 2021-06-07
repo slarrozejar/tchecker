@@ -82,7 +82,8 @@ namespace tchecker {
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
         _pure_local_map(tchecker::pure_local_map(model.system())),
-        _location_next_syncs(tchecker::location_next_syncs(model.system()))
+        _location_next_syncs(tchecker::location_next_syncs(model.system())),
+        _mixed_map(tchecker::mixed_map(model.system()))
         {
           if (! tchecker::client_server(model.system(), _server_pid))
 				    throw std::invalid_argument("System is not client/server");
@@ -167,7 +168,9 @@ namespace tchecker {
             std::set<tchecker::process_id_t> vedge_pids
             = tchecker::vedge_pids(vedge);
 
-            if (! in_source_set(s, vedge_pids))
+            tchecker::process_id_t next_mem = s->por_memory();
+
+            if (! in_source_set(s, vedge_pids,next_mem,vedge))
               continue;
             
             tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
@@ -184,8 +187,9 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
-            //Update mem to no_selected_process
+            //Update memory
             next_state->mixed_local(NO_SELECTED_PROCESS);
+            next_state->por_memory(next_mem);
 
             // Duplicate next state if location reached by vedge is mixed 
             if (_mixed_map.is_mixed(next_state->vloc()[active_pid]->id())){
@@ -195,6 +199,7 @@ namespace tchecker {
               v.push_back(next_state_bis);
             }
             v.push_back(next_state);
+          }
         }
       private:
 
@@ -231,7 +236,7 @@ namespace tchecker {
           return true;
         }
 
-                /*!
+        /*!
         \brief Compute next active process identifier from a vedge
         \param vedge_pids : set of process identifiers in a vedge
         \return the identifier of the active process after taking a vedge
@@ -253,13 +258,47 @@ namespace tchecker {
          \brief Source set selection
          \param state : a state
          \param vedge_pids : process identifiers in a vedge
+         \param next_mem : memory of current state 
+         \param vedge : a vedge 
          \return true if a vedge involving processes vedge_pids is in the source
-         set of state, false otherwise
+         set of state, false otherwise. Update next_mem according to mem function.
          */
+        template <class VEDGE>
         bool in_source_set(state_ptr_t & state,
-        std::set<tchecker::process_id_t> const & vedge_pids)
+        std::set<tchecker::process_id_t> const & vedge_pids,
+        tchecker::process_id_t & next_mem,
+        VEDGE const & vedge)
         {
-          return true;
+          tchecker::process_id_t mixed_pid = state->mixed_local();
+          tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
+          // Local action of mixed state
+          if (active_pid != NO_SELECTED_PROCESS){
+            if (vedge_pids.size() == 1 && active_pid == mixed_pid)
+              return true;
+          }
+          // Local action of pure local process
+          if (_pure_local_map.is_pure_local(state->vloc()[active_pid]->id())  
+              && vedge_pids.size() == 1)
+            return true;
+          // Check if other pure local process
+          for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (_pure_local_map.is_pure_local(location->id()))
+              return false;
+          }
+          // Read action
+          for (auto const * edge : vedge){
+            if (_read_events[edge->event_id()] && edge->pid() >= state->por_memory()){
+              next_mem = edge->pid();
+              return true;
+            }
+          }
+          // Write action
+          if (vedge_pids.size() == 2){
+            next_mem = NO_SELECTED_PROCESS;
+            return true;
+          }
+          return false;
         }
 
         TS & _ts; /*!< Transition system */
@@ -268,6 +307,7 @@ namespace tchecker {
         tchecker::pure_local_map_t _pure_local_map; /*!< Pure local map */
         boost::dynamic_bitset<> _read_events; /*!< set of read events */        
         tchecker::location_next_syncs_t _location_next_syncs; /*!< Next synchronisations */
+        tchecker::mixed_map_t _mixed_map; /*!< Pure local map */
       };
 
     } // end of namespace rr
