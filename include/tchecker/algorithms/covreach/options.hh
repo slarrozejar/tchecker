@@ -117,7 +117,8 @@ namespace tchecker {
         SOURCE_SET_POR3,     /*!< por3 reduction for client/server systems */
         SOURCE_SET_POR4,     /*!< por4 reduction for client/server systems */
         SOURCE_SET_POR5,     /*!< por5 reduction for client/server systems */
-        SOURCE_SET_MAG     /*!< magnetic POR for client/server systems */
+        SOURCE_SET_MAG,     /*!< magnetic POR for client/server systems */        
+        SOURCE_SET_RR     /*!< read/read POR for client/server systems */
       };
 
       /*!

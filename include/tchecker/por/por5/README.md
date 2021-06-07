@@ -27,7 +27,6 @@ $$
 Functions *source* and *mem* are defined as follows:
 
 $$
-    \label{eq:source_por5}
     \begin{aligned}
     & source_5(q,m) = 
     \begin{cases}
