@@ -101,6 +101,15 @@ namespace tchecker {
         [&] (node_ptr_t const & n) -> bool {
           return accepting_labels(n) && ALGORITHM_MODEL::valid_final_node(ts, n);
         };
+  
+        tchecker::covreach::dot_outputter_t<typename ALGORITHM_MODEL::node_outputter_t>
+          dot_outputter(false, ALGORITHM_MODEL::node_outputter_args(model));
+
+        std::function<void(graph_t const &)> graph_output =
+        [&] (graph_t const & graph) -> void {
+          dot_outputter.template output<graph_t, typename ALGORITHM_MODEL::node_lt_t>
+          (options.output_stream(), graph, model.system().name());
+        };
 
         tchecker::gc_t gc;
 
@@ -121,7 +130,7 @@ namespace tchecker {
         tchecker::covreach::algorithm_t<builder_t, graph_t, WAITING> algorithm;
 
         try {
-          std::tie(outcome, stats) = algorithm.run(builder, graph, accepting_node);
+          std::tie(outcome, stats) = algorithm.run(builder, graph, accepting_node, graph_output);
         }
         catch (...) {
           gc.stop();
@@ -138,8 +147,10 @@ namespace tchecker {
         }
 
         if (options.output_format() == tchecker::covreach::options_t::DOT) {
+          /*
           tchecker::covreach::dot_outputter_t<typename ALGORITHM_MODEL::node_outputter_t>
           dot_outputter(false, ALGORITHM_MODEL::node_outputter_args(model));
+          */
 
           dot_outputter.template output<graph_t, typename ALGORITHM_MODEL::node_lt_t>
           (options.output_stream(), graph, model.system().name());
