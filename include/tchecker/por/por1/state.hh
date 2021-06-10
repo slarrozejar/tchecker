@@ -210,6 +210,7 @@ namespace tchecker {
             if (pure_local.is_pure_local(id) && pid != m)
               return false;
           }
+          return true;
         }
         // state with no selected process covered by state with selected process
         if (s1.por_memory() == NO_SELECTED_PROCESS && s2.por_memory() != NO_SELECTED_PROCESS) {
@@ -221,10 +222,10 @@ namespace tchecker {
             if (pid != m && (pure_local.is_pure_local(id) || !outgoing_edges.empty()))
               return false;
           }
+          return true;
         }
-        return true;
+        return false;
       }
-
     } // end of namespace por1
 
   } // end of namespace por

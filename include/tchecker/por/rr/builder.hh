@@ -93,6 +93,10 @@ namespace tchecker {
           for (auto && [id, name] : event_index)
             if (name[0] == '!') 
               _read_events[id] = 1;
+          for (auto && [id, name] : event_index){
+            if(_read_events[id])
+              std::cout << "read event: " << name << std::endl;
+          }
         }
 
         /*!
@@ -272,7 +276,7 @@ namespace tchecker {
           tchecker::process_id_t mixed_pid = state->mixed_local();
           tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
           // Local action of mixed state
-          if (active_pid != NO_SELECTED_PROCESS){
+          if (mixed_pid != NO_SELECTED_PROCESS){
             if (vedge_pids.size() == 1 && active_pid == mixed_pid)
               return true;
           }
@@ -288,15 +292,17 @@ namespace tchecker {
           }
           // Read action
           for (auto const * edge : vedge){
-            if (_read_events[edge->event_id()] && edge->pid() >= state->por_memory()){
-              next_mem = edge->pid();
+            if (_read_events[edge->event_id()] && edge->pid() == active_pid) {
+              if (active_pid >= state->por_memory()){
+                next_mem = edge->pid();
+                return true;
+              }
+            }
+            // Write action
+            if (edge->pid() == active_pid) {
+              next_mem = 0;
               return true;
             }
-          }
-          // Write action
-          if (vedge_pids.size() == 2){
-            next_mem = NO_SELECTED_PROCESS;
-            return true;
           }
           return false;
         }
