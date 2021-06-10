@@ -81,7 +81,8 @@ namespace tchecker {
        \note this algorithm may not terminate if the transition system is not finite
        */
       std::tuple<enum tchecker::covreach::outcome_t, tchecker::covreach::stats_t>
-      run(BUILDER & builder, GRAPH & graph, tchecker::covreach::accepting_condition_t<node_ptr_t> accepting)
+      run(BUILDER & builder, GRAPH & graph, tchecker::covreach::accepting_condition_t<node_ptr_t> accepting,
+      std::function<void(GRAPH const &)> & graph_output)
       {
         waiting_t waiting;
         node_ptr_t node{nullptr}, next_node{nullptr}, covering_node{nullptr};
@@ -96,6 +97,9 @@ namespace tchecker {
           waiting.insert(n);
         nodes.clear();
         
+        // UNCOMMENT TO DEBUG
+      //  graph_output(graph);
+
         // explore waiting nodes
         while (! waiting.empty()) {
           node = waiting.first();
@@ -134,6 +138,9 @@ namespace tchecker {
             }
           }
           nodes.clear();
+
+          // UNCOMMENT TO DEBUG
+          //graph_output(graph);
         }
         
         return std::make_tuple(tchecker::covreach::UNREACHABLE, stats);
