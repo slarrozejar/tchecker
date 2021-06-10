@@ -82,13 +82,13 @@ namespace tchecker {
         _allocator(allocator),
         _server_pid(model.system().processes().key(server)),
         _pure_local_map(tchecker::pure_local_map(model.system())),
+        _read_events(model.system().events().size()),
         _location_next_syncs(tchecker::location_next_syncs(model.system())),
         _mixed_map(tchecker::mixed_map(model.system()))
         {
           if (! tchecker::client_server(model.system(), _server_pid))
 				    throw std::invalid_argument("System is not client/server");
           auto const & event_index = model.system().events();
-          _read_events = boost::dynamic_bitset(event_index.size());
           // Set all read events
           for (auto && [id, name] : event_index)
             if (name[0] == '!') 
@@ -197,8 +197,7 @@ namespace tchecker {
 
             // Duplicate next state if location reached by vedge is mixed 
             if (_mixed_map.is_mixed(next_state->vloc()[active_pid]->id())){
-              state_ptr_t next_state_bis = _allocator.construct_from_state(s);
-              _ts.next(*next_state_bis, *transition, vedge);
+              state_ptr_t next_state_bis = _allocator.construct_from_state(next_state);
               next_state_bis->mixed_local(active_pid);
               v.push_back(next_state_bis);
             }
@@ -279,10 +278,10 @@ namespace tchecker {
           if (mixed_pid != NO_SELECTED_PROCESS){
             if (vedge_pids.size() == 1 && active_pid == mixed_pid)
               return true;
+            return false;
           }
           // Local action of pure local process
-          if (_pure_local_map.is_pure_local(state->vloc()[active_pid]->id())  
-              && vedge_pids.size() == 1)
+          if (_pure_local_map.is_pure_local(state->vloc()[active_pid]->id()))
             return true;
           // Check if other pure local process
           for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
@@ -291,20 +290,19 @@ namespace tchecker {
               return false;
           }
           // Read action
-          for (auto const * edge : vedge){
-            if (_read_events[edge->event_id()] && edge->pid() == active_pid) {
-              if (active_pid >= state->por_memory()){
-                next_mem = edge->pid();
-                return true;
-              }
-            }
-            // Write action
-            if (edge->pid() == active_pid) {
-              next_mem = 0;
+          if (vedge.size() == 1)
+            return false;
+          auto const * edge = vedge[0];
+          if (_read_events[edge->event_id()]) {
+            if (active_pid >= state->por_memory()){
+              next_mem = active_pid;
               return true;
             }
+            return false;
           }
-          return false;
+          // Write action
+          next_mem = 0;
+          return true;
         }
 
         TS & _ts; /*!< Transition system */
