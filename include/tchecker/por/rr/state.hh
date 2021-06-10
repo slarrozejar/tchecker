@@ -42,7 +42,7 @@ namespace tchecker {
         /*!
         \brief Constructor
         */
-        state_t(tchecker::process_id_t por_mem = NO_SELECTED_PROCESS, 
+        state_t(tchecker::process_id_t por_mem = 0, 
                 tchecker::process_id_t mixed_local = NO_SELECTED_PROCESS);
 
         /*!
