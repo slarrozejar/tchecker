@@ -289,20 +289,25 @@ namespace tchecker {
             if (_pure_local_map.is_pure_local(location->id()))
               return false;
           }
-          // Read action
-          if (vedge.size() == 1)
-            return false;
-          auto const * edge = vedge[0];
-          if (_read_events[edge->event_id()]) {
-            if (active_pid >= state->por_memory()){
-              next_mem = active_pid;
-              return true;
+          // TODO function 
+          assert (vedge_pids.size() != 1);
+          // TODO une fonction qui compte le nombre de pur local
+          // et assert qui dit count <= 1
+          // loop because of operator *
+          for (auto const * edge : vedge) {
+            // Read action
+            if (_read_events[edge->event_id()]) {
+              if (active_pid >= state->por_memory()){
+                next_mem = active_pid;
+                return true;
+              }
+              return false;
             }
-            return false;
+            // Write action
+            next_mem = 0;
+            return true;
           }
-          // Write action
-          next_mem = 0;
-          return true;
+          return false;
         }
 
         TS & _ts; /*!< Transition system */
