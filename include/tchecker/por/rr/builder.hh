@@ -84,7 +84,8 @@ namespace tchecker {
         _pure_local_map(tchecker::pure_local_map(model.system())),
         _read_events(model.system().events().size()),
         _location_next_syncs(tchecker::location_next_syncs(model.system())),
-        _mixed_map(tchecker::mixed_map(model.system()))
+        _mixed_map(tchecker::mixed_map(model.system())),
+        _synchronizations(model.system().synchronizations())
         {
           if (! tchecker::client_server(model.system(), _server_pid))
 				    throw std::invalid_argument("System is not client/server");
@@ -199,8 +200,14 @@ namespace tchecker {
             if (_mixed_map.is_mixed(next_state->vloc()[active_pid]->id())){
               state_ptr_t next_state_bis = _allocator.construct_from_state(next_state);
               next_state_bis->mixed_local(active_pid);
+              if (cut(next_state_bis))
+                continue;
               v.push_back(next_state_bis);
             }
+
+            if (cut(next_state))
+              continue;
+
             v.push_back(next_state);
           }
         }
@@ -240,6 +247,85 @@ namespace tchecker {
         }
 
         /*!
+        \brief Checks if a set of syncs contains only read actions
+        \param syncs : a set of syncs
+        \param pid : a process id
+        \return true if syncs contains only read actions, false otherwise
+        */
+        bool only_read_events(boost::dynamic_bitset<> & syncs, process_id_t pid) {
+          if (syncs.none())
+            return false;
+          for (auto it = _synchronizations.begin(); it != _synchronizations.end();
+               it++){
+              const tchecker::synchronization_t & synchro = *it;
+            for (size_t event_id = 0; event_id < _read_events.size(); event_id++){
+              if (syncs[synchro.id()] && synchro.synchronizes(pid,event_id) 
+                  && ! _read_events[event_id]){
+                return false;
+              }
+            }
+          } 
+          return true;
+        }
+
+        /*!
+        \brief Checks if a set of events contains a write action of pid
+        \param events : a set of events
+        \param pid : a process id
+        \return true if events contains a write action of pid, false otherwise
+        */
+        bool has_write_event(boost::dynamic_bitset<> & syncs, process_id_t pid) {
+          if (syncs.none())
+            return false;
+          for (auto it = _synchronizations.begin(); it != _synchronizations.end();
+               it++){
+              const tchecker::synchronization_t & synchro = *it;
+            for (size_t event_id = 0; event_id < _read_events.size(); event_id++){
+              if (syncs[synchro.id()] && synchro.synchronizes(pid,event_id) 
+                  && ! _read_events[event_id]){
+                return true;
+              }
+            }
+          } 
+          return false;
+        }
+
+        /*!
+        \brief Checks if a state leads to a deadlock
+        \param s : state
+        \return true if location leads to a deadlock, false otherwise
+        */
+        bool cut(state_ptr_t & s)
+        {
+          bool read_not_allowed = false;
+          bool no_write_reachable = true;
+          for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (location->pid() != _server_pid && location->pid() < s->por_memory()) { 
+              boost::dynamic_bitset<> next_sync_reachable = 
+                _location_next_syncs.next_syncs(location->id(),
+                location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
+              if (only_read_events(next_sync_reachable,location->pid())){
+                read_not_allowed = true;
+                std::cout << " pid " << location->pid() << " has only next read in location " << location->name() << std::endl;
+              }
+            }
+            if (location->pid() != _server_pid && location->pid() >= s->por_memory()) { 
+              boost::dynamic_bitset<> all_sync_reachable = 
+                _location_next_syncs.next_syncs(location->id(),
+                location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);
+              if (has_write_event(all_sync_reachable,location->pid())){
+                no_write_reachable = false;
+                std::cout << " pid " << location->pid() << " has a write event reachable in location " << location->name() << std::endl;
+              }
+            }
+            std::cout << location->name() << ", ";
+          }
+          std::cout << s->por_memory() << " has pid blocked by read " << read_not_allowed << ", has no write actions " << no_write_reachable << std::endl;
+          return read_not_allowed && no_write_reachable;
+        }
+
+        /*!
         \brief Compute next active process identifier from a vedge
         \param vedge_pids : set of process identifiers in a vedge
         \return the identifier of the active process after taking a vedge
@@ -258,6 +344,35 @@ namespace tchecker {
         }
 
         /*!
+        \brief Check wether state contains a pure local location
+        \param state : a state
+        \return true if state contains a pure local location, false otherwise
+        */
+        size_t count_pure_local(state_ptr_t & state) {
+          size_t count = 0;
+          for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (_pure_local_map.is_pure_local(location->id()))
+              count++;
+          }
+          return count;
+        }
+
+        /*!
+        \brief Counts the number of pure local locations in state
+        \param state : a state
+        \return the number of pure local locations in state
+        */
+        bool has_pure_local(state_ptr_t & state) {
+          for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (_pure_local_map.is_pure_local(location->id()))
+              return true;
+          }
+          return false;
+        }
+
+        /*!
          \brief Source set selection
          \param state : a state
          \param vedge_pids : process identifiers in a vedge
@@ -272,27 +387,27 @@ namespace tchecker {
         tchecker::process_id_t & next_mem,
         VEDGE const & vedge)
         {
+          // There is at most one pure local location in state
+          assert (count_pure_local(state) <= 1);
+
           tchecker::process_id_t mixed_pid = state->mixed_local();
           tchecker::process_id_t active_pid = compute_active_pid(vedge_pids);
+
           // Local action of mixed state
           if (mixed_pid != NO_SELECTED_PROCESS){
             if (vedge_pids.size() == 1 && active_pid == mixed_pid)
               return true;
             return false;
           }
+
           // Local action of pure local process
           if (_pure_local_map.is_pure_local(state->vloc()[active_pid]->id()))
             return true;
+          
           // Check if other pure local process
-          for(auto it = state->vloc().begin(); it != state->vloc().end(); ++it) {
-            auto const * location = *it;
-            if (_pure_local_map.is_pure_local(location->id()))
-              return false;
-          }
-          // TODO function 
-          assert (vedge_pids.size() != 1);
-          // TODO une fonction qui compte le nombre de pur local
-          // et assert qui dit count <= 1
+          if (has_pure_local(state))
+            return false;
+
           // loop because of operator *
           for (auto const * edge : vedge) {
             // Read action
@@ -317,6 +432,7 @@ namespace tchecker {
         boost::dynamic_bitset<> _read_events; /*!< set of read events */        
         tchecker::location_next_syncs_t _location_next_syncs; /*!< Next synchronisations */
         tchecker::mixed_map_t _mixed_map; /*!< Pure local map */
+        tchecker::range_t<tchecker::const_sync_iterator_t> _synchronizations; 
       };
 
     } // end of namespace rr
