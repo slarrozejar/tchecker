@@ -298,6 +298,7 @@ namespace tchecker {
         bool cut(state_ptr_t & s)
         {
           bool read_not_allowed = false;
+          bool no_next_write = true;
           bool no_write_reachable = true;
           for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
             auto const * location = *it;
@@ -309,6 +310,8 @@ namespace tchecker {
                 read_not_allowed = true;
                 std::cout << " pid " << location->pid() << " has only next read in location " << location->name() << std::endl;
               }
+              if (has_write_event(next_sync_reachable,location->pid()))
+                no_next_write = false;
             }
             if (location->pid() != _server_pid && location->pid() >= s->por_memory()) { 
               boost::dynamic_bitset<> all_sync_reachable = 
@@ -322,7 +325,7 @@ namespace tchecker {
             std::cout << location->name() << ", ";
           }
           std::cout << s->por_memory() << " has pid blocked by read " << read_not_allowed << ", has no write actions " << no_write_reachable << std::endl;
-          return read_not_allowed && no_write_reachable;
+          return read_not_allowed && no_next_write && no_write_reachable;
         }
 
         /*!
