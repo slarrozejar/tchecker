@@ -94,8 +94,6 @@ namespace tchecker {
           for (auto && [id, name] : event_index)
             if (name[0] == '!') 
               _read_events[id] = 1;
-          for (auto && [id, name] : event_index)
-            if(_read_events[id])
         }
 
         /*!
