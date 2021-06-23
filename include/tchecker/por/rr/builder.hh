@@ -411,6 +411,10 @@ namespace tchecker {
           if (has_pure_local(state))
             return false;
 
+          // Check if local action
+          if (vedge_pids.size() == 1)
+            return false;
+
           // loop because of operator *
           for (auto const * edge : vedge) {
             // Read action
