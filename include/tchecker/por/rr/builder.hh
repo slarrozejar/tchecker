@@ -94,10 +94,8 @@ namespace tchecker {
           for (auto && [id, name] : event_index)
             if (name[0] == '!') 
               _read_events[id] = 1;
-          for (auto && [id, name] : event_index){
+          for (auto && [id, name] : event_index)
             if(_read_events[id])
-              std::cout << "read event: " << name << std::endl;
-          }
         }
 
         /*!
@@ -306,10 +304,8 @@ namespace tchecker {
               boost::dynamic_bitset<> next_sync_reachable = 
                 _location_next_syncs.next_syncs(location->id(),
                 location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
-              if (only_read_events(next_sync_reachable,location->pid())){
+              if (only_read_events(next_sync_reachable,location->pid()))
                 read_not_allowed = true;
-                std::cout << " pid " << location->pid() << " has only next read in location " << location->name() << std::endl;
-              }
               if (has_write_event(next_sync_reachable,location->pid()))
                 no_next_write = false;
             }
@@ -317,14 +313,10 @@ namespace tchecker {
               boost::dynamic_bitset<> all_sync_reachable = 
                 _location_next_syncs.next_syncs(location->id(),
                 location_next_syncs_t::next_type_t::ALL_SYNC_REACHABLE);
-              if (has_write_event(all_sync_reachable,location->pid())){
+              if (has_write_event(all_sync_reachable,location->pid()))
                 no_write_reachable = false;
-                std::cout << " pid " << location->pid() << " has a write event reachable in location " << location->name() << std::endl;
-              }
             }
-            std::cout << location->name() << ", ";
           }
-          std::cout << s->por_memory() << " has pid blocked by read " << read_not_allowed << ", has no write actions " << no_write_reachable << std::endl;
           return read_not_allowed && no_next_write && no_write_reachable;
         }
 
