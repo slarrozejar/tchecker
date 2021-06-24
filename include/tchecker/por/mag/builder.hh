@@ -141,6 +141,9 @@ namespace tchecker {
             if (! synchronizable(state))
               continue;
 
+            if (cut(state))
+              continue;
+
             v.push_back(state);
           }
         }
@@ -175,10 +178,41 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
+            if (cut(next_state))
+              continue;
+
             v.push_back(next_state);
           }
         }
       private:
+
+        /*!
+        \brief Checks if a state leads to a deadlock
+        \param s : state
+        \return true if state leads to a deadlock, false otherwise
+        */
+        bool cut(state_ptr_t & s) const
+        {
+          // next server synchronizations reachable
+          boost::dynamic_bitset<> const & server_next_sync = _location_next_syncs.next_syncs(s->vloc()[_server_pid]->id(),
+                                                  location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
+          for(auto it = s->vloc().begin(); it != s->vloc().end(); ++it) {
+            auto const * location = *it;
+            if (location->pid() != _server_pid) { 
+              if (!magnetic(location->name())){
+                boost::dynamic_bitset<> next_sync_not_mag = 
+                  _location_next_syncs.next_syncs(location->id(),
+                  location_next_syncs_t::next_type_t::NEXT_SYNC_NOT_MAG_REACHABLE);
+                if (next_sync_not_mag.none())
+                  continue;
+                next_sync_not_mag &= server_next_sync;
+                if (next_sync_not_mag.none())
+                    return true;
+              }
+            }
+          }
+          return false;
+        }
 
         /*!
          \brief Checks if a state can reach a communication
@@ -228,16 +262,6 @@ namespace tchecker {
             if(pid != _server_pid)
                active_pid = pid;   
           return active_pid;
-        }
-
-        /*!
-        \brief Tests whether a location is magnetic
-        \param loc_name : a location name
-        \return false if loc_name begins by the caracter '!', true otherwise
-        */
-        bool magnetic(std::string const & loc_name) 
-        {
-          return loc_name[0] != '!';
         }
 
         /*!
