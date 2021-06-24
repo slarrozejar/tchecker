@@ -323,6 +323,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::cs::async_zg::sync_zones::ta::
@@ -464,6 +465,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with client/server POR");
         }
@@ -504,6 +506,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::gl::async_zg::sync_zones::ta::
@@ -645,6 +648,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with global/local POR");
         }
@@ -683,6 +687,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::por1::async_zg::sync_zones::ta::
@@ -824,6 +829,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with por1 POR");
         }
@@ -861,6 +867,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::por2::async_zg::sync_zones::ta::
@@ -1002,6 +1009,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with por2 POR");
         }
@@ -1039,6 +1047,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::por3::async_zg::sync_zones::ta::
@@ -1180,6 +1189,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with por3 POR");
         }
@@ -1217,6 +1227,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::por4::async_zg::sync_zones::ta::
@@ -1358,6 +1369,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with por4 POR");
         }
@@ -1395,6 +1407,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::por5::async_zg::sync_zones::ta::
@@ -1536,6 +1549,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with por5 POR");
         }
@@ -1573,6 +1587,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::mag::async_zg::sync_zones::ta::
@@ -1714,6 +1729,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with mag POR");
         }
@@ -1751,6 +1767,7 @@ namespace tchecker {
               GRAPH_OUTPUTTER, WAITING>
               (sysdecl, options, log);
             break;
+#ifdef USELESS
           case tchecker::covreach::options_t::ASYNC_ZG_ELAPSED_NOEXTRA:
             tchecker::covreach::details::run_async_zg_sync_zones
             <tchecker::covreach::details::por::rr::async_zg::sync_zones::ta::
@@ -1892,6 +1909,7 @@ namespace tchecker {
             GRAPH_OUTPUTTER, WAITING>
             (sysdecl, options, log);
             break;
+#endif // USELESS
           default:
             log.error("unsupported model with rr POR");
         }
