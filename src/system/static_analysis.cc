@@ -12,6 +12,11 @@
 
 namespace tchecker {
   
+  bool magnetic(std::string const & loc_name)
+  {
+    return loc_name[0] != '!';
+  }
+  
   /* process_events_map_t */
   
   process_events_map_t::process_events_map_t(tchecker::process_id_t proc_count)
@@ -55,12 +60,11 @@ namespace tchecker {
   
   location_next_syncs_t::location_next_syncs_t(tchecker::loc_id_t locations_count,
                                                tchecker::sync_id_t syncs_count)
-  : _next_syncs_map{
-    {locations_count, boost::dynamic_bitset<>(syncs_count, 0)},
-    {locations_count, boost::dynamic_bitset<>(syncs_count, 0)},
-    {locations_count, boost::dynamic_bitset<>(syncs_count, 0)}},
-  _syncs_count(syncs_count)
-  {}
+  : _syncs_count(syncs_count)
+  {
+    for (unsigned i =0; i < NEXT_SYNC_END; ++i)
+      _next_syncs_map[i] = std::vector<boost::dynamic_bitset<>>{locations_count, boost::dynamic_bitset<>{_syncs_count, 0}};
+  }
   
   
   void location_next_syncs_t::add_next_sync(tchecker::sync_id_t sync_id,

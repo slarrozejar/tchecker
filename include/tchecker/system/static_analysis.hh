@@ -25,6 +25,13 @@
  */
 
 namespace tchecker {
+    /*!
+  \brief Tests whether a location is magnetic
+  \param loc_name : a location name
+  \return false if loc_name begins by the caracter '!', true otherwise
+  */
+  bool magnetic(std::string const & loc_name);
+  
   /*!
    \class process_events_map_t
    \brief Type of map : process ID -> event IDs
@@ -156,6 +163,7 @@ namespace tchecker {
     enum next_type_t {
       NEXT_SYNC_LOCATION,  /*!< In the location */
       NEXT_SYNC_REACHABLE, /*!< Reachable from location (through asynchronous transitions) */
+      NEXT_SYNC_NOT_MAG_REACHABLE, /*!< Reachable from location (through asynchronous and non magnetic transitions) */
       ALL_SYNC_REACHABLE,  /*!< Reachable from location */
       NEXT_SYNC_END
     };
@@ -232,6 +240,28 @@ namespace tchecker {
           = map.next_syncs(edge->tgt()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
           boost::dynamic_bitset<> & src_syncs
           = map.next_syncs(edge->src()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_REACHABLE);
+          if (! tgt_syncs.is_subset_of(src_syncs)) {
+            fixed_point = false;
+            src_syncs |= tgt_syncs;
+          }
+        }
+    }
+    while ( ! fixed_point );
+
+    // Copy to reachable next syncs not mag 
+    for (tchecker::loc_id_t loc_id = 0; loc_id < locations_count; ++loc_id)
+      map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_NOT_MAG_REACHABLE)
+      = map.next_syncs(loc_id, tchecker::location_next_syncs_t::NEXT_SYNC_LOCATION);
+    
+    // Propagate reachable next syncs along asynchronous edges
+    do {
+      fixed_point = true;
+      for (auto const * edge : system.edges())
+        if (system.asynchronous(edge->pid(), edge->event_id()) && !magnetic(edge->tgt()->name())) { 
+          boost::dynamic_bitset<> const & tgt_syncs
+          = map.next_syncs(edge->tgt()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_NOT_MAG_REACHABLE);
+          boost::dynamic_bitset<> & src_syncs
+          = map.next_syncs(edge->src()->id(), tchecker::location_next_syncs_t::NEXT_SYNC_NOT_MAG_REACHABLE);
           if (! tgt_syncs.is_subset_of(src_syncs)) {
             fixed_point = false;
             src_syncs |= tgt_syncs;
@@ -913,6 +943,7 @@ namespace tchecker {
     }
     return m;
   }
+
 } // end of namespace tchecker
 
 #endif // TCHECKER_SYSTEM_STATIC_ANALYSIS_HH
