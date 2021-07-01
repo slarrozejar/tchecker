@@ -141,8 +141,8 @@ namespace tchecker {
             if (! synchronizable(state))
               continue;
 
-            if (cut(state))
-              continue;
+            // if (cut(state))
+            //   continue;
 
             v.push_back(state);
           }
@@ -178,8 +178,8 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
-            if (cut(next_state))
-              continue;
+            // if (cut(next_state))
+            //   continue;
 
             v.push_back(next_state);
           }
