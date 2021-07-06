@@ -141,8 +141,8 @@ namespace tchecker {
             if (! synchronizable(state))
               continue;
 
-            // if (cut(state))
-            //   continue;
+            if (cut(state))
+              continue;
 
             v.push_back(state);
           }
@@ -178,8 +178,8 @@ namespace tchecker {
             if (! synchronizable(next_state))
               continue;
 
-            // if (cut(next_state))
-            //   continue;
+            if (cut(next_state))
+              continue;
 
             v.push_back(next_state);
           }
@@ -203,11 +203,14 @@ namespace tchecker {
                 boost::dynamic_bitset<> next_sync_not_mag = 
                   _location_next_syncs.next_syncs(location->id(),
                   location_next_syncs_t::next_type_t::NEXT_SYNC_NOT_MAG_REACHABLE);
-                if (next_sync_not_mag.none())
-                  continue;
+                boost::dynamic_bitset<> next_sync = 
+                  _location_next_syncs.next_syncs(location->id(),
+                  location_next_syncs_t::next_type_t::NEXT_SYNC_REACHABLE);
+                if (!(next_sync <= next_sync_not_mag))
+                  return false;
                 next_sync_not_mag &= server_next_sync;
                 if (next_sync_not_mag.none())
-                    return true;
+                  return true;
               }
             }
           }
